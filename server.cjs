@@ -26,21 +26,60 @@ var import_express = __toESM(require("express"), 1);
 var import_path = __toESM(require("path"), 1);
 var import_genai = require("@google/genai");
 var import_vite = require("vite");
+var rateLimitMap = /* @__PURE__ */ new Map();
+function checkRateLimit(ip, limit = 20, windowMs = 60 * 1e3) {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+    return { allowed: true };
+  }
+  if (record.count >= limit) {
+    return { allowed: false, retryAfter: Math.ceil((record.resetTime - now) / 1e3) };
+  }
+  record.count += 1;
+  return { allowed: true };
+}
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of rateLimitMap.entries()) {
+    if (now > record.resetTime) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}, 5 * 60 * 1e3);
+function sanitizeText(str, maxLength = 2e3) {
+  if (typeof str !== "string") return "";
+  const cleaned = str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "").trim();
+  return cleaned.slice(0, maxLength);
+}
 async function startServer() {
   const app = (0, import_express.default)();
   const PORT = 3e3;
-  app.use(import_express.default.json());
-  app.use((req, res, next) => {
+  app.disable("x-powered-by");
+  app.use(import_express.default.json({ limit: "500kb" }));
+  app.use((_req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "SAMEORIGIN");
     res.setHeader("X-XSS-Protection", "1; mode=block");
     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+    res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
     next();
   });
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", service: "RM Segar Backend", timestamp: (/* @__PURE__ */ new Date()).toISOString() });
   });
   app.post("/api/chat", async (req, res) => {
+    const clientIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket.remoteAddress || "unknown";
+    const rateCheck = checkRateLimit(clientIp, 20, 60 * 1e3);
+    if (!rateCheck.allowed) {
+      res.setHeader("Retry-After", rateCheck.retryAfter || 60);
+      return res.status(429).json({
+        error: "TOO_MANY_REQUESTS",
+        message: `Terlalu banyak permintaan. Silakan coba lagi dalam ${rateCheck.retryAfter || 60} detik.`
+      });
+    }
     try {
       const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
       if (!apiKey || typeof apiKey !== "string" || apiKey.trim() === "") {
@@ -49,10 +88,15 @@ async function startServer() {
           message: "GEMINI_API_KEY is not configured on the server."
         });
       }
-      const { message, history, language, menuList } = req.body;
-      if (!message || typeof message !== "string") {
+      const { message: rawMessage, history: rawHistory, language, menuList: rawMenuList } = req.body || {};
+      if (!rawMessage || typeof rawMessage !== "string") {
         return res.status(400).json({ error: "Field 'message' is required and must be a string." });
       }
+      const message = sanitizeText(rawMessage, 2e3);
+      if (!message) {
+        return res.status(400).json({ error: "Pesan tidak boleh kosong." });
+      }
+      const menuList = sanitizeText(rawMenuList || "", 5e3);
       const genAI = new import_genai.GoogleGenAI({
         apiKey: apiKey.trim(),
         httpOptions: {
@@ -73,7 +117,7 @@ Gaya Berbicara Anda:
 - Simpan ingatan dari obrolan ini untuk memberikan rekomendasi terbaik.
 
 Berikut adalah daftar menu kami:
-${menuList || ""}
+${menuList}
 
 Aturan Sangat Penting:
 1. Jawablah secara natural, komunikatif, dan interaktif seperti koki asli yang hangat dan bersemangat. Buat kalimat yang mengalir enak didengar, ramah, dan humoris jika cocok. Jangan kaku seperti robot cs. Jika hanya mengobrol/chit-chat, jadilah teman bincang yang asyik tentang kuliner Kalimantan Barat, resep bumbu khas Sambas, atau tips memasak.
@@ -85,9 +129,9 @@ Aturan Sangat Penting:
    - Jika Pesanan: [KIRIM_WA: pesanan | Halo RM Segar, saya ingin memesan: <nama_menu> (<qty>x). Terima kasih!]
    - Jika Reservasi: [KIRIM_WA: reservasi | Halo RM Segar, saya ingin melakukan reservasi atas nama <nama> untuk tanggal <tanggal> jam <jam> sebanyak <jumlah_orang> orang. Terima kasih!]
 5. Jangan tampilkan tag [KIRIM_WA] sebelum semua data lengkap dan dikonfirmasi.`;
-      const formattedHistory = Array.isArray(history) ? history.map((item) => ({
+      const formattedHistory = Array.isArray(rawHistory) ? rawHistory.slice(-30).map((item) => ({
         role: item.role === "user" ? "user" : "model",
-        parts: [{ text: item.text || "" }]
+        parts: [{ text: sanitizeText(item.text || "", 2e3) }]
       })) : [];
       const chat = genAI.chats.create({
         model: "gemini-3.6-flash",
