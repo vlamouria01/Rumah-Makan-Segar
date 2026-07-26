@@ -952,14 +952,39 @@ export default function App() {
   const fortuneDragControls = useDragControls();
   const pdfDragControls = useDragControls();
 
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('rm_segar_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('rm_segar_favs');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [orders, setOrders] = useState<Order[]>(() => {
+    try {
+      const saved = localStorage.getItem('rm_segar_orders');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [reservations, setReservations] = useState<Reservation[]>(() => {
+    try {
+      const saved = localStorage.getItem('rm_segar_reservations');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('Semua');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [searchHistory, setSearchHistory] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('rm_segar_search_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [activeTab, setActiveTab] = useState('home');
   const [language, setLanguage] = useState<'id' | 'en' | 'zh'>(getInitialLanguage);
   const [showOrderHistory, setShowOrderHistory] = useState(false);
@@ -996,6 +1021,10 @@ export default function App() {
   const [flies, setFlies] = useState<{ id: string; startX: number; startY: number; endX: number; endY: number; item: MenuItem }[]>([]);
   const [cartPulse, setCartPulse] = useState(false);
   
+  // Confirmation Modals State
+  const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState(false);
+  const [showClearHistoryConfirmModal, setShowClearHistoryConfirmModal] = useState(false);
+
   // Fortune Cookie States
   const [fortuneState, setFortuneState] = useState<'idle' | 'shaking' | 'cracked'>('idle');
   const [currentFortune, setCurrentFortune] = useState<ChineseFortune | null>(null);
@@ -1009,7 +1038,12 @@ export default function App() {
   // Onboarding State
   const [activeTour, setActiveTour] = useState<'home' | 'search' | 'heart' | 'profile' | 'about' | null>(null);
   const [tourStep, setTourStep] = useState(0);
-  const [completedTours, setCompletedTours] = useState<Record<string, boolean>>({});
+  const [completedTours, setCompletedTours] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('rm_segar_completed_tours');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
   const [spotlightRect, setSpotlightRect] = useState<{ x: number, y: number, width: number, height: number, rx: number } | null>(null);
   
   // AI Chat State
@@ -1061,6 +1095,8 @@ export default function App() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (showLogoutConfirmModal) setShowLogoutConfirmModal(false);
+        if (showClearHistoryConfirmModal) setShowClearHistoryConfirmModal(false);
         if (isChatOpen) setIsChatOpen(false);
         if (isCartOpen) setIsCartOpen(false);
         if (noteModalItem) setNoteModalItem(null);
@@ -1069,7 +1105,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isChatOpen, isCartOpen, noteModalItem, optionModalItem]);
+  }, [isChatOpen, isCartOpen, noteModalItem, optionModalItem, showLogoutConfirmModal, showClearHistoryConfirmModal]);
 
   const handleSendMessage = async (e?: React.FormEvent, initialPrompt?: string) => {
     if (e) e.preventDefault();
@@ -1285,6 +1321,11 @@ Aturan Sangat Penting:
       localStorage.setItem('rm_segar_chat_timestamp', Date.now().toString());
     }
   }, [chatMessages]);
+
+  // Sync Orders state to LocalStorage
+  useEffect(() => {
+    localStorage.setItem('rm_segar_orders', JSON.stringify(orders));
+  }, [orders]);
 
   // Trigger tours on tab change or initial load
   useEffect(() => {
@@ -3191,14 +3232,27 @@ Aturan Sangat Penting:
         renderAdminDashboard()
       ) : showOrderHistory ? (
         <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setShowOrderHistory(false)}
-              className="w-10 h-10 bg-white rounded-xl shadow-sm border border-stone-50 flex items-center justify-center text-stone-400"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <h2 className="text-xl font-bold text-stone-900">Riwayat Pesanan</h2>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setShowOrderHistory(false)}
+                className="w-10 h-10 bg-white rounded-xl shadow-sm border border-stone-50 flex items-center justify-center text-stone-400 hover:text-stone-700 transition-colors"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <h2 className="text-xl font-bold text-stone-900">Riwayat Pesanan</h2>
+            </div>
+
+            {orders.length > 0 && (
+              <button
+                onClick={() => setShowClearHistoryConfirmModal(true)}
+                className="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 active:scale-95 text-xs font-bold rounded-xl border border-red-100 flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                title="Hapus Semua Riwayat Pesanan"
+              >
+                <Trash2 size={14} />
+                <span>{language === 'en' ? 'Delete History' : language === 'zh' ? '清空历史' : 'Hapus Riwayat'}</span>
+              </button>
+            )}
           </div>
 
           {orders.length === 0 ? (
@@ -3609,16 +3663,16 @@ Aturan Sangat Penting:
             
             {user && (
               <button 
-                onClick={handleLogout}
-                className="w-full md:col-span-2 flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-stone-50"
+                onClick={() => setShowLogoutConfirmModal(true)}
+                className="w-full md:col-span-2 flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-stone-50 hover:bg-red-50/50 hover:border-red-100 transition-all cursor-pointer group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-colors">
                     <LogOut size={20} />
                   </div>
-                  <span className="font-bold text-stone-700">{TRANSLATIONS[language].logout}</span>
+                  <span className="font-bold text-stone-700 group-hover:text-red-600 transition-colors">{TRANSLATIONS[language].logout}</span>
                 </div>
-                <ChevronRight size={20} className="text-stone-300" />
+                <ChevronRight size={20} className="text-stone-300 group-hover:text-red-400 transition-colors" />
               </button>
             )}
           </div>
@@ -4541,27 +4595,13 @@ Aturan Sangat Penting:
             >
               {/* Swipe Handle & Header Container */}
               <div className="bg-white border-b border-stone-100 flex-shrink-0 sticky top-0 z-20 shadow-xs">
-                {/* Swipe Handle Indicator with explicit Close button */}
+                {/* Swipe Handle Indicator */}
                 <div 
                   onPointerDown={(e) => chatDragControls.start(e)}
-                  className="w-full pt-3 pb-2 px-5 flex items-center justify-between cursor-grab active:cursor-grabbing touch-none flex-shrink-0 select-none bg-stone-50/90 border-b border-stone-100"
-                  title="Geser ke bawah atau ketuk Tutup untuk keluar"
+                  className="w-full pt-3 pb-2 flex justify-center cursor-grab active:cursor-grabbing touch-none flex-shrink-0 select-none bg-stone-50/90 border-b border-stone-100"
+                  title="Geser ke bawah untuk menutup"
                 >
-                  <div className="flex items-center gap-1.5 text-[11px] text-stone-400 font-bold uppercase tracking-wider">
-                    <span>✨ Koki AI RM Segar</span>
-                  </div>
-                  <div className="w-12 h-1.5 bg-stone-300 rounded-full transition-colors mx-auto" />
-                  <button 
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsChatOpen(false);
-                    }}
-                    className="px-3 py-1 bg-stone-200/80 hover:bg-red-50 hover:text-red-600 active:bg-stone-300 text-stone-700 rounded-full text-xs font-bold flex items-center gap-1 transition-all touch-manipulation cursor-pointer"
-                  >
-                    <X size={14} />
-                    <span>Tutup</span>
-                  </button>
+                  <div className="w-12 h-1.5 bg-stone-300 rounded-full transition-colors" />
                 </div>
                 
                 {/* Header */}
@@ -5445,9 +5485,119 @@ Aturan Sangat Penting:
         )}
       </AnimatePresence>
 
-      {/* Onboarding Overlay */}
+      {/* Logout Confirmation Modal */}
       <AnimatePresence>
-        {activeTour && renderOnboarding()}
+        {showLogoutConfirmModal && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLogoutConfirmModal(false)}
+              className="fixed inset-0 bg-stone-950/60 backdrop-blur-sm z-[90]"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-[32px] p-6 text-center space-y-5 border border-stone-100 shadow-2xl z-[90] overflow-hidden"
+            >
+              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto shadow-inner border border-red-100">
+                <LogOut size={30} />
+              </div>
+
+              <div className="space-y-1.5">
+                <h3 className="text-xl font-bold text-stone-900">
+                  {language === 'en' ? 'Confirm Log Out' : language === 'zh' ? '确认退出登录' : 'Konfirmasi Keluar'}
+                </h3>
+                <p className="text-xs text-stone-500 leading-relaxed px-2">
+                  {language === 'en' 
+                    ? 'Are you sure you want to log out of your RM Segar account?' 
+                    : language === 'zh' 
+                    ? '您确定要退出 RM Segar 账号吗？' 
+                    : 'Apakah Anda yakin ingin keluar dari akun RM Segar?'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button 
+                  onClick={() => setShowLogoutConfirmModal(false)}
+                  className="py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-2xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
+                >
+                  {language === 'en' ? 'Cancel' : language === 'zh' ? '取消' : 'Batal'}
+                </button>
+                <button 
+                  onClick={() => {
+                    handleLogout();
+                    setShowLogoutConfirmModal(false);
+                  }}
+                  className="py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-red-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <LogOut size={16} />
+                  <span>{language === 'en' ? 'Log Out' : language === 'zh' ? '退出' : 'Ya, Keluar'}</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Clear Order History Confirmation Modal */}
+      <AnimatePresence>
+        {showClearHistoryConfirmModal && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowClearHistoryConfirmModal(false)}
+              className="fixed inset-0 bg-stone-950/60 backdrop-blur-sm z-[90]"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-[32px] p-6 text-center space-y-5 border border-stone-100 shadow-2xl z-[90] overflow-hidden"
+            >
+              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto shadow-inner border border-red-100">
+                <Trash2 size={30} />
+              </div>
+
+              <div className="space-y-1.5">
+                <h3 className="text-xl font-bold text-stone-900">
+                  {language === 'en' ? 'Delete Order History?' : language === 'zh' ? '清空订单历史？' : 'Hapus Riwayat Pesanan?'}
+                </h3>
+                <p className="text-xs text-stone-500 leading-relaxed px-1">
+                  {language === 'en' 
+                    ? 'Are you sure you want to delete all order history? This action cannot be undone.' 
+                    : language === 'zh' 
+                    ? '您确定要删除所有订单历史记录吗？此操作无法撤销。' 
+                    : 'Apakah Anda yakin ingin menghapus semua riwayat pesanan? Tindakan ini tidak dapat dibatalkan.'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button 
+                  onClick={() => setShowClearHistoryConfirmModal(false)}
+                  className="py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-2xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
+                >
+                  {language === 'en' ? 'Cancel' : language === 'zh' ? '取消' : 'Batal'}
+                </button>
+                <button 
+                  onClick={() => {
+                    setOrders([]);
+                    localStorage.removeItem('rm_segar_orders');
+                    setShowClearHistoryConfirmModal(false);
+                  }}
+                  className="py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-red-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Trash2 size={16} />
+                  <span>{language === 'en' ? 'Delete All' : language === 'zh' ? '清空' : 'Ya, Hapus'}</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
       </AnimatePresence>
 
       {/* Fly-to-Cart Animation Overlay */}
