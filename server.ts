@@ -1,0 +1,136 @@
+import express from "express";
+import path from "path";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { createServer as createViteServer } from "vite";
+
+async function startServer() {
+  const app = express();
+  const PORT = 3000;
+
+  app.use(express.json());
+
+  // Security headers middleware
+  app.use((req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("X-XSS-Protection", "1; mode=block");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    next();
+  });
+
+  // Health check endpoint
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", service: "RM Segar Backend", timestamp: new Date().toISOString() });
+  });
+
+  // Secure Proxy API route for Gemini AI Chat
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY || (process.env as any).API_KEY;
+      if (!apiKey || typeof apiKey !== "string" || apiKey.trim() === "") {
+        return res.status(400).json({ 
+          error: "API_KEY_MISSING", 
+          message: "GEMINI_API_KEY is not configured on the server." 
+        });
+      }
+
+      const { message, history, language, menuList } = req.body;
+      if (!message || typeof message !== "string") {
+        return res.status(400).json({ error: "Field 'message' is required and must be a string." });
+      }
+
+      const genAI = new GoogleGenAI({ 
+        apiKey: apiKey.trim(),
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build'
+          }
+        }
+      });
+
+      const systemInstruction = `Anda adalah "Koki A-Sian", kepala koki legendaris RM Segar (鲜馆) yang berasal dari Sambas, Kalimantan Barat. Anda sangat ramah, humoris, hangat, dan gemar bercerita tentang kuliner khas daerah Anda dengan penuh gairah!
+Anda ingin pelanggan merasa seperti mengobrol dengan koki sungguhan yang ramah di kedai makan, bukan robot CS yang kaku.
+
+SANGAT PENTING: JAWABLAH DALAM BAHASA ${language === 'en' ? 'ENGLISH (Bahasa Inggris)' : language === 'zh' ? 'CHINESE/MANDARIN (Bahasa Mandarin)' : 'INDONESIAN (Bahasa Indonesia)'} sesuai dengan preferensi bahasa pelanggan saat ini. Namun, selipkan juga beberapa dialek lokal Sambas/Kalbar atau ekspresi khas koki jika berbicara dalam Bahasa Indonesia untuk menambah kehangatan dan keaslian!
+
+Gaya Berbicara Anda:
+- Ramah, akrab, humoris, dan menggunakan sapaan hangat. Jika dalam Bahasa Indonesia, gunakan sapaan seperti "Adek", "Kakak", "Om", "Tante", atau "Kawan".
+- Sangat menyukai makanan dan senang merekomendasikan hidangan berdasarkan selera pelanggan.
+- Jika pengguna curhat atau ingin mengobrol hal-hal santai, responlah dengan nyambung, ceria, dan berikan analogi makanan yang seru! Jangan menolak obrolan santai, rangkul mereka seolah sedang mengobrol di meja bar restoran.
+- Simpan ingatan dari obrolan ini untuk memberikan rekomendasi terbaik.
+
+Berikut adalah daftar menu kami:
+${menuList || ''}
+
+Aturan Sangat Penting:
+1. Jawablah secara natural, komunikatif, dan interaktif seperti koki asli yang hangat dan bersemangat. Buat kalimat yang mengalir enak didengar, ramah, dan humoris jika cocok. Jangan kaku seperti robot cs. Jika hanya mengobrol/chit-chat, jadilah teman bincang yang asyik tentang kuliner Kalimantan Barat, resep bumbu khas Sambas, atau tips memasak.
+2. JANGAN PERNAH MENGGUNAKAN TANDA BINTANG TEBAL (seperti **) dalam teks Anda. Tulis dalam teks biasa yang bersih tanpa tanda bintang apa pun.
+3. Jika pelanggan ingin memesan makanan atau melakukan reservasi, tanyakan detailnya dengan ramah dan ringkas:
+   - Pesanan: Nama menu, kuantitas.
+   - Reservasi: Nama, tanggal/hari, jam, jumlah orang.
+4. Jika detail sudah lengkap dan pelanggan mengonfirmasi, tampilkan ringkasan singkat dengan gaya koki yang riang dan WAJIB sertakan format tag berikut persis di bagian akhir teks Anda (satu baris):
+   - Jika Pesanan: [KIRIM_WA: pesanan | Halo RM Segar, saya ingin memesan: <nama_menu> (<qty>x). Terima kasih!]
+   - Jika Reservasi: [KIRIM_WA: reservasi | Halo RM Segar, saya ingin melakukan reservasi atas nama <nama> untuk tanggal <tanggal> jam <jam> sebanyak <jumlah_orang> orang. Terima kasih!]
+5. Jangan tampilkan tag [KIRIM_WA] sebelum semua data lengkap dan dikonfirmasi.`;
+
+      const formattedHistory = Array.isArray(history) ? history.map((item: any) => ({
+        role: item.role === 'user' ? 'user' : 'model',
+        parts: [{ text: item.text || '' }]
+      })) : [];
+
+      const chat = genAI.chats.create({
+        model: "gemini-3.6-flash",
+        config: {
+          systemInstruction: systemInstruction,
+          thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL }
+        },
+        history: formattedHistory
+      });
+
+      const responseStream = await chat.sendMessageStream({ message });
+
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.setHeader("Transfer-Encoding", "chunked");
+
+      for await (const chunk of responseStream) {
+        if (chunk.text) {
+          res.write(chunk.text);
+        }
+      }
+      res.end();
+    } catch (error: any) {
+      console.error("Server API Chat Error:", error);
+      if (!res.headersSent) {
+        const errorMsg = error?.message || "Internal server error";
+        const isApiKeyError = errorMsg.includes("API key not valid") || errorMsg.includes("API_KEY_INVALID");
+        res.status(isApiKeyError ? 400 : 500).json({ 
+          error: isApiKeyError ? "API_KEY_INVALID" : "CHAT_ERROR",
+          message: errorMsg 
+        });
+      } else {
+        res.end();
+      }
+    }
+  });
+
+  // Vite middleware for development vs static serve for production
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), "dist");
+    app.use(express.static(distPath));
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`RM Segar Full-Stack Server running on http://0.0.0.0:${PORT}`);
+  });
+}
+
+startServer();

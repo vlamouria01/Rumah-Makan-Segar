@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-stone-50 text-stone-900;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Native Print Styles for RM Segar Menu Catalog */
+@media print {
+  html, body {
+    background: #FAF7F2 !important;
+    color: #1c1917 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm !important;
+    height: auto !important;
+  }
+
+  /* Hide absolutely everything by default */
+  #root,
+  .modal-overlay,
+  button,
+  header,
+  footer,
+  aside,
+  nav,
+  section,
+  div:not(.print-only-container):not(.print-only-container *) {
+    display: none !important;
+  }
+
+  /* Make sure our print container is shown at the top */
+  .print-only-container {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 9999999 !important;
+  }
+
+  .print-page {
+    display: block !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    page-break-after: always !important;
+    box-sizing: border-box !important;
+    border: 12px solid #450a0a !important;
+    background: #FAF7F2 !important;
+  }
+}
+

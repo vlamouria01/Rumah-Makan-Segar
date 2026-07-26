@@ -1,0 +1,6 @@
+{
+  "name": "RM Segar - Chinese Food Kalimantan",
+  "description": "Aplikasi pemesanan Chinese Food khas Kalimantan Barat - Bakmie, Kwetiao, Capcai, dan Kaifon.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
