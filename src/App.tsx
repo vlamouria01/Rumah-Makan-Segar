@@ -1355,8 +1355,8 @@ Aturan Sangat Penting:
       return;
     }
 
-    const updatePosition = () => {
-      const step = onboardingSteps[activeTour][tourStep];
+    const updatePosition = (shouldScroll = false) => {
+      const step = onboardingSteps[activeTour]?.[tourStep];
       if (!step || step.position === 'center') {
         setSpotlightRect({ x: window.innerWidth / 2, y: window.innerHeight / 2, width: 0, height: 0, rx: 0 });
         return;
@@ -1364,11 +1364,19 @@ Aturan Sangat Penting:
 
       const element = document.getElementById(step.elementId);
       if (element) {
-        // Scroll element into view if needed
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const activeEl = document.activeElement;
+        const isInputFocused = activeEl && (
+          activeEl.tagName === 'INPUT' || 
+          activeEl.tagName === 'TEXTAREA' || 
+          activeEl.getAttribute('contenteditable') === 'true'
+        );
+
+        if (shouldScroll && !isInputFocused) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         
-        // Wait for scroll to finish before measuring
-        setTimeout(() => {
+        const updateRect = () => {
+          if (!element) return;
           const rect = element.getBoundingClientRect();
           setSpotlightRect({
             x: rect.left,
@@ -1377,13 +1385,20 @@ Aturan Sangat Penting:
             height: rect.height,
             rx: step.rx || 20
           });
-        }, 300);
+        };
+
+        if (shouldScroll && !isInputFocused) {
+          setTimeout(updateRect, 300);
+        } else {
+          updateRect();
+        }
       }
     };
 
-    updatePosition();
-    window.addEventListener('resize', updatePosition);
-    return () => window.removeEventListener('resize', updatePosition);
+    updatePosition(true);
+    const handleResize = () => updatePosition(false);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [activeTour, tourStep]);
 
   // Pull to refresh logic using native touch events to avoid blocking scroll
