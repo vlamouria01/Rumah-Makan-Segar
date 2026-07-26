@@ -77,7 +77,7 @@ export const TRANSLATIONS = {
     back: "Kembali",
     search: "Cari",
     favorite: "Favorit",
-    chatChef: "Ngobrol dengan Koki AI RM Segar!",
+    chatChef: "Ngobrol dengan Koki Teng AI!",
     recommendation: "Rekomendasi",
     aboutText: "RM Segar adalah restoran Chinese Food khas Kalimantan Barat yang menyajikan hidangan autentik berkualitas tinggi.",
     nonHalalWarning: "Menu kami mengandung bahan-bahan yang Tidak Halal.",
@@ -90,14 +90,14 @@ export const TRANSLATIONS = {
     recomNasi: "Menu nasi favorit",
     recomMinuman: "Minuman segar",
     recomPedas: "Menu paling pedas",
-    kokiTitle: "Koki AI RM Segar",
-    kokiDesc: "Asisten kuliner pintar Anda untuk memesan hidangan terbaik.",
+    kokiTitle: "Koki Teng AI RM Segar",
+    kokiDesc: "Asisten kuliner pintar Anda dari Koki Teng untuk memesan hidangan terbaik.",
     forgotPassword: "Lupa Sandi",
     verifyToken: "Verifikasi Token",
     kokiAsk: "Bingung mau makan apa?",
     kokiStart: "Mulai Chat Rekomendasi",
-    kokiGreeting: "Halo! Saya Koki AI RM Segar. Bingung mau makan apa hari ini? Beritahu saya apa yang Anda suka, dan saya akan carikan menu yang paling pas buat Anda! 🐼🍜",
-    kokiError: "Ups, koki AI kami sedang sibuk menyiapkan pesanan. Coba lagi nanti ya!",
+    kokiGreeting: "Halo! Saya Koki Teng. Bingung mau makan apa hari ini? Beritahu saya apa yang Anda suka, dan saya akan carikan menu yang paling pas buat Anda! 🐼🍜",
+    kokiError: "Ups, Koki Teng sedang sibuk menyiapkan pesanan. Coba lagi nanti ya!",
     searchTitle: "Pencarian",
     searchResultsFor: "Hasil pencarian untuk",
     searchNoResults: "Menu tidak ditemukan"
@@ -140,7 +140,7 @@ export const TRANSLATIONS = {
     back: "Back",
     search: "Search",
     favorite: "Favorites",
-    chatChef: "Chat with RM Segar's AI Chef!",
+    chatChef: "Chat with Chef Teng AI!",
     recommendation: "Recommendation",
     aboutText: "RM Segar is a Chinese Food restaurant from West Kalimantan serving high-quality, authentic dishes.",
     nonHalalWarning: "Our menu contains non-halal ingredients.",
@@ -153,14 +153,14 @@ export const TRANSLATIONS = {
     recomNasi: "Favorite rice dishes",
     recomMinuman: "Fresh drinks",
     recomPedas: "Spiciest options",
-    kokiTitle: "RM Segar AI Chef",
-    kokiDesc: "Your smart culinary assistant to order the best dishes.",
+    kokiTitle: "Chef Teng AI RM Segar",
+    kokiDesc: "Your smart culinary assistant from Chef Teng to order the best dishes.",
     forgotPassword: "Forgot Password",
     verifyToken: "Verify Token",
     kokiAsk: "Not sure what to eat?",
     kokiStart: "Start Recommendation Chat",
-    kokiGreeting: "Hello! I am RM Segar's AI Chef. Not sure what to eat today? Tell me what you like, and I'll find the perfect dish for you! 🐼🍜",
-    kokiError: "Oops, our AI chef is busy preparing orders. Please try again later!",
+    kokiGreeting: "Hello! I am Chef Teng. Not sure what to eat today? Tell me what you like, and I'll find the perfect dish for you! 🐼🍜",
+    kokiError: "Oops, Chef Teng is busy preparing orders. Please try again later!",
     searchTitle: "Search",
     searchResultsFor: "Search results for",
     searchNoResults: "No menu items found"
@@ -203,7 +203,7 @@ export const TRANSLATIONS = {
     back: "返回",
     search: "搜索",
     favorite: "收藏",
-    chatChef: "与鲜馆 AI 厨师聊天！",
+    chatChef: "与 Koki Teng AI 厨师聊天！",
     recommendation: "推荐",
     aboutText: "RM Segar (鲜馆) 是一家来自西加里曼丹的正宗中餐馆，为您提供高品质的经典美味。",
     nonHalalWarning: "我们的菜单含有非清真 (Non-Halal) 食材。",
@@ -216,14 +216,14 @@ export const TRANSLATIONS = {
     recomNasi: "人气饭食",
     recomMinuman: "清凉饮品",
     recomPedas: "最辣推荐",
-    kokiTitle: "鲜馆 AI 厨师",
-    kokiDesc: "您的智能美食助理，帮您点选最佳佳肴。",
+    kokiTitle: "鲜馆 Koki Teng AI 厨师",
+    kokiDesc: "您的智能美食助理 Koki Teng，帮您点选最佳佳肴。",
     forgotPassword: "忘记密码",
     verifyToken: "验证令牌",
     kokiAsk: "不知道吃什么？",
     kokiStart: "开启美食对话",
-    kokiGreeting: "您好！我是鲜馆 AI 厨师。今天不知道吃什么吗？告诉我您喜欢吃什么，我会为您寻找最完美的佳肴！ 🐼🍜",
-    kokiError: "哎呀，我们的 AI 厨师正忙于准备订单，请稍后再试！",
+    kokiGreeting: "您好！我是 Koki Teng 厨师。今天不知道吃什么吗？告诉我您喜欢吃什么，我会为您寻找最完美的佳肴！ 🐼🍜",
+    kokiError: "哎呀，Koki Teng 正忙于准备订单，请稍后再试！",
     searchTitle: "搜索",
     searchResultsFor: "搜索结果：",
     searchNoResults: "未找到相关菜品"
@@ -1194,7 +1194,7 @@ export default function App() {
               ? "Hello friend! The AI Chef feature requires a valid GEMINI_API_KEY. Please configure GEMINI_API_KEY in the app settings or environment variables." 
               : language === 'zh'
               ? "你好朋友！AI 厨师功能需要有效的 GEMINI_API_KEY。请在应用设置或环境变量中配置 GEMINI_API_KEY。"
-              : "Halo kawan! Fitur AI Koki A-Sian membutuhkan GEMINI_API_KEY yang valid. Silakan konfigurasikan GEMINI_API_KEY pada Settings > Secrets aplikasi Anda." 
+              : "Halo kawan! Fitur AI Koki Teng membutuhkan GEMINI_API_KEY yang valid. Silakan konfigurasikan GEMINI_API_KEY pada Settings > Secrets aplikasi Anda." 
           }]);
           setIsAIThinking(false);
           return;
@@ -1202,7 +1202,7 @@ export default function App() {
 
         const genAI = new GoogleGenAI({ apiKey: apiKey.trim() });
 
-        const systemInstruction = `Anda adalah "Koki A-Sian", kepala koki legendaris RM Segar (鲜馆) yang berasal dari Sambas, Kalimantan Barat. Anda sangat ramah, humoris, hangat, dan gemar bercerita tentang kuliner khas daerah Anda dengan penuh gairah!
+        const systemInstruction = `Anda adalah "Koki Teng", kepala koki legendaris RM Segar (鲜馆) yang berasal dari Sambas, Kalimantan Barat. Anda sangat ramah, humoris, hangat, dan gemar bercerita tentang kuliner khas daerah Anda dengan penuh gairah!
 Anda ingin pelanggan merasa seperti mengobrol dengan koki sungguhan yang ramah di kedai makan, bukan robot CS yang kaku.
 
 SANGAT PENTING: JAWABLAH DALAM BAHASA ${language === 'en' ? 'ENGLISH (Bahasa Inggris)' : language === 'zh' ? 'CHINESE/MANDARIN (Bahasa Mandarin)' : 'INDONESIAN (Bahasa Indonesia)'} sesuai dengan preferensi bahasa pelanggan saat ini. Namun, selipkan juga beberapa dialek lokal Sambas/Kalbar atau ekspresi khas koki jika berbicara dalam Bahasa Indonesia untuk menambah kehangatan dan keaslian!
@@ -2073,7 +2073,7 @@ Aturan Sangat Penting:
         button: "Mulai Tur"
       },
       {
-        title: "Koki AI RM Segar",
+        title: "Koki Teng AI RM Segar",
         description: "Bingung mau makan apa? Ngobrol dengan AI kami untuk mendapatkan rekomendasi menu terbaik.",
         position: "target",
         elementId: "tour-ai-chat",
@@ -4093,7 +4093,7 @@ Aturan Sangat Penting:
                 ) : isRefreshing ? (
                   <span className="text-amber-300 flex items-center gap-1.5">
                     <Sparkles size={14} className="animate-spin text-amber-400" />
-                    {pandaMessage || "Koki Panda Sedang Memasak Pesanan..."}
+                    {pandaMessage || "Koki Teng Sedang Memasak Pesanan..."}
                   </span>
                 ) : (
                   <span className="text-stone-300">Tarik untuk Memuat Ulang</span>
@@ -5172,7 +5172,7 @@ Aturan Sangat Penting:
                         {language === 'en' ? 'ALCHEMIZING LUCK...' : language === 'zh' ? '主厨正在占卜运势...' : 'MENGALIRKAN ENERGI HOKI...'}
                       </h4>
                       <p className="text-stone-400 text-xs">
-                        {language === 'en' ? 'Chef A-Sian is invoking ancient culinary blessings...' : language === 'zh' ? '金瓮摇曳，福星高照，您的专属菜单正在出炉中...' : 'Koki A-Sian sedang memutar cawan takdir kuliner Anda...'}
+                        {language === 'en' ? 'Chef Teng is invoking ancient culinary blessings...' : language === 'zh' ? '金瓮摇曳，福星高照，您的专属菜单正在出炉中...' : 'Koki Teng sedang memutar cawan takdir kuliner Anda...'}
                       </p>
                     </div>
                   </div>
