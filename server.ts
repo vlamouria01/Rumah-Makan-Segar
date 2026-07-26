@@ -3,18 +3,62 @@ import path from "path";
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { createServer as createViteServer } from "vite";
 
+// Simple in-memory rate limiting map
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(ip: string, limit = 20, windowMs = 60 * 1000): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+    return { allowed: true };
+  }
+
+  if (record.count >= limit) {
+    return { allowed: false, retryAfter: Math.ceil((record.resetTime - now) / 1000) };
+  }
+
+  record.count += 1;
+  return { allowed: true };
+}
+
+// Clean up stale rate limit entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of rateLimitMap.entries()) {
+    if (now > record.resetTime) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}, 5 * 60 * 1000);
+
+// Helper function to sanitize user text inputs against null bytes / control chars
+function sanitizeText(str: string, maxLength = 2000): string {
+  if (typeof str !== "string") return "";
+  // Strip null characters and non-printable ASCII control characters except newlines/tabs
+  const cleaned = str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "").trim();
+  return cleaned.slice(0, maxLength);
+}
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  // Disable powered-by header for security obfuscation
+  app.disable("x-powered-by");
+
+  // Strict request body size limit to mitigate DoS / payload bloat
+  app.use(express.json({ limit: "500kb" }));
 
   // Security headers middleware
-  app.use((req, res, next) => {
+  app.use((_req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "SAMEORIGIN");
     res.setHeader("X-XSS-Protection", "1; mode=block");
     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
+    res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
     next();
   });
 
@@ -25,6 +69,17 @@ async function startServer() {
 
   // Secure Proxy API route for Gemini AI Chat
   app.post("/api/chat", async (req, res) => {
+    // 1. Rate Limiting per IP
+    const clientIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.socket.remoteAddress || "unknown";
+    const rateCheck = checkRateLimit(clientIp, 20, 60 * 1000); // 20 requests per minute
+    if (!rateCheck.allowed) {
+      res.setHeader("Retry-After", rateCheck.retryAfter || 60);
+      return res.status(429).json({
+        error: "TOO_MANY_REQUESTS",
+        message: `Terlalu banyak permintaan. Silakan coba lagi dalam ${rateCheck.retryAfter || 60} detik.`
+      });
+    }
+
     try {
       const apiKey = process.env.GEMINI_API_KEY || (process.env as any).API_KEY;
       if (!apiKey || typeof apiKey !== "string" || apiKey.trim() === "") {
@@ -34,10 +89,19 @@ async function startServer() {
         });
       }
 
-      const { message, history, language, menuList } = req.body;
-      if (!message || typeof message !== "string") {
+      const { message: rawMessage, history: rawHistory, language, menuList: rawMenuList } = req.body || {};
+      
+      // 2. Strict Input Validation & Sanitization
+      if (!rawMessage || typeof rawMessage !== "string") {
         return res.status(400).json({ error: "Field 'message' is required and must be a string." });
       }
+
+      const message = sanitizeText(rawMessage, 2000);
+      if (!message) {
+        return res.status(400).json({ error: "Pesan tidak boleh kosong." });
+      }
+
+      const menuList = sanitizeText(rawMenuList || "", 5000);
 
       const genAI = new GoogleGenAI({ 
         apiKey: apiKey.trim(),
@@ -60,7 +124,7 @@ Gaya Berbicara Anda:
 - Simpan ingatan dari obrolan ini untuk memberikan rekomendasi terbaik.
 
 Berikut adalah daftar menu kami:
-${menuList || ''}
+${menuList}
 
 Aturan Sangat Penting:
 1. Jawablah secara natural, komunikatif, dan interaktif seperti koki asli yang hangat dan bersemangat. Buat kalimat yang mengalir enak didengar, ramah, dan humoris jika cocok. Jangan kaku seperti robot cs. Jika hanya mengobrol/chit-chat, jadilah teman bincang yang asyik tentang kuliner Kalimantan Barat, resep bumbu khas Sambas, atau tips memasak.
@@ -73,10 +137,13 @@ Aturan Sangat Penting:
    - Jika Reservasi: [KIRIM_WA: reservasi | Halo RM Segar, saya ingin melakukan reservasi atas nama <nama> untuk tanggal <tanggal> jam <jam> sebanyak <jumlah_orang> orang. Terima kasih!]
 5. Jangan tampilkan tag [KIRIM_WA] sebelum semua data lengkap dan dikonfirmasi.`;
 
-      const formattedHistory = Array.isArray(history) ? history.map((item: any) => ({
-        role: item.role === 'user' ? 'user' : 'model',
-        parts: [{ text: item.text || '' }]
-      })) : [];
+      // 3. Sanitize and cap conversation history (max last 30 turns)
+      const formattedHistory = Array.isArray(rawHistory) 
+        ? rawHistory.slice(-30).map((item: any) => ({
+            role: item.role === 'user' ? 'user' : 'model',
+            parts: [{ text: sanitizeText(item.text || '', 2000) }]
+          })) 
+        : [];
 
       const chat = genAI.chats.create({
         model: "gemini-3.6-flash",
