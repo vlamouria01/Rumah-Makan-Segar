@@ -760,6 +760,10 @@ export interface ShioDetail {
   emoji: string;
   elementDefault: string;
   foodId: string;
+  luckyNumbers: string;
+  luckyColors: { id: string; en: string; zh: string };
+  luckyDirection: { id: string; en: string; zh: string };
+  trait: { id: string; en: string; zh: string };
   desc: {
     id: string;
     en: string;
@@ -775,6 +779,10 @@ export const SHIO_DETAILS: ShioDetail[] = [
     emoji: '🐭',
     elementDefault: 'Air',
     foodId: 'bakmie-kering',
+    luckyNumbers: '2, 3, 6',
+    luckyColors: { id: 'Emas & Hijau', en: 'Gold & Green', zh: '金色与绿色' },
+    luckyDirection: { id: 'Tenggara & Timur Laut', en: 'Southeast & Northeast', zh: '东南与东北' },
+    trait: { id: 'Cerdas, Lincah & Penuh Strategi', en: 'Clever, Agile & Strategic', zh: '机智敏捷、足智多谋' },
     desc: {
       id: 'Shio Tikus yang cerdas menyukai kepraktisan dan kelezatan yang padat. Bakmie Kering dengan topping lengkap sangat cocok untuk menemani hari produktif Anda!',
       en: 'The clever Rat loves practical yet rich flavors. Dry Bakmie with complete toppings is perfect to accompany your highly productive day!',
@@ -788,6 +796,10 @@ export const SHIO_DETAILS: ShioDetail[] = [
     emoji: '🐮',
     elementDefault: 'Tanah',
     foodId: 'capcai-kuah',
+    luckyNumbers: '1, 8, 9',
+    luckyColors: { id: 'Kuning Karamel & Merah', en: 'Caramel Yellow & Red', zh: '琥珀黄与大红' },
+    luckyDirection: { id: 'Utara & Barat Daya', en: 'North & Southwest', zh: '正北与西南' },
+    trait: { id: 'Tekun, Setia & Pantang Menyerah', en: 'Diligent, Loyal & Persistent', zh: '勤劳稳重、踏实坚韧' },
     desc: {
       id: 'Shio Kerbau yang tekun dan kuat membutuhkan asupan gizi yang seimbang dan menenangkan. Nasi Capcai Kuah hangat yang kaya serat adalah pilihan terbaik!',
       en: 'The diligent and strong Ox needs balanced and comforting nourishment. Warm Nasi Capcai Kuah, rich in fibers, is your ultimate companion!',
@@ -801,6 +813,10 @@ export const SHIO_DETAILS: ShioDetail[] = [
     emoji: '🐯',
     elementDefault: 'Kayu',
     foodId: 'kwetiao-goreng',
+    luckyNumbers: '1, 3, 4',
+    luckyColors: { id: 'Jingga & Biru Langit', en: 'Orange & Sky Blue', zh: '橙色与天蓝' },
+    luckyDirection: { id: 'Selatan & Timur', en: 'South & East', zh: '正南与正东' },
+    trait: { id: 'Pemberani, Antusias & Karismatik', en: 'Brave, Enthusiastic & Charismatic', zh: '勇猛威严、富有领导力' },
     desc: {
       id: 'Shio Macan yang berani sangat menggemari aroma arang wajan (wok hei) yang kuat. Kwetiao Goreng Sapi beraroma smokey akan membakar semangat hoki Anda!',
       en: 'The brave Tiger craves intense wok hei aromas. Smokey Kwetiao Goreng is guaranteed to ignite your lucky spirit today!',
@@ -814,6 +830,10 @@ export const SHIO_DETAILS: ShioDetail[] = [
     emoji: '🐰',
     elementDefault: 'Kayu',
     foodId: 'susu-kedelai',
+    luckyNumbers: '3, 4, 9',
+    luckyColors: { id: 'Merah Muda & Ungu', en: 'Pink & Purple', zh: '粉红与紫色' },
+    luckyDirection: { id: 'Barat Daya & Barat Laut', en: 'Southwest & Northwest', zh: '西南与西北' },
+    trait: { id: 'Anggun, Lembut & Penuh Kedamaian', en: 'Elegant, Gentle & Peaceful', zh: '温和典雅、善良体贴' },
     desc: {
       id: 'Shio Kelinci yang anggun dan lembut sangat cocok dengan kesegaran yang alami dan murni. Susu Kedelai murni yang manis lembut akan menjaga kedamaian hati Anda.',
       en: 'The elegant and gentle Rabbit matches beautifully with pure, natural refreshment. Sweet, silky Soy Milk will preserve your peaceful harmony today.',
@@ -827,10 +847,14 @@ export const SHIO_DETAILS: ShioDetail[] = [
     emoji: '🐲',
     elementDefault: 'Tanah',
     foodId: 'kaifon',
+    luckyNumbers: '1, 6, 7',
+    luckyColors: { id: 'Emas Imperial & Perak', en: 'Imperial Gold & Silver', zh: '帝王金与亮银' },
+    luckyDirection: { id: 'Barat & Barat Laut', en: 'West & Northwest', zh: '正西与西北' },
+    trait: { id: 'Megah, Berani & Penuh Kejayaan', en: 'Majestic, Bold & Ambitious', zh: '尊贵非凡、雄心勃勃' },
     desc: {
       id: 'Shio Naga yang megah menyukai kemewahan rasa dan ragam topping berlimpah. Nasi Campur (Kaifon) spesial dengan aneka daging lezat adalah lambang kejayaan Anda!',
       en: 'The majestic Dragon deserves a feast of rich, diverse premium toppings. Nasi Campur (Kaifon) with multi-meat toppings perfectly represents your glorious luck!',
-      zh: '尊尊非凡的属龙者值得拥有一场饕餮盛宴。配料豪华、酱汁香浓的招牌什锦饭正是您鸿运当头的象征！'
+      zh: '尊荣非凡的属龙者值得拥有一场饕餮盛宴。配料豪华、酱汁香浓的招牌什锦饭正是您鸿运当头的象征！'
     }
   },
   {
@@ -840,6 +864,10 @@ export const SHIO_DETAILS: ShioDetail[] = [
     emoji: '🐍',
     elementDefault: 'Api',
     foodId: 'kwetiao-kering',
+    luckyNumbers: '2, 8, 9',
+    luckyColors: { id: 'Hitam Elegan & Merah', en: 'Elegant Black & Red', zh: '玄黑与大红' },
+    luckyDirection: { id: 'Barat Daya & Selatan', en: 'Southwest & South', zh: '西南与正南' },
+    trait: { id: 'Intuitif, Bijaksana & Penuh Rahasia', en: 'Intuitive, Wise & Mysterious', zh: '深谋远虑、冷静睿智' },
     desc: {
       id: 'Shio Ular yang penuh misteri dan intuitif menyukai perpaduan rasa bumbu halus yang meresap sempurna. Kwetiao Kering spesial adalah rahasia hoki Anda.',
       en: 'The mysterious and intuitive Snake appreciates complex, deeply infused secret spices. Special Kwetiao Kering holds the hidden key to your fortune today.',
@@ -853,6 +881,10 @@ export const SHIO_DETAILS: ShioDetail[] = [
     emoji: '🐴',
     elementDefault: 'Api',
     foodId: 'bakmie-goreng',
+    luckyNumbers: '2, 3, 7',
+    luckyColors: { id: 'Kuning Kunyit & Hijau', en: 'Turmeric Yellow & Green', zh: '姜黄与翠绿' },
+    luckyDirection: { id: 'Barat Daya & Barat', en: 'Southwest & West', zh: '西南与正西' },
+    trait: { id: 'Berenergi Tinggi, Bebas & Dinamis', en: 'Energetic, Free-spirited & Dynamic', zh: '热情奔放、极富活力' },
     desc: {
       id: 'Shio Kuda yang berenergi tinggi membutuhkan hidangan lezat berkalori tinggi yang cepat saji. Bakmie Goreng spesial akan memberi Anda dorongan energi ekstra!',
       en: 'The high-energy Horse needs a fast, flavorful, and energizing meal. Special Bakmie Goreng will give you that extra boost to race through your day!',
@@ -866,6 +898,10 @@ export const SHIO_DETAILS: ShioDetail[] = [
     emoji: '🐐',
     elementDefault: 'Tanah',
     foodId: 'capcai-kering',
+    luckyNumbers: '2, 7, 8',
+    luckyColors: { id: 'Cokelat Kayu & Putih', en: 'Wood Brown & White', zh: '木棕与雪白' },
+    luckyDirection: { id: 'Utara & Barat Daya', en: 'North & Southwest', zh: '正北与西南' },
+    trait: { id: 'Lembut, Penyayang & Artistik', en: 'Gentle, Loving & Artistic', zh: '温和善良、富有艺术气质' },
     desc: {
       id: 'Shio Kambing yang damai dan penyayang menyukai kelezatan sayur-sayuran segar beraroma harum. Nasi Capcai Kering adalah sajian harmoni yang menenangkan jiwa.',
       en: 'The peaceful and loving Goat loves fresh, fragrant, and vibrant stir-fried vegetables. Nasi Capcai Kering is a harmonious dish that calms your soul.',
@@ -879,6 +915,10 @@ export const SHIO_DETAILS: ShioDetail[] = [
     emoji: '🐵',
     elementDefault: 'Logam',
     foodId: 'jeruk-nipis',
+    luckyNumbers: '4, 9, 1',
+    luckyColors: { id: 'Putih Murni & Biru Laut', en: 'Pure White & Ocean Blue', zh: '纯白与海蓝' },
+    luckyDirection: { id: 'Utara & Barat Laut', en: 'North & Northwest', zh: '正北与西北' },
+    trait: { id: 'Jenaka, Cerdas & Cepat Tanggap', en: 'Witty, Intelligent & Quick-witted', zh: '聪明伶俐、幽默风趣' },
     desc: {
       id: 'Shio Monyet yang jenaka dan ceria sangat menyukai kejutan rasa asam manis yang menyegarkan. Es Jeruk Nipis Pontianak yang asam manis akan mencerahkan ide hoki Anda!',
       en: 'The playful and witty Monkey loves refreshing, sweet-and-sour flavor bursts. Sweet-sour Ice Jeruk Nipis Pontianak will spark brilliant, lucky ideas today!',
@@ -892,6 +932,10 @@ export const SHIO_DETAILS: ShioDetail[] = [
     emoji: '🐔',
     elementDefault: 'Logam',
     foodId: 'bakmie-kuah',
+    luckyNumbers: '5, 7, 8',
+    luckyColors: { id: 'Kuning Keemasan & Cokelat', en: 'Golden Yellow & Brown', zh: '金黄与咖啡色' },
+    luckyDirection: { id: 'Timur Laut & Selatan', en: 'Northeast & South', zh: '东北与正南' },
+    trait: { id: 'Teliti, Rapi & Penuh Percaya Diri', en: 'Meticulous, Neat & Confident', zh: '勤奋精明、条理分明' },
     desc: {
       id: 'Shio Ayam yang teliti dan rapi sangat menikmati sup kaldu bening yang bersih dan menghangatkan jiwa. Bakmie Kuah kaldu murni adalah resep kenyamanan hoki Anda.',
       en: 'The meticulous and neat Rooster enjoys clean, soul-warming clear bone broths. Bakmie Kuah with pure rich broth is your perfect recipe for comforting luck.',
@@ -905,6 +949,10 @@ export const SHIO_DETAILS: ShioDetail[] = [
     emoji: '🐶',
     elementDefault: 'Tanah',
     foodId: 'kwetiao-kuah',
+    luckyNumbers: '3, 4, 9',
+    luckyColors: { id: 'Hijau Daun & Merah', en: 'Leaf Green & Red', zh: '翠绿与大红' },
+    luckyDirection: { id: 'Timur & Tenggara', en: 'East & Southeast', zh: '正东与东南' },
+    trait: { id: 'Setia, Jujur & Menghangatkan Hati', en: 'Loyal, Honest & Heartwarming', zh: '忠诚坦荡、守护温暖' },
     desc: {
       id: 'Shio Anjing yang setia dan hangat sangat menyukai sup hangat yang menenangkan hati di tengah keluarga. Kwetiao Kuah gurih akan melipatgandakan kebahagiaan harian Anda.',
       en: 'The loyal and warm-hearted Dog treasures comforting soups shared with loved ones. Savory Kwetiao Kuah will double your daily joy and absolute peace.',
@@ -917,11 +965,15 @@ export const SHIO_DETAILS: ShioDetail[] = [
     zh: '猪',
     emoji: '🐷',
     elementDefault: 'Air',
-    foodId: 'kaifon',
+    foodId: 'kopi',
+    luckyNumbers: '2, 5, 8',
+    luckyColors: { id: 'Kuning Emas & Hitam', en: 'Golden Yellow & Black', zh: '金黄与墨黑' },
+    luckyDirection: { id: 'Tenggara & Timur', en: 'Southeast & East', zh: '东南与正东' },
+    trait: { id: 'Santai, Ramah & Penuh Rezeki', en: 'Easygoing, Friendly & Abundantly Blessed', zh: '心胸宽广、福禄双全' },
     desc: {
-      id: 'Shio Babi yang santai dan penuh berkah menyukai makanan lezat porsi melimpah. Nasi Campur legendaris dengan cita rasa manis gurih adalah sahabat sejati perut Anda!',
-      en: 'The easygoing and blessed Pig loves generous, rich portions of sheer deliciousness. Legendary Nasi Campur with sweet-savory combinations is your tummy’s soulmate!',
-      zh: '随和富态、福泽深厚的属猪者最懂享受分量十足的经典美味。一碗香甜咸鲜、油脂丰盈的招牌什锦饭，定能让您福气满满！'
+      id: 'Shio Babi yang santai dan penuh berkah menyukai minuman mantap beraroma harum mendalam. Kopi Hitam Mantap khas Kalbar adalah teman diskusi & penarik rezeki Anda!',
+      en: 'The easygoing and blessed Pig loves deep, aromatic and bold classic drinks. Bold Black Coffee from Kalbar is your best companion to draw continuous fortune!',
+      zh: '随和富态、福泽深厚的属猪者最懂享受香气浓郁的美味。一杯浓郁提神的古法黑咖啡，让您舒心悠闲、财源滚滚！'
     }
   }
 ];
@@ -1063,6 +1115,7 @@ export default function App() {
   // Confirmation Modals State
   const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState(false);
   const [showClearHistoryConfirmModal, setShowClearHistoryConfirmModal] = useState(false);
+  const [showClearChatConfirmModal, setShowClearChatConfirmModal] = useState(false);
 
   // Fortune Cookie States
   const [fortuneState, setFortuneState] = useState<'idle' | 'shaking' | 'cracked'>('idle');
@@ -1134,6 +1187,7 @@ export default function App() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (showClearChatConfirmModal) setShowClearChatConfirmModal(false);
         if (showLogoutConfirmModal) setShowLogoutConfirmModal(false);
         if (showClearHistoryConfirmModal) setShowClearHistoryConfirmModal(false);
         if (isChatOpen) setIsChatOpen(false);
@@ -1144,7 +1198,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isChatOpen, isCartOpen, noteModalItem, optionModalItem, showLogoutConfirmModal, showClearHistoryConfirmModal]);
+  }, [isChatOpen, isCartOpen, noteModalItem, optionModalItem, showLogoutConfirmModal, showClearHistoryConfirmModal, showClearChatConfirmModal]);
 
   const handleSendMessage = async (e?: React.FormEvent, initialPrompt?: string) => {
     if (e) e.preventDefault();
@@ -1224,27 +1278,26 @@ export default function App() {
 
         const genAI = new GoogleGenAI({ apiKey: apiKey.trim() });
 
-        const systemInstruction = `Anda adalah "Koki Teng", kepala koki legendaris RM Segar (鲜馆) yang berasal dari Sambas, Kalimantan Barat. Anda sangat ramah, humoris, hangat, dan gemar bercerita tentang kuliner khas daerah Anda dengan penuh gairah!
-Anda ingin pelanggan merasa seperti mengobrol dengan koki sungguhan yang ramah di kedai makan, bukan robot CS yang kaku.
+        const systemInstruction = `Anda adalah "Koki Teng", kepala koki legendaris RM Segar (鲜馆) yang berasal dari Sambas, Kalimantan Barat. Anda sangat ramah, hangat, dan to-the-point!
 
-SANGAT PENTING: JAWABLAH DALAM BAHASA ${language === 'en' ? 'ENGLISH (Bahasa Inggris)' : language === 'zh' ? 'CHINESE/MANDARIN (Bahasa Mandarin)' : 'INDONESIAN (Bahasa Indonesia)'} sesuai dengan preferensi bahasa pelanggan saat ini. Namun, selipkan juga beberapa dialek lokal Sambas/Kalbar atau ekspresi khas koki jika berbicara dalam Bahasa Indonesia untuk menambah kehangatan dan keaslian!
+SANGAT PENTING: JAWABLAH SECARA SINGKAT, PADAT, DAN JELAS! Jangan panjang lebar atau bertele-tele. Maksimal 1-3 kalimat saja per jawaban, langsung pada inti pertanyaan/saran menu.
+
+JAWABLAH DALAM BAHASA ${language === 'en' ? 'ENGLISH (Bahasa Inggris)' : language === 'zh' ? 'CHINESE/MANDARIN (Bahasa Mandarin)' : 'INDONESIAN (Bahasa Indonesia)'} sesuai dengan preferensi bahasa pelanggan saat ini. Jika Bahasa Indonesia, selipkan sedikit sapaan hangat khas koki (seperti "Kawan", "Kakak").
 
 Gaya Berbicara Anda:
-- Ramah, akrab, humoris, dan menggunakan sapaan hangat. Jika dalam Bahasa Indonesia, gunakan sapaan seperti "Adek", "Kakak", "Om", "Tante", atau "Kawan".
-- Sangat menyukai makanan dan senang merekomendasikan hidangan berdasarkan selera pelanggan.
-- Jika pengguna curhat atau ingin mengobrol hal-hal santai, responlah dengan nyambung, ceria, dan berikan analogi makanan yang seru! Jangan menolak obrolan santai, rangkul mereka seolah sedang mengobrol di meja bar restoran.
-- Simpan ingatan dari obrolan ini untuk memberikan rekomendasi terbaik.
+- Singkat, padat, jelas, ramah, dan langsung menjawab inti pertanyaan tanpa kata-kata berbunga-bunga yang terlalu panjang.
+- Sangat paham menu dan langsung merekomendasikan hidangan terbaik sesuai keinginan pelanggan secara efisien.
 
 Berikut adalah daftar menu kami:
 ${menuList}
 
 Aturan Sangat Penting:
-1. Jawablah secara natural, komunikatif, dan interaktif seperti koki asli yang hangat dan bersemangat. Buat kalimat yang mengalir enak didengar, ramah, dan humoris jika cocok. Jangan kaku seperti robot cs. Jika hanya mengobrol/chit-chat, jadilah teman bincang yang asyik tentang kuliner Kalimantan Barat, resep bumbu khas Sambas, atau tips memasak.
+1. Jawablah secara SINGKAT, PADAT, dan JELAS (maksimal 2-3 kalimat per pesan). Langsung to the point.
 2. JANGAN PERNAH MENGGUNAKAN TANDA BINTANG TEBAL (seperti **) dalam teks Anda. Tulis dalam teks biasa yang bersih tanpa tanda bintang apa pun.
-3. Jika pelanggan ingin memesan makanan atau melakukan reservasi, tanyakan detailnya dengan ramah dan ringkas:
+3. Jika pelanggan ingin memesan makanan atau melakukan reservasi, tanyakan detailnya secara ringkas dan cepat:
    - Pesanan: Nama menu, kuantitas.
    - Reservasi: Nama, tanggal/hari, jam, jumlah orang.
-4. Jika detail sudah lengkap dan pelanggan mengonfirmasi, tampilkan ringkasan singkat dengan gaya koki yang riang dan WAJIB sertakan format tag berikut persis di bagian akhir teks Anda (satu baris):
+4. Jika detail sudah lengkap dan pelanggan mengonfirmasi, tampilkan ringkasan singkat satu baris dan WAJIB sertakan format tag berikut persis di bagian akhir teks Anda (satu baris):
    - Jika Pesanan: [KIRIM_WA: pesanan | Halo RM Segar, saya ingin memesan: <nama_menu> (<qty>x). Terima kasih!]
    - Jika Reservasi: [KIRIM_WA: reservasi | Halo RM Segar, saya ingin melakukan reservasi atas nama <nama> untuk tanggal <tanggal> jam <jam> sebanyak <jumlah_orang> orang. Terima kasih!]
 5. Jangan tampilkan tag [KIRIM_WA] sebelum semua data lengkap dan dikonfirmasi.`;
@@ -2814,8 +2867,30 @@ Aturan Sangat Penting:
                           {language === 'en' ? selectedShio.elementDefault : language === 'zh' ? '本命' : `Elemen ${selectedShio.elementDefault}`}
                         </span>
                       )}
+
+                      {/* Unique Trait Badge */}
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-sans font-bold bg-amber-500/10 border border-amber-500/30 text-amber-300">
+                        {selectedShio.trait[language]}
+                      </span>
                     </div>
-                    <p className="text-stone-300 text-xs leading-relaxed mt-1.5 max-w-lg font-medium font-serif italic">
+
+                    {/* Lucky Numbers, Colors, and Directions Badges */}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-stone-300 font-sans">
+                      <span className="flex items-center gap-1 bg-stone-900/90 px-2 py-0.5 rounded-md border border-stone-800">
+                        <span className="text-amber-400 font-bold">🎯 {language === 'en' ? 'Numbers:' : language === 'zh' ? '吉数:' : 'Angka Hoki:'}</span>
+                        <span className="font-extrabold text-amber-200">{selectedShio.luckyNumbers}</span>
+                      </span>
+                      <span className="flex items-center gap-1 bg-stone-900/90 px-2 py-0.5 rounded-md border border-stone-800">
+                        <span className="text-amber-400 font-bold">🎨 {language === 'en' ? 'Colors:' : language === 'zh' ? '吉色:' : 'Warna Hoki:'}</span>
+                        <span className="font-semibold text-stone-200">{selectedShio.luckyColors[language]}</span>
+                      </span>
+                      <span className="flex items-center gap-1 bg-stone-900/90 px-2 py-0.5 rounded-md border border-stone-800">
+                        <span className="text-amber-400 font-bold">🧭 {language === 'en' ? 'Direction:' : language === 'zh' ? '财位:' : 'Arah Hoki:'}</span>
+                        <span className="font-semibold text-stone-200">{selectedShio.luckyDirection[language]}</span>
+                      </span>
+                    </div>
+
+                    <p className="text-stone-300 text-xs leading-relaxed mt-2.5 max-w-lg font-medium font-serif italic border-l-2 border-amber-500/30 pl-2.5">
                       "{selectedShio.desc[language]}"
                     </p>
                   </div>
@@ -3160,11 +3235,10 @@ Aturan Sangat Penting:
 
                       <button
                         onClick={() => {
-                          if (confirm('Hapus record pesanan ini?')) {
-                            setOrders(prev => prev.filter(o => o.id !== order.id));
-                          }
+                          setOrders(prev => prev.filter(o => o.id !== order.id));
                         }}
-                        className="p-2 text-stone-300 hover:text-red-500 transition-colors"
+                        className="p-2 text-stone-300 hover:text-red-500 transition-colors cursor-pointer"
+                        title="Hapus Pesanan"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -3260,11 +3334,10 @@ Aturan Sangat Penting:
 
                       <button
                         onClick={() => {
-                          if (confirm('Hapus reservasi ini?')) {
-                            setReservations(prev => prev.filter(r => r.id !== res.id));
-                          }
+                          setReservations(prev => prev.filter(r => r.id !== res.id));
                         }}
-                        className="p-2 text-stone-300 hover:text-red-500 transition-colors"
+                        className="p-2 text-stone-300 hover:text-red-500 transition-colors cursor-pointer"
+                        title="Hapus Reservasi"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -4700,15 +4773,9 @@ Aturan Sangat Penting:
                   <div className="flex items-center gap-2">
                     <button 
                       type="button"
-                      onClick={() => {
-                        if (confirm(language === 'en' ? 'Are you sure you want to clear the chat history?' : language === 'zh' ? '您确定要清除聊天记录吗？' : 'Apakah Anda yakin ingin menghapus riwayat obrolan?')) {
-                          setChatMessages([]);
-                          localStorage.removeItem('rm_segar_chat_messages');
-                          localStorage.removeItem('rm_segar_chat_timestamp');
-                        }
-                      }}
+                      onClick={() => setShowClearChatConfirmModal(true)}
                       title={language === 'en' ? 'Clear History' : language === 'zh' ? '清除记录' : 'Hapus Riwayat'}
-                      className="w-10 h-10 bg-stone-100 hover:bg-red-50 hover:text-red-500 rounded-2xl flex items-center justify-center text-stone-500 transition-colors"
+                      className="w-10 h-10 bg-stone-100 hover:bg-red-50 hover:text-red-500 rounded-2xl flex items-center justify-center text-stone-500 transition-colors cursor-pointer"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -5673,6 +5740,69 @@ Aturan Sangat Penting:
                 >
                   <Trash2 size={16} />
                   <span>{language === 'en' ? 'Delete All' : language === 'zh' ? '清空' : 'Ya, Hapus'}</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Clear Chat History Confirmation Modal */}
+      <AnimatePresence>
+        {showClearChatConfirmModal && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowClearChatConfirmModal(false)}
+              className="fixed inset-0 bg-stone-950/60 backdrop-blur-sm z-[2000]"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm bg-white rounded-[32px] p-6 text-center space-y-5 border border-stone-100 shadow-2xl z-[2001] overflow-hidden"
+            >
+              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto shadow-inner border border-red-100">
+                <Trash2 size={30} />
+              </div>
+
+              <div className="space-y-1.5">
+                <h3 className="text-xl font-bold text-stone-900">
+                  {language === 'en' ? 'Clear Chat History?' : language === 'zh' ? '清空聊天记录？' : 'Hapus Obrolan Koki?'}
+                </h3>
+                <p className="text-xs text-stone-500 leading-relaxed px-1">
+                  {language === 'en' 
+                    ? 'Are you sure you want to clear all chat messages with Chef Teng?' 
+                    : language === 'zh' 
+                    ? '您确定要清空与 Koki Teng 厨师的所有聊天记录吗？' 
+                    : 'Apakah Anda yakin ingin menghapus semua riwayat obrolan dengan Koki Teng?'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button 
+                  onClick={() => setShowClearChatConfirmModal(false)}
+                  className="py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-2xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
+                >
+                  {language === 'en' ? 'Cancel' : language === 'zh' ? '取消' : 'Batal'}
+                </button>
+                <button 
+                  onClick={() => {
+                    setChatMessages([{
+                      role: 'model',
+                      text: TRANSLATIONS[language].kokiGreeting
+                    }]);
+                    localStorage.removeItem('rm_segar_chat_messages');
+                    localStorage.removeItem('rm_segar_chat_timestamp');
+                    setConfirmedAIMessages({});
+                    setShowClearChatConfirmModal(false);
+                  }}
+                  className="py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-red-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Trash2 size={16} />
+                  <span>{language === 'en' ? 'Clear' : language === 'zh' ? '清空' : 'Ya, Hapus'}</span>
                 </button>
               </div>
             </motion.div>
