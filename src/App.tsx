@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   ShoppingBag, 
   MapPin, 
@@ -1038,6 +1038,28 @@ export default function App() {
   const [flies, setFlies] = useState<{ id: string; startX: number; startY: number; endX: number; endY: number; item: MenuItem }[]>([]);
   const [cartPulse, setCartPulse] = useState(false);
   
+  // Section Scroll Refs
+  const popularScrollRef = useRef<HTMLDivElement>(null);
+  const menuListSectionRef = useRef<HTMLElement>(null);
+
+  const handleViewAllMenu = () => {
+    setActiveCategory('Semua');
+    
+    // Smooth scroll the popular horizontal container to the far end
+    if (popularScrollRef.current) {
+      popularScrollRef.current.scrollTo({
+        left: popularScrollRef.current.scrollWidth,
+        behavior: 'smooth'
+      });
+    }
+
+    // Smooth scroll down to the full menu section
+    setTimeout(() => {
+      if (menuListSectionRef.current) {
+        menuListSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 150);
+  };
   // Confirmation Modals State
   const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState(false);
   const [showClearHistoryConfirmModal, setShowClearHistoryConfirmModal] = useState(false);
@@ -2478,14 +2500,14 @@ Aturan Sangat Penting:
             <h2 className="text-xl font-bold text-stone-900 tracking-tight">{TRANSLATIONS[language].popular}</h2>
           </div>
           <button 
-            onClick={() => setActiveCategory('Semua')}
-            className="text-red-600 hover:text-red-700 text-sm font-bold flex items-center gap-0.5 transition-colors"
+            onClick={handleViewAllMenu}
+            className="text-red-600 hover:text-red-700 text-sm font-bold flex items-center gap-0.5 transition-colors cursor-pointer"
           >
             <span>Lihat Semua</span>
             <span>→</span>
           </button>
         </div>
-        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 md:flex lg:grid lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 md:gap-6 lg:gap-8 xl:gap-10">
+        <div ref={popularScrollRef} className="flex gap-4 overflow-x-auto no-scrollbar pb-4 md:flex lg:grid lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 md:gap-6 lg:gap-8 xl:gap-10">
           {popularItems.map((item) => (
             <motion.div 
               key={item.id}
@@ -2521,7 +2543,7 @@ Aturan Sangat Penting:
       </section>
 
       {/* Menu List */}
-      <section className="px-4 md:px-8 lg:px-10">
+      <section ref={menuListSectionRef} className="px-4 md:px-8 lg:px-10 scroll-mt-20">
         <h2 className="text-xl font-bold text-stone-900 mb-4">Menu {activeCategory}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8 xl:gap-10">
           {categoryItems.map((item) => (
