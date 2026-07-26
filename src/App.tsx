@@ -1014,6 +1014,23 @@ export default function App() {
   const [pullY, setPullY] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [pandaMessage, setPandaMessage] = useState<string | null>(null);
+
+  const triggerPandaAnimation = (msg?: string, onComplete?: () => void) => {
+    if (msg) setPandaMessage(msg);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        setPullY(0);
+        setPandaMessage(null);
+        if (onComplete) onComplete();
+      }, 2000);
+    }, 2200);
+  };
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isPDFPreviewModalOpen, setIsPDFPreviewModalOpen] = useState(false);
@@ -2322,6 +2339,9 @@ Aturan Sangat Penting:
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
     setCart([]);
     setIsCartOpen(false);
+
+    // Trigger panda swipe down animation when order is sent to WhatsApp
+    triggerPandaAnimation("Pesanan Berhasil Dikirim ke WhatsApp! 🐼📱");
   };
 
   const handleConfirmFromAIChat = (idx: number, type: 'pesanan' | 'reservasi', content: string) => {
@@ -2353,6 +2373,7 @@ Aturan Sangat Penting:
     }
 
     setConfirmedAIMessages(prev => ({ ...prev, [idx]: true }));
+    triggerPandaAnimation("Pesanan AI Berhasil Terkonfirmasi! 🐼✨");
   };
 
   const renderHome = () => (
@@ -4057,6 +4078,27 @@ Aturan Sangat Penting:
                   </div>
                 )}
               </div>
+
+              {/* Status text badge below panda */}
+              <motion.div 
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 bg-stone-900/90 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 border border-amber-500/30 backdrop-blur-md pointer-events-none"
+              >
+                {showSuccess ? (
+                  <span className="text-emerald-400 flex items-center gap-1.5">
+                    <Check size={14} className="stroke-[3]" />
+                    {pandaMessage || "Pesanan Berhasil Dikirim ke WhatsApp!"}
+                  </span>
+                ) : isRefreshing ? (
+                  <span className="text-amber-300 flex items-center gap-1.5">
+                    <Sparkles size={14} className="animate-spin text-amber-400" />
+                    {pandaMessage || "Koki Panda Sedang Memasak Pesanan..."}
+                  </span>
+                ) : (
+                  <span className="text-stone-300">Tarik untuk Memuat Ulang</span>
+                )}
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -4730,6 +4772,7 @@ Aturan Sangat Penting:
                                   onClick={() => {
                                     const phoneNumber = "6281258394293";
                                     window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(parsed.waLink!.content)}`, '_blank');
+                                    triggerPandaAnimation("Menghubungi WhatsApp RM Segar... 🐼💬");
                                   }}
                                   className="w-full py-2.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
                                 >
