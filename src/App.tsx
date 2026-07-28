@@ -1180,10 +1180,45 @@ export default function App() {
   const openWhatsApp = (phone: string, text: string) => {
     const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
     const encodedText = encodeURIComponent(text);
-    const waUrl = cleanPhone 
+
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    const nativeScheme = cleanPhone
+      ? `whatsapp://send?phone=${cleanPhone}&text=${encodedText}`
+      : `whatsapp://send?text=${encodedText}`;
+
+    const webUrl = cleanPhone
       ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedText}`
       : `https://api.whatsapp.com/send?text=${encodedText}`;
-    window.location.href = waUrl;
+
+    if (isMobile) {
+      // Direct deep link via anchor element prevents browser window navigation
+      const a = document.createElement('a');
+      a.href = nativeScheme;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+
+      let hasBlurred = false;
+      const onBlur = () => {
+        hasBlurred = true;
+      };
+      window.addEventListener('blur', onBlur, { once: true });
+
+      a.click();
+
+      setTimeout(() => {
+        if (document.body.contains(a)) {
+          document.body.removeChild(a);
+        }
+        window.removeEventListener('blur', onBlur);
+        // If app did not launch and window remained focused, fallback to web URL
+        if (!hasBlurred && document.visibilityState === 'visible') {
+          window.open(webUrl, '_blank', 'noopener,noreferrer');
+        }
+      }, 1200);
+    } else {
+      window.open(webUrl, '_blank', 'noopener,noreferrer');
+    }
   };
   // Confirmation Modals State
   const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState(false);
