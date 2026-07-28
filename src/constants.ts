@@ -61,7 +61,7 @@ export const MENU_ITEMS: MenuItem[] = [
   // Nasi
   {
     id: 'kaifon',
-    name: 'Nasi Campur',
+    name: 'Nasi Campur (Kaifon)',
     category: 'Nasi',
     description: 'Nasi campur khas Kalimantan Barat dengan aneka topping daging.',
   },

@@ -28,9 +28,14 @@ import {
   Send,
   MessageCircle,
   MessageSquare,
+  Users,
+  Share2,
   BookOpen,
   Globe,
-  Download
+  Download,
+  Gamepad2,
+  Trophy,
+  Dices
 } from 'lucide-react';
 import { motion, AnimatePresence, useDragControls } from 'motion/react';
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
@@ -370,7 +375,7 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
     },
     'kaifon': {
       id: {
-        name: 'Nasi Campur',
+        name: 'Nasi Campur (Kaifon)',
         category: 'Nasi',
         description: 'Nasi campur khas Kalimantan Barat dengan aneka topping daging.'
       },
@@ -978,6 +983,65 @@ export const SHIO_DETAILS: ShioDetail[] = [
   }
 ];
 
+export const WHEEL_ITEMS = [
+  { id: 'bakmie-kering', name: 'Bakmie Kering', emoji: '🍜', bg: '#d97706', text: '#ffffff' },
+  { id: 'kwetiao-goreng', name: 'Kwetiao Goreng', emoji: '🥢', bg: '#ea580c', text: '#ffffff' },
+  { id: 'kaifon', name: 'Nasi Campur (Kaifon)', emoji: '🍛', bg: '#dc2626', text: '#ffffff' },
+  { id: 'capcai-kuah', name: 'Capcai Kuah', emoji: '🍲', bg: '#059669', text: '#ffffff' },
+  { id: 'jeruk-nipis', name: 'Es Jeruk Nipis', emoji: '🍋', bg: '#eab308', text: '#ffffff' },
+  { id: 'susu-kedelai', name: 'Susu Kedelai', emoji: '🥛', bg: '#7c3aed', text: '#ffffff' },
+  { id: 'kwetiao-kering', name: 'Kwetiao Kering', emoji: '🥢', bg: '#b45309', text: '#ffffff' },
+  { id: 'kopi', name: 'Kopi Hitam', emoji: '☕', bg: '#44403c', text: '#ffffff' }
+];
+
+export interface BlockPiece {
+  id: string;
+  shape: number[][];
+  color: string;
+  emoji: string;
+}
+
+export const BLOCK_PRESETS: Omit<BlockPiece, 'id'>[] = [
+  { shape: [[1]], color: '#f59e0b', emoji: '🍜' },
+  { shape: [[1, 1]], color: '#ef4444', emoji: '🥢' },
+  { shape: [[1], [1]], color: '#10b981', emoji: '🍛' },
+  { shape: [[1, 1, 1]], color: '#3b82f6', emoji: '🥟' },
+  { shape: [[1], [1], [1]], color: '#8b5cf6', emoji: '☕' },
+  { shape: [[1, 1], [1, 1]], color: '#ec4899', emoji: '🍋' },
+  { shape: [[1, 1, 1], [0, 1, 0]], color: '#f97316', emoji: '🍡' },
+  { shape: [[1, 0], [1, 1]], color: '#14b8a6', emoji: '🍚' },
+  { shape: [[0, 1], [1, 1]], color: '#06b6d4', emoji: '🧋' },
+  { shape: [[1, 1, 1, 1]], color: '#84cc16', emoji: '🥬' },
+  { shape: [[1, 1], [1, 0]], color: '#d97706', emoji: '🥟' }
+];
+
+export const canPlacePiece = (board: (string | null)[][], shape: number[][], startR: number, startC: number): boolean => {
+  for (let r = 0; r < shape.length; r++) {
+    for (let c = 0; c < shape[r].length; c++) {
+      if (shape[r][c] === 1) {
+        const boardR = startR + r;
+        const boardC = startC + c;
+        if (boardR < 0 || boardR >= 8 || boardC < 0 || boardC >= 8) return false;
+        if (board[boardR][boardC] !== null) return false;
+      }
+    }
+  }
+  return true;
+};
+
+export const canFitAnywhere = (board: (string | null)[][], pieces: (BlockPiece | null)[]): boolean => {
+  const activePieces = pieces.filter((p): p is BlockPiece => p !== null);
+  if (activePieces.length === 0) return true;
+  for (const piece of activePieces) {
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (canPlacePiece(board, piece.shape, r, c)) return true;
+      }
+    }
+  }
+  return false;
+};
+
 // Admin Credentials for Multi-User Dashboard Access
 const ADMIN_PHONE_NUMBERS = ['6289518948115', '089518948115', '89518948115'];
 const ADMIN_EMAILS = ['livinajong123@gmail.com', 'valensiarainy73@gmail.com'];
@@ -1112,6 +1176,15 @@ export default function App() {
       }
     }, 150);
   };
+
+  const openWhatsApp = (phone: string, text: string) => {
+    const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
+    const encodedText = encodeURIComponent(text);
+    const waUrl = cleanPhone 
+      ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedText}`
+      : `https://api.whatsapp.com/send?text=${encodedText}`;
+    window.location.href = waUrl;
+  };
   // Confirmation Modals State
   const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState(false);
   const [showClearHistoryConfirmModal, setShowClearHistoryConfirmModal] = useState(false);
@@ -1122,10 +1195,58 @@ export default function App() {
   const [currentFortune, setCurrentFortune] = useState<ChineseFortune | null>(null);
   const [isFortuneModalOpen, setIsFortuneModalOpen] = useState(false);
   
+  // Spin Wheel Game States
+  const [isWheelModalOpen, setIsWheelModalOpen] = useState(false);
+  const [isWheelSpinning, setIsWheelSpinning] = useState(false);
+  const [wheelRotation, setWheelRotation] = useState(0);
+  const [wonWheelMenu, setWonWheelMenu] = useState<MenuItem | null>(null);
+
   // Shio Zodiac Matcher States
   const [selectedShio, setSelectedShio] = useState<ShioDetail | null>(null);
   const [birthYear, setBirthYear] = useState<string>('');
   const [showShioResult, setShowShioResult] = useState(false);
+  const [isShioModalOpen, setIsShioModalOpen] = useState(false);
+
+  // Block Blast Kuliner Game States
+  const [isBlockBlastModalOpen, setIsBlockBlastModalOpen] = useState(false);
+  const [bbBoard, setBbBoard] = useState<(string | null)[][]>(() => Array(8).fill(null).map(() => Array(8).fill(null)));
+  const [bbScore, setBbScore] = useState(0);
+  const [bbHighScore, setBbHighScore] = useState<number>(() => {
+    try {
+      return parseInt(localStorage.getItem('rm_segar_bb_hi') || '0', 10);
+    } catch { return 0; }
+  });
+  const [bbPieces, setBbPieces] = useState<(BlockPiece | null)[]>([]);
+  const [bbSelectedPieceIdx, setBbSelectedPieceIdx] = useState<number | null>(null);
+  const [bbHoverPos, setBbHoverPos] = useState<{ r: number, c: number } | null>(null);
+  const [bbCombo, setBbCombo] = useState(0);
+  const [bbIsGameOver, setBbIsGameOver] = useState(false);
+  const [bbClearingCells, setBbClearingCells] = useState<string[]>([]);
+  const [bbRewardMenu, setBbRewardMenu] = useState<MenuItem | null>(null);
+
+  // Multi-Game "Yang Kalah Traktir" States
+  const [isTraktirModalOpen, setIsTraktirModalOpen] = useState(false);
+  const [traktirGameMode, setTraktirGameMode] = useState<'wheel' | 'bomb' | 'tap'>('wheel');
+  const [traktirPlayers, setTraktirPlayers] = useState<string[]>(['Andi', 'Budi', 'Citra', 'Dedi']);
+  const [newPlayerInput, setNewPlayerInput] = useState('');
+
+  // Mode 1: Roda Traktir
+  const [traktirWheelRotation, setTraktirWheelRotation] = useState(0);
+  const [traktirIsSpinning, setTraktirIsSpinning] = useState(false);
+  const [traktirLoser, setTraktirLoser] = useState<string | null>(null);
+
+  // Mode 2: Bom Traktir
+  const [bombGrid, setBombGrid] = useState<{ id: number; isOpen: boolean; isBomb: boolean; foodEmoji: string }[]>([]);
+  const [bombCurrentTurn, setBombCurrentTurn] = useState(0);
+  const [bombLoser, setBombLoser] = useState<string | null>(null);
+
+  // Mode 3: Adu Ketuk Sumpit
+  const [tapP1Score, setTapP1Score] = useState(0);
+  const [tapP2Score, setTapP2Score] = useState(0);
+  const [tapTimeLeft, setTapTimeLeft] = useState(5);
+  const [tapIsActive, setTapIsActive] = useState(false);
+  const [tapCountdown, setTapCountdown] = useState<number | null>(null);
+  const [tapLoser, setTapLoser] = useState<string | null>(null);
   
   // Onboarding State
   const [activeTour, setActiveTour] = useState<'home' | 'search' | 'heart' | 'profile' | 'about' | null>(null);
@@ -1873,7 +1994,7 @@ Aturan Sangat Penting:
           const token = Math.floor(1000 + Math.random() * 9000).toString();
           setResetToken(token);
           const message = `Halo! Kode OTP masuk RM Segar Anda adalah: *${token}*`;
-          window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+          openWhatsApp(cleanPhone, message);
           setLoginMode('verify');
           setShowOtpNotification(token);
         } else {
@@ -1979,6 +2100,155 @@ Aturan Sangat Penting:
     setCurrentFortune(null);
   };
 
+  const handleSpinWheel = () => {
+    if (isWheelSpinning) return;
+    setIsWheelSpinning(true);
+    setWonWheelMenu(null);
+
+    const randomIdx = Math.floor(Math.random() * WHEEL_ITEMS.length);
+    const sliceAngle = 360 / WHEEL_ITEMS.length;
+    const sliceCenter = randomIdx * sliceAngle + (sliceAngle / 2);
+    const targetSliceAngle = (270 - sliceCenter + 360) % 360;
+    
+    const fullSpins = 360 * 6;
+    const currentMod = wheelRotation % 360;
+    const additionalAngle = (targetSliceAngle - currentMod + 360) % 360;
+    const newRotation = wheelRotation + fullSpins + additionalAngle;
+
+    setWheelRotation(newRotation);
+
+    setTimeout(() => {
+      setIsWheelSpinning(false);
+      const wonItem = MENU_ITEMS.find(m => m.id === WHEEL_ITEMS[randomIdx].id) || MENU_ITEMS[0];
+      setWonWheelMenu(wonItem);
+    }, 4200);
+  };
+
+  const openBlockBlastGame = () => {
+    const empty = Array(8).fill(null).map(() => Array(8).fill(null));
+    const initialPieces = [0, 1, 2].map((i) => {
+      const preset = BLOCK_PRESETS[Math.floor(Math.random() * BLOCK_PRESETS.length)];
+      return { ...preset, id: `piece_${Date.now()}_${i}_${Math.random()}` };
+    });
+    setBbBoard(empty);
+    setBbScore(0);
+    setBbCombo(0);
+    setBbPieces(initialPieces);
+    setBbSelectedPieceIdx(null);
+    setBbHoverPos(null);
+    setBbIsGameOver(false);
+    setBbClearingCells([]);
+    setBbRewardMenu(null);
+    setIsBlockBlastModalOpen(true);
+  };
+
+  const placeBlockPiece = (startR: number, startC: number) => {
+    if (bbSelectedPieceIdx === null || !bbPieces[bbSelectedPieceIdx]) return;
+    const piece = bbPieces[bbSelectedPieceIdx]!;
+    
+    if (!canPlacePiece(bbBoard, piece.shape, startR, startC)) return;
+
+    // 1. Clone board and place piece
+    const newBoard = bbBoard.map(row => [...row]);
+    let placedBlocksCount = 0;
+    for (let r = 0; r < piece.shape.length; r++) {
+      for (let c = 0; c < piece.shape[r].length; c++) {
+        if (piece.shape[r][c] === 1) {
+          newBoard[startR + r][startC + c] = piece.color;
+          placedBlocksCount++;
+        }
+      }
+    }
+
+    // 2. Remove placed piece from pieces array
+    const newPieces = [...bbPieces];
+    newPieces[bbSelectedPieceIdx] = null;
+
+    // 3. Check for full rows and columns
+    const fullRows: number[] = [];
+    for (let r = 0; r < 8; r++) {
+      if (newBoard[r].every(cell => cell !== null)) {
+        fullRows.push(r);
+      }
+    }
+
+    const fullCols: number[] = [];
+    for (let c = 0; c < 8; c++) {
+      let isFull = true;
+      for (let r = 0; r < 8; r++) {
+        if (newBoard[r][c] === null) {
+          isFull = false;
+          break;
+        }
+      }
+      if (isFull) fullCols.push(c);
+    }
+
+    const linesCleared = fullRows.length + fullCols.length;
+    let addedScore = placedBlocksCount * 10;
+    let newCombo = bbCombo;
+
+    const clearedKeys: string[] = [];
+
+    if (linesCleared > 0) {
+      newCombo += 1;
+      addedScore += linesCleared * 100 * newCombo;
+
+      fullRows.forEach(r => {
+        for (let c = 0; c < 8; c++) clearedKeys.push(`${r}_${c}`);
+      });
+      fullCols.forEach(c => {
+        for (let r = 0; r < 8; r++) clearedKeys.push(`${r}_${c}`);
+      });
+
+      setBbClearingCells(clearedKeys);
+
+      fullRows.forEach(r => {
+        for (let c = 0; c < 8; c++) newBoard[r][c] = null;
+      });
+      fullCols.forEach(c => {
+        for (let r = 0; r < 8; r++) newBoard[r][c] = null;
+      });
+
+      setTimeout(() => {
+        setBbClearingCells([]);
+      }, 400);
+    } else {
+      newCombo = 0;
+    }
+
+    const newScore = bbScore + addedScore;
+    setBbScore(newScore);
+    setBbCombo(newCombo);
+    if (newScore > bbHighScore) {
+      setBbHighScore(newScore);
+      try { localStorage.setItem('rm_segar_bb_hi', newScore.toString()); } catch {}
+    }
+
+    setBbBoard(newBoard);
+    setBbSelectedPieceIdx(null);
+    setBbHoverPos(null);
+
+    // 4. Check if all 3 pieces are used -> spawn new 3 pieces
+    let updatedPieces = newPieces;
+    if (newPieces.every(p => p === null)) {
+      updatedPieces = [0, 1, 2].map((i) => {
+        const preset = BLOCK_PRESETS[Math.floor(Math.random() * BLOCK_PRESETS.length)];
+        return { ...preset, id: `piece_${Date.now()}_${i}_${Math.random()}` };
+      });
+      setBbPieces(updatedPieces);
+    } else {
+      setBbPieces(newPieces);
+    }
+
+    // 5. Check Game Over
+    if (!canFitAnywhere(newBoard, updatedPieces)) {
+      setBbIsGameOver(true);
+      const randomMenu = MENU_ITEMS[Math.floor(Math.random() * MENU_ITEMS.length)];
+      setBbRewardMenu(randomMenu);
+    }
+  };
+
   const startCrackingCookie = () => {
     setFortuneState('shaking');
     setTimeout(() => {
@@ -2052,6 +2322,131 @@ Aturan Sangat Penting:
       setBirthYear('');
       setShowShioResult(true);
     }
+  };
+
+  // Yang Kalah Traktir Multi-Game Handlers
+  const initTraktirBombGame = (playerList = traktirPlayers) => {
+    const bombIndex = Math.floor(Math.random() * 12);
+    const foodEmojis = ['🍜', '🥟', '🍲', '☕', '🧋', '🍋', '🍢', '🍚', '🍗', '🍤', '🥒', '🍱'];
+    
+    const grid = Array(12).fill(null).map((_, i) => ({
+      id: i,
+      isOpen: false,
+      isBomb: i === bombIndex,
+      foodEmoji: foodEmojis[i % foodEmojis.length]
+    }));
+
+    setBombGrid(grid);
+    setBombCurrentTurn(0);
+    setBombLoser(null);
+  };
+
+  const openTraktirGame = () => {
+    setTraktirLoser(null);
+    initTraktirBombGame();
+    setTapP1Score(0);
+    setTapP2Score(0);
+    setTapTimeLeft(5);
+    setTapIsActive(false);
+    setTapCountdown(null);
+    setTapLoser(null);
+    setIsTraktirModalOpen(true);
+  };
+
+  const addTraktirPlayer = () => {
+    const trimmed = newPlayerInput.trim();
+    if (!trimmed) return;
+    if (traktirPlayers.includes(trimmed)) return;
+    setTraktirPlayers(prev => [...prev, trimmed]);
+    setNewPlayerInput('');
+  };
+
+  const removeTraktirPlayer = (index: number) => {
+    if (traktirPlayers.length <= 2) return;
+    setTraktirPlayers(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSpinTraktirWheel = () => {
+    if (traktirPlayers.length < 2 || traktirIsSpinning) return;
+    setTraktirIsSpinning(true);
+    setTraktirLoser(null);
+
+    const chosenIndex = Math.floor(Math.random() * traktirPlayers.length);
+    const sliceAngle = 360 / traktirPlayers.length;
+    const targetAngle = 360 - (chosenIndex * sliceAngle + sliceAngle / 2);
+    const extraSpins = 5 * 360;
+    const nextRotation = traktirWheelRotation + extraSpins + (targetAngle - (traktirWheelRotation % 360));
+
+    setTraktirWheelRotation(nextRotation);
+
+    setTimeout(() => {
+      setTraktirIsSpinning(false);
+      setTraktirLoser(traktirPlayers[chosenIndex]);
+    }, 3600);
+  };
+
+  const handleOpenBombCell = (index: number) => {
+    if (bombGrid[index]?.isOpen || bombLoser) return;
+
+    const newGrid = [...bombGrid];
+    newGrid[index] = { ...newGrid[index], isOpen: true };
+    setBombGrid(newGrid);
+
+    if (newGrid[index].isBomb) {
+      const loser = traktirPlayers[bombCurrentTurn % traktirPlayers.length];
+      setBombLoser(loser);
+    } else {
+      setBombCurrentTurn(prev => (prev + 1) % traktirPlayers.length);
+    }
+  };
+
+  const startTapDuel = () => {
+    setTapP1Score(0);
+    setTapP2Score(0);
+    setTapTimeLeft(5);
+    setTapIsActive(false);
+    setTapLoser(null);
+    setTapCountdown(3);
+
+    const countdownInterval = setInterval(() => {
+      setTapCountdown(prev => {
+        if (prev === null || prev <= 1) {
+          clearInterval(countdownInterval);
+          setTapIsActive(true);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  useEffect(() => {
+    let timer: any;
+    if (tapIsActive && tapTimeLeft > 0) {
+      timer = setInterval(() => {
+        setTapTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setTapIsActive(false);
+            if (tapP1Score < tapP2Score) {
+              setTapLoser(traktirPlayers[0] || 'Pemain 1');
+            } else if (tapP2Score < tapP1Score) {
+              setTapLoser(traktirPlayers[1] || 'Pemain 2');
+            } else {
+              setTapLoser('SERI! Keduanya Traktir Seporsi Bakmie!');
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [tapIsActive, tapTimeLeft, tapP1Score, tapP2Score, traktirPlayers]);
+
+  const shareTraktirWhatsApp = (loserName: string, gameName: string) => {
+    const text = `📢 *OFFICIAL ANNOUNCEMENT: GAME YANG KALAH TRAKTIR RM SEGAR* 📢\n\nHasil Pertandingan (${gameName}):\n👑 *YANG KALAH & WAJIB TRAKTIR:* ${loserName.toUpperCase()}! 💸\n\nYuk kumpul & pesan Bakmie Kering & Kwetiao Goreng RM Segar Pontianak!\nBuka Menu & Pesan: ${window.location.href}`;
+    openWhatsApp('', text);
   };
 
   const handleTabChange = (tab: string) => {
@@ -2373,29 +2768,29 @@ Aturan Sangat Penting:
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const sendToWhatsApp = () => {
-    const phoneNumber = "+6281258394293";
+    const phoneNumber = "6281258394293";
     const orderDetails = cart.map(item => {
       let detail = `- ${item.name}${item.option ? ` (${item.option})` : ''} (${item.quantity}x)`;
-      if (item.note) detail += `%0A  *Catatan: ${item.note}*`;
+      if (item.note) detail += `\n  *Catatan: ${item.note}*`;
       return detail;
-    }).join('%0A');
+    }).join('\n');
 
     let extraInfo = '';
     if (orderType === 'Makan di Tempat') {
       if (tableNumber) {
-        extraInfo = `%0A%0A*Detail Penyajian:* Makan di Tempat%0A*Nomor Meja:* ${tableNumber}`;
+        extraInfo = `\n\n*Detail Penyajian:* Makan di Tempat\n*Nomor Meja:* ${tableNumber}`;
       } else {
-        extraInfo = `%0A%0A*Detail Penyajian:* Makan di Tempat`;
+        extraInfo = `\n\n*Detail Penyajian:* Makan di Tempat`;
       }
     } else {
       const methodText = deliveryMethod === 'kirim_alamat' ? 'Kirim ke Alamat' : 'Ambil Sendiri di Toko';
-      extraInfo = `%0A%0A*Detail Penyajian:* Bungkus (${methodText})`;
+      extraInfo = `\n\n*Detail Penyajian:* Bungkus (${methodText})`;
       if (deliveryMethod === 'kirim_alamat' && deliveryAddress) {
-        extraInfo += `%0A*Alamat Pengiriman:* ${deliveryAddress}`;
+        extraInfo += `\n*Alamat Pengiriman:* ${deliveryAddress}`;
       }
     }
 
-    const message = `Halo RM Segar,%0A%0ASaya ingin memesan:%0A${orderDetails}${extraInfo}%0A%0ATerima kasih!`;
+    const message = `Halo RM Segar,\n\nSaya ingin memesan:\n${orderDetails}${extraInfo}\n\nTerima kasih!`;
     
     // Save to history
     const newOrder: Order = {
@@ -2411,7 +2806,7 @@ Aturan Sangat Penting:
     };
     setOrders(prev => [newOrder, ...prev]);
     
-    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+    openWhatsApp(phoneNumber, message);
     setCart([]);
     setIsCartOpen(false);
 
@@ -3693,6 +4088,8 @@ Aturan Sangat Penting:
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+
             {user && isAdminUser(user) && (
               <button 
                 onClick={() => setShowAdminDashboard(true)}
@@ -4860,7 +5257,7 @@ Aturan Sangat Penting:
                                 <button
                                   onClick={() => {
                                     const phoneNumber = "6281258394293";
-                                    window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(parsed.waLink!.content)}`, '_blank');
+                                    openWhatsApp(phoneNumber, parsed.waLink!.content);
                                     triggerPandaAnimation("Menghubungi WhatsApp RM Segar... 🐼💬");
                                   }}
                                   className="w-full py-2.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
@@ -5805,6 +6202,974 @@ Aturan Sangat Penting:
                   <span>{language === 'en' ? 'Clear' : language === 'zh' ? '清空' : 'Ya, Hapus'}</span>
                 </button>
               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Spin Wheel Game Modal */}
+      <AnimatePresence>
+        {isWheelModalOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { if (!isWheelSpinning) setIsWheelModalOpen(false); }}
+              className="fixed inset-0 bg-stone-950/80 backdrop-blur-md z-[120]"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 30 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-md bg-stone-900 rounded-[36px] p-6 text-center space-y-6 border border-amber-500/30 shadow-2xl z-[120] overflow-hidden text-white"
+            >
+              {/* Header with Close */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🎡</span>
+                  <div className="text-left">
+                    <h3 className="font-black text-amber-300 text-lg leading-tight">RODA PUTAR HOKI</h3>
+                    <p className="text-[10px] text-stone-400 font-semibold">Tentukan Pilihan Kuliner Hari Ini!</p>
+                  </div>
+                </div>
+                {!isWheelSpinning && (
+                  <button 
+                    onClick={() => setIsWheelModalOpen(false)}
+                    className="w-9 h-9 bg-stone-800 text-stone-400 hover:text-white rounded-full flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+
+              {/* Wheel Container */}
+              <div className="relative flex flex-col items-center justify-center py-2">
+                {/* Top Pointer Arrow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20 pointer-events-none drop-shadow-md">
+                  <div className="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[22px] border-t-amber-400 animate-pulse" />
+                </div>
+
+                {/* SVG Wheel */}
+                <div className="relative p-2 bg-gradient-to-br from-amber-500/20 to-red-600/20 rounded-full border-4 border-amber-500/40 shadow-inner">
+                  <svg viewBox="0 0 300 300" className="w-60 h-60 sm:w-68 sm:h-68 drop-shadow-2xl overflow-visible">
+                    <g 
+                      style={{ 
+                        transform: `rotate(${wheelRotation}deg)`, 
+                        transformOrigin: '150px 150px',
+                        transition: isWheelSpinning ? 'transform 4s cubic-bezier(0.15, 0.85, 0.15, 1)' : 'none'
+                      }}
+                    >
+                      {WHEEL_ITEMS.map((item, i) => {
+                        const startAngle = i * 45;
+                        const endAngle = (i + 1) * 45;
+                        const midAngle = i * 45 + 22.5;
+                        const rad = Math.PI / 180;
+                        
+                        const x1 = 150 + 140 * Math.cos(startAngle * rad);
+                        const y1 = 150 + 140 * Math.sin(startAngle * rad);
+                        const x2 = 150 + 140 * Math.cos(endAngle * rad);
+                        const y2 = 150 + 140 * Math.sin(endAngle * rad);
+
+                        const labelX = 150 + 95 * Math.cos(midAngle * rad);
+                        const labelY = 150 + 95 * Math.sin(midAngle * rad);
+
+                        return (
+                          <g key={item.id}>
+                            <path
+                              d={`M 150 150 L ${x1} ${y1} A 140 140 0 0 1 ${x2} ${y2} Z`}
+                              fill={item.bg}
+                              stroke="#ffffff"
+                              strokeWidth="2.5"
+                            />
+                            <text
+                              x={labelX}
+                              y={labelY}
+                              fill={item.text}
+                              fontSize="20"
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              style={{ userSelect: 'none', pointerEvents: 'none' }}
+                            >
+                              {item.emoji}
+                            </text>
+                          </g>
+                        );
+                      })}
+                      {/* Center Pin */}
+                      <circle cx="150" cy="150" r="22" fill="#ffffff" stroke="#e5e7eb" strokeWidth="3" />
+                      <circle cx="150" cy="150" r="12" fill="#f59e0b" />
+                    </g>
+                  </svg>
+                </div>
+              </div>
+
+              {/* Action or Result */}
+              {wonWheelMenu ? (
+                <motion.div 
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="p-4 bg-stone-800/90 rounded-2xl border border-amber-500/40 text-left space-y-3"
+                >
+                  <div className="flex items-center gap-2 text-amber-300 font-extrabold text-xs">
+                    <Sparkles size={16} />
+                    <span>SELAMAT! RODA MEMILIH:</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-amber-500/20 text-amber-300 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 border border-amber-500/30">
+                      {WHEEL_ITEMS.find(w => w.id === wonWheelMenu.id)?.emoji || '🍲'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-extrabold text-white text-sm truncate">{wonWheelMenu.name}</h4>
+                      <p className="text-amber-300 text-[11px] leading-tight line-clamp-1">{wonWheelMenu.description}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      onClick={handleSpinWheel}
+                      className="py-2.5 bg-stone-700 hover:bg-stone-600 text-stone-200 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer"
+                    >
+                      Putar Lagi 🎡
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        addToCart(wonWheelMenu, undefined, e);
+                        setIsWheelModalOpen(false);
+                      }}
+                      className="py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-stone-950 font-black rounded-xl text-xs shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <ShoppingBag size={14} />
+                      <span>+ Keranjang</span>
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <button
+                  disabled={isWheelSpinning}
+                  onClick={handleSpinWheel}
+                  className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                    isWheelSpinning
+                      ? 'bg-stone-800 text-stone-500 border border-stone-700 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:brightness-110 text-stone-950 shadow-lg shadow-orange-500/20 active:scale-98'
+                  }`}
+                >
+                  <Dices size={20} className={isWheelSpinning ? 'animate-spin' : ''} />
+                  <span>{isWheelSpinning ? 'MEMUTAR RODA...' : 'PUTAR RODA HOKI 🎡'}</span>
+                </button>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Shio Zodiac Matcher Modal */}
+      <AnimatePresence>
+        {isShioModalOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsShioModalOpen(false)}
+              className="fixed inset-0 bg-stone-950/80 backdrop-blur-md z-[120]"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 30 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-lg max-h-[85vh] bg-stone-900 rounded-[36px] p-6 text-stone-100 space-y-5 border border-amber-500/30 shadow-2xl z-[120] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🐉</span>
+                  <div>
+                    <h3 className="font-black text-amber-300 text-lg leading-tight">RAMALAN SHIO KULINER</h3>
+                    <p className="text-[10px] text-stone-400">Temukan Elemen & Menu Hoki Anda</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsShioModalOpen(false)}
+                  className="w-9 h-9 bg-stone-800 text-stone-400 hover:text-white rounded-full flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Year Input */}
+              <div className="bg-stone-800/80 p-4 rounded-2xl border border-stone-700/50 space-y-2">
+                <label className="text-xs font-bold text-amber-200 block">
+                  Masukkan Tahun Kelahiran Anda:
+                </label>
+                <div className="flex gap-2">
+                  <input 
+                    type="number"
+                    placeholder="Contoh: 1996"
+                    value={birthYear}
+                    onChange={(e) => {
+                      setBirthYear(e.target.value);
+                      const res = getShioAndElementFromYear(e.target.value);
+                      if (res) setSelectedShio(res);
+                    }}
+                    className="flex-1 bg-stone-900 border border-stone-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 font-mono"
+                  />
+                  <button 
+                    onClick={() => {
+                      const res = getShioAndElementFromYear(birthYear);
+                      if (res) setSelectedShio(res);
+                    }}
+                    className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all cursor-pointer"
+                  >
+                    Cek Hoki
+                  </button>
+                </div>
+              </div>
+
+              {/* Shio Grid Selection */}
+              <div className="space-y-2">
+                <p className="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Atau Pilih Shio Anda Langsung:</p>
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                  {SHIO_DETAILS.map((shio) => (
+                    <button
+                      key={shio.id}
+                      onClick={() => {
+                        setSelectedShio(shio);
+                      }}
+                      className={`p-2.5 rounded-2xl flex flex-col items-center justify-center border transition-all cursor-pointer ${
+                        selectedShio?.id === shio.id 
+                          ? 'bg-amber-500/20 border-amber-400 text-amber-300 scale-105 shadow-md' 
+                          : 'bg-stone-800/60 border-stone-700/60 text-stone-300 hover:bg-stone-800'
+                      }`}
+                    >
+                      <span className="text-2xl">{shio.emoji}</span>
+                      <span className="text-[10px] font-bold mt-1 truncate max-w-full">{shio.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Selected Shio Result Card */}
+              {selectedShio && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-gradient-to-br from-amber-950/40 via-stone-800/80 to-stone-900 p-5 rounded-3xl border border-amber-500/40 space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl">{selectedShio.emoji}</span>
+                      <div>
+                        <h4 className="font-black text-amber-300 text-base">Shio {selectedShio.name} ({selectedShio.zh})</h4>
+                        <p className="text-xs text-stone-300 font-medium">{selectedShio.trait[language]}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-stone-300 leading-relaxed italic bg-stone-900/60 p-3 rounded-2xl border border-stone-800">
+                    "{selectedShio.desc[language]}"
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800">
+                      <span className="text-[10px] text-amber-400 font-bold block uppercase">Angka Hoki</span>
+                      <span className="font-bold text-stone-200">{selectedShio.luckyNumbers}</span>
+                    </div>
+                    <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800">
+                      <span className="text-[10px] text-amber-400 font-bold block uppercase">Warna Hoki</span>
+                      <span className="font-bold text-stone-200">{selectedShio.luckyColors[language]}</span>
+                    </div>
+                  </div>
+
+                  {/* Matching Menu Item */}
+                  {(() => {
+                    const matchedMenu = MENU_ITEMS.find(m => m.id === selectedShio.foodId) || MENU_ITEMS[0];
+                    return (
+                      <div className="pt-2 border-t border-stone-800 space-y-2">
+                        <span className="text-[11px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                          <Sparkles size={14} /> Menu Hoki Shio Anda:
+                        </span>
+                        <div className="flex items-center justify-between bg-stone-900/90 p-3 rounded-2xl border border-amber-500/30">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-amber-500/20 text-amber-300 rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0 border border-amber-500/30">
+                              🍜
+                            </div>
+                            <div>
+                              <p className="font-bold text-white text-xs">{matchedMenu.name}</p>
+                              <p className="text-amber-300 text-[10px] leading-tight line-clamp-1">{matchedMenu.description}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              addToCart(matchedMenu, undefined, e);
+                              setIsShioModalOpen(false);
+                            }}
+                            className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1 flex-shrink-0"
+                          >
+                            <ShoppingBag size={12} />
+                            <span>+ Keranjang</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </motion.div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Block Blast Kuliner Modal */}
+      <AnimatePresence>
+        {isBlockBlastModalOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsBlockBlastModalOpen(false)}
+              className="fixed inset-0 bg-stone-950/85 backdrop-blur-md z-[120]"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 30 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-md max-h-[90vh] bg-stone-900 rounded-[36px] p-5 text-stone-100 space-y-4 border border-amber-500/40 shadow-2xl z-[120] overflow-y-auto"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🧩</span>
+                  <div>
+                    <h3 className="font-black text-amber-300 text-lg leading-tight">BLOCK BLAST KULINER</h3>
+                    <p className="text-[10px] text-stone-400">Susun Balok, Bersihkan Garis & Raih Poin!</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsBlockBlastModalOpen(false)}
+                  className="w-9 h-9 bg-stone-800 text-stone-400 hover:text-white rounded-full flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Score Dashboard */}
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="p-2.5 bg-stone-800/80 rounded-2xl border border-stone-700/60">
+                  <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Skor</span>
+                  <span className="text-xl font-black text-amber-300 font-mono">{bbScore}</span>
+                </div>
+                <div className="p-2.5 bg-stone-800/80 rounded-2xl border border-stone-700/60 flex flex-col justify-center items-center">
+                  <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Combo</span>
+                  {bbCombo > 0 ? (
+                    <span className="text-sm font-black text-orange-400 animate-bounce">🔥 x{bbCombo}</span>
+                  ) : (
+                    <span className="text-xs font-bold text-stone-500">-</span>
+                  )}
+                </div>
+                <div className="p-2.5 bg-stone-800/80 rounded-2xl border border-stone-700/60">
+                  <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Tertinggi 🏆</span>
+                  <span className="text-xl font-black text-amber-400 font-mono">{bbHighScore}</span>
+                </div>
+              </div>
+
+              {/* Game Over Banner or Instructions */}
+              {bbIsGameOver ? (
+                <motion.div 
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="p-4 bg-gradient-to-br from-red-950 via-stone-900 to-amber-950 rounded-2xl border border-amber-500/50 text-center space-y-3"
+                >
+                  <div className="w-12 h-12 bg-amber-500/20 text-amber-300 rounded-full flex items-center justify-center mx-auto text-2xl border border-amber-500/40">
+                    🏆
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-black text-amber-200">GAME OVER!</h4>
+                    <p className="text-xs text-stone-300 mt-0.5">Skor Akhir Anda: <strong className="text-amber-300 font-mono text-sm">{bbScore} Poin</strong></p>
+                  </div>
+
+                  {bbRewardMenu && (
+                    <div className="bg-stone-900/90 p-3 rounded-xl border border-amber-500/30 text-left flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-2xl">🍜</span>
+                        <div>
+                          <span className="text-[9px] font-bold text-amber-400 uppercase block">Voucher Rekomendasi Hoki:</span>
+                          <span className="font-bold text-white text-xs">{bbRewardMenu.name}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          addToCart(bbRewardMenu, undefined, e);
+                          setIsBlockBlastModalOpen(false);
+                        }}
+                        className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1"
+                      >
+                        <ShoppingBag size={12} />
+                        <span>+ Pesan</span>
+                      </button>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={openBlockBlastGame}
+                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:brightness-110 text-stone-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all active:scale-95 cursor-pointer"
+                  >
+                    Main Lagi 🧩
+                  </button>
+                </motion.div>
+              ) : (
+                <div className="text-[11px] text-stone-400 text-center">
+                  {bbSelectedPieceIdx !== null ? (
+                    <span className="text-amber-300 font-extrabold animate-pulse">
+                      👇 Ketuk petak di papan untuk menaruh balok yang dipilih!
+                    </span>
+                  ) : (
+                    <span>Pilih balok di bawah, lalu ketuk posisi di papan 8x8:</span>
+                  )}
+                </div>
+              )}
+
+              {/* 8x8 Board */}
+              <div className="p-2.5 bg-stone-950/90 rounded-2xl border border-stone-800 shadow-inner mx-auto w-fit">
+                <div className="grid grid-cols-8 gap-1">
+                  {bbBoard.map((row, r) =>
+                    row.map((cell, c) => {
+                      const isClearing = bbClearingCells.includes(`${r}_${c}`);
+                      
+                      // Check if ghost preview valid
+                      let isGhost = false;
+                      let isGhostValid = false;
+                      if (bbSelectedPieceIdx !== null && bbHoverPos && bbPieces[bbSelectedPieceIdx]) {
+                        const piece = bbPieces[bbSelectedPieceIdx]!;
+                        const relativeR = r - bbHoverPos.r;
+                        const relativeC = c - bbHoverPos.c;
+                        if (
+                          relativeR >= 0 && relativeR < piece.shape.length &&
+                          relativeC >= 0 && relativeC < piece.shape[0].length &&
+                          piece.shape[relativeR][relativeC] === 1
+                        ) {
+                          isGhost = true;
+                          isGhostValid = canPlacePiece(bbBoard, piece.shape, bbHoverPos.r, bbHoverPos.c);
+                        }
+                      }
+
+                      return (
+                        <button
+                          key={`${r}_${c}`}
+                          type="button"
+                          onMouseEnter={() => setBbHoverPos({ r, c })}
+                          onClick={() => {
+                            if (bbSelectedPieceIdx !== null) {
+                              placeBlockPiece(r, c);
+                            }
+                          }}
+                          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg transition-all flex items-center justify-center relative cursor-pointer ${
+                            isClearing
+                              ? 'bg-amber-300 scale-125 z-10 shadow-lg shadow-amber-400 animate-ping'
+                              : cell
+                              ? 'shadow-xs border border-white/20'
+                              : isGhost
+                              ? isGhostValid ? 'bg-amber-400/50 border border-amber-300 scale-105' : 'bg-red-500/40 border border-red-400'
+                              : 'bg-stone-900 hover:bg-stone-800/80 border border-stone-800/60'
+                          }`}
+                          style={{
+                            backgroundColor: cell ? cell : undefined
+                          }}
+                        >
+                          {cell && (
+                            <span className="w-2 h-2 rounded-full bg-white/30" />
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Pieces Selection Tray */}
+              {!bbIsGameOver && (
+                <div className="space-y-2 pt-1">
+                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block text-center">
+                    Pilihan Balok Kuliner (Ketuk Untuk Memilih):
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {bbPieces.map((piece, idx) => {
+                      if (!piece) {
+                        return (
+                          <div 
+                            key={idx} 
+                            className="h-20 bg-stone-950/40 rounded-2xl border border-stone-800/40 flex items-center justify-center text-stone-600 text-xs italic"
+                          >
+                            Terpakai
+                          </div>
+                        );
+                      }
+
+                      const isSelected = bbSelectedPieceIdx === idx;
+
+                      return (
+                        <button
+                          key={piece.id}
+                          type="button"
+                          onClick={() => {
+                            setBbSelectedPieceIdx(isSelected ? null : idx);
+                          }}
+                          className={`h-20 p-2 rounded-2xl flex flex-col items-center justify-center border transition-all cursor-pointer relative ${
+                            isSelected 
+                              ? 'bg-amber-500/20 border-amber-400 ring-2 ring-amber-400/50 scale-105 shadow-lg shadow-amber-500/10' 
+                              : 'bg-stone-800/70 border-stone-700/70 hover:bg-stone-800 text-stone-300'
+                          }`}
+                        >
+                          {/* Mini Grid rendering of shape */}
+                          <div className="flex flex-col gap-0.5 items-center justify-center">
+                            {piece.shape.map((sRow, sr) => (
+                              <div key={sr} className="flex gap-0.5">
+                                {sRow.map((cell, sc) => (
+                                  <div
+                                    key={sc}
+                                    className={`w-3.5 h-3.5 rounded-xs ${
+                                      cell === 1 ? 'shadow-xs' : 'opacity-0'
+                                    }`}
+                                    style={{
+                                      backgroundColor: cell === 1 ? piece.color : 'transparent'
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+                          <span className="text-[9px] font-extrabold text-amber-300 mt-1 flex items-center gap-1">
+                            <span>{piece.emoji}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Yang Kalah Traktir Multi-Game Modal */}
+      <AnimatePresence>
+        {isTraktirModalOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsTraktirModalOpen(false)}
+              className="fixed inset-0 bg-stone-950/85 backdrop-blur-md z-[120]"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 30 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-lg max-h-[90vh] bg-stone-900 rounded-[36px] p-5 text-stone-100 space-y-4 border border-amber-500/40 shadow-2xl z-[120] overflow-y-auto"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 text-stone-950 rounded-xl flex items-center justify-center text-2xl font-black shadow-md">
+                    💸
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="font-black text-amber-300 text-lg leading-tight">YANG KALAH TRAKTIR!</h3>
+                      <span className="px-1.5 py-0.5 bg-red-600 text-white font-black text-[8px] uppercase rounded-full">
+                        Party Game
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-stone-400 font-medium">Tentukan Siapa Yang Bayar Makan Hari Ini!</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsTraktirModalOpen(false)}
+                  className="w-9 h-9 bg-stone-800 text-stone-400 hover:text-white rounded-full flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Player Roster Section */}
+              <div className="bg-stone-800/70 p-3.5 rounded-2xl border border-stone-700/60 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-amber-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <Users size={14} className="text-amber-400" /> Daftar Pemain ({traktirPlayers.length}):
+                  </span>
+                  <span className="text-[10px] text-stone-400">Min 2, Max 8</span>
+                </div>
+
+                {/* Player Badges */}
+                <div className="flex flex-wrap gap-1.5">
+                  {traktirPlayers.map((player, idx) => (
+                    <div 
+                      key={idx} 
+                      className="px-2.5 py-1 bg-stone-900 border border-amber-500/30 text-amber-200 text-xs font-bold rounded-xl flex items-center gap-1.5"
+                    >
+                      <span>👤 {player}</span>
+                      {traktirPlayers.length > 2 && (
+                        <button 
+                          onClick={() => removeTraktirPlayer(idx)}
+                          className="hover:text-red-400 text-stone-500 transition-colors cursor-pointer"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add Player Input */}
+                {traktirPlayers.length < 8 && (
+                  <div className="flex gap-2 pt-1">
+                    <input 
+                      type="text"
+                      placeholder="Tambah nama teman..."
+                      value={newPlayerInput}
+                      onChange={(e) => setNewPlayerInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && addTraktirPlayer()}
+                      className="flex-1 bg-stone-900 border border-stone-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
+                    />
+                    <button 
+                      onClick={addTraktirPlayer}
+                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      <Plus size={14} />
+                      <span>Tambah</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Sub-Game Mode Navigation Tabs */}
+              <div className="grid grid-cols-3 gap-1.5 bg-stone-950 p-1 rounded-2xl border border-stone-800">
+                <button
+                  onClick={() => { setTraktirGameMode('wheel'); setTraktirLoser(null); }}
+                  className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    traktirGameMode === 'wheel'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 shadow-md'
+                      : 'text-stone-400 hover:text-white'
+                  }`}
+                >
+                  <span>🎡 Roda Traktir</span>
+                </button>
+                <button
+                  onClick={() => { setTraktirGameMode('bomb'); initTraktirBombGame(); }}
+                  className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    traktirGameMode === 'bomb'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 shadow-md'
+                      : 'text-stone-400 hover:text-white'
+                  }`}
+                >
+                  <span>💣 Bom Kuliner</span>
+                </button>
+                <button
+                  onClick={() => { setTraktirGameMode('tap'); setTapIsActive(false); setTapLoser(null); }}
+                  className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    traktirGameMode === 'tap'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 shadow-md'
+                      : 'text-stone-400 hover:text-white'
+                  }`}
+                >
+                  <span>🥢 Adu Sumpit</span>
+                </button>
+              </div>
+
+              {/* MODE 1: RODA TRAKTIR */}
+              {traktirGameMode === 'wheel' && (
+                <div className="space-y-4 pt-1 text-center">
+                  <p className="text-[11px] text-stone-300">
+                    Putar Roda Dosa Traktir! Siapa pun yang ditunjuk panah WAJIB traktir makan!
+                  </p>
+
+                  <div className="relative flex flex-col items-center justify-center py-2">
+                    {/* Arrow Pointer */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20 pointer-events-none drop-shadow-md">
+                      <div className="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[22px] border-t-amber-400 animate-pulse" />
+                    </div>
+
+                    {/* SVG Wheel */}
+                    <div className="relative p-2 bg-gradient-to-br from-amber-500/20 to-red-600/20 rounded-full border-4 border-amber-500/40 shadow-inner">
+                      <svg viewBox="0 0 300 300" className="w-60 h-60 sm:w-68 sm:h-68 drop-shadow-2xl overflow-visible">
+                        <g 
+                          style={{ 
+                            transform: `rotate(${traktirWheelRotation}deg)`, 
+                            transformOrigin: '150px 150px',
+                            transition: traktirIsSpinning ? 'transform 3.5s cubic-bezier(0.15, 0.85, 0.15, 1)' : 'none'
+                          }}
+                        >
+                          {traktirPlayers.map((player, i) => {
+                            const total = traktirPlayers.length;
+                            const slice = 360 / total;
+                            const startAngle = i * slice;
+                            const endAngle = (i + 1) * slice;
+                            const midAngle = startAngle + slice / 2;
+                            const rad = Math.PI / 180;
+                            
+                            const x1 = 150 + 140 * Math.cos(startAngle * rad);
+                            const y1 = 150 + 140 * Math.sin(startAngle * rad);
+                            const x2 = 150 + 140 * Math.cos(endAngle * rad);
+                            const y2 = 150 + 140 * Math.sin(endAngle * rad);
+
+                            const labelX = 150 + 90 * Math.cos(midAngle * rad);
+                            const labelY = 150 + 90 * Math.sin(midAngle * rad);
+
+                            const colors = ['#dc2626', '#d97706', '#059669', '#2563eb', '#7c3aed', '#db2777', '#0284c7', '#ca8a04'];
+                            const bgColor = colors[i % colors.length];
+
+                            return (
+                              <g key={i}>
+                                <path
+                                  d={`M 150 150 L ${x1} ${y1} A 140 140 0 0 1 ${x2} ${y2} Z`}
+                                  fill={bgColor}
+                                  stroke="#1c1917"
+                                  strokeWidth="2.5"
+                                />
+                                <text
+                                  x={labelX}
+                                  y={labelY}
+                                  fill="#ffffff"
+                                  fontSize={total > 6 ? "11" : "13"}
+                                  fontWeight="900"
+                                  textAnchor="middle"
+                                  dominantBaseline="central"
+                                  style={{ userSelect: 'none', pointerEvents: 'none' }}
+                                >
+                                  {player.length > 8 ? player.substring(0, 7) + '..' : player}
+                                </text>
+                              </g>
+                            );
+                          })}
+                          {/* Center Pin */}
+                          <circle cx="150" cy="150" r="22" fill="#1c1917" stroke="#f59e0b" strokeWidth="3" />
+                          <text x="150" y="150" fill="#f59e0b" fontSize="14" textAnchor="middle" dominantBaseline="central">💸</text>
+                        </g>
+                      </svg>
+                    </div>
+                  </div>
+
+                  {traktirLoser ? (
+                    <motion.div 
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="p-4 bg-gradient-to-br from-red-950 via-stone-900 to-amber-950 rounded-2xl border border-amber-500/50 text-center space-y-3 shadow-xl"
+                    >
+                      <div className="w-12 h-12 bg-amber-500/20 text-amber-300 rounded-full flex items-center justify-center mx-auto text-2xl border border-amber-500/40">
+                        👑
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest block">KORBAN TRAKTIR TERPILIH</span>
+                        <h4 className="text-xl font-black text-white mt-0.5">{traktirLoser.toUpperCase()}! 💸</h4>
+                        <p className="text-xs text-stone-300 mt-1">Selamat! Kamu yang bayar makanan untuk rombongan hari ini!</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => shareTraktirWhatsApp(traktirLoser, 'Roda Dosa Traktir')}
+                          className="py-2.5 bg-green-600 hover:bg-green-500 text-white font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
+                        >
+                          <Share2 size={14} />
+                          <span>Kirim Bukti WA</span>
+                        </button>
+                        <button
+                          onClick={handleSpinTraktirWheel}
+                          className="py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer"
+                        >
+                          Putar Ulang 🎡
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <button
+                      disabled={traktirIsSpinning}
+                      onClick={handleSpinTraktirWheel}
+                      className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        traktirIsSpinning
+                          ? 'bg-stone-800 text-stone-500 border border-stone-700 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:brightness-110 text-stone-950 shadow-lg shadow-orange-500/20 active:scale-98'
+                      }`}
+                    >
+                      <Dices size={18} className={traktirIsSpinning ? 'animate-spin' : ''} />
+                      <span>{traktirIsSpinning ? 'MEMUTAR RODA DOSA...' : 'PUTAR RODA DOSA TRAKTIR 🎡'}</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* MODE 2: BOM KULINER */}
+              {traktirGameMode === 'bomb' && (
+                <div className="space-y-4 pt-1 text-center">
+                  <div className="bg-stone-950 p-3 rounded-2xl border border-stone-800 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Giliran Membuka Tudung:</span>
+                      <span className="font-black text-amber-300 text-sm">
+                        👤 {traktirPlayers[bombCurrentTurn % traktirPlayers.length]}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => initTraktirBombGame()}
+                      className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                    >
+                      Reset Tudung 🔄
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-stone-300">
+                    Buka tudung saji satu-per-satu! Ada 11 makanan lezat dan 1 BOM TRAKTIR. Yang buka bom WAJIB TRAKTIR!
+                  </p>
+
+                  {/* 12 Tudung Grid */}
+                  <div className="grid grid-cols-4 gap-2.5 p-3 bg-stone-950 rounded-2xl border border-stone-800">
+                    {bombGrid.map((cell, idx) => (
+                      <button
+                        key={cell.id}
+                        onClick={() => handleOpenBombCell(idx)}
+                        disabled={cell.isOpen || bombLoser !== null}
+                        className={`h-16 rounded-2xl border transition-all flex flex-col items-center justify-center cursor-pointer relative ${
+                          cell.isOpen
+                            ? cell.isBomb
+                              ? 'bg-red-600 border-red-400 text-white scale-110 shadow-lg animate-bounce z-10'
+                              : 'bg-stone-800 border-stone-700 text-stone-300'
+                            : 'bg-gradient-to-br from-amber-500/20 to-orange-600/20 border-amber-500/40 hover:border-amber-400 hover:scale-105 shadow-md active:scale-95'
+                        }`}
+                      >
+                        {cell.isOpen ? (
+                          <span className="text-2xl">{cell.isBomb ? '💣' : cell.foodEmoji}</span>
+                        ) : (
+                          <>
+                            <span className="text-xl">🍱</span>
+                            <span className="text-[9px] font-mono text-amber-400/80 font-bold">#{idx + 1}</span>
+                          </>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {bombLoser && (
+                    <motion.div 
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="p-4 bg-gradient-to-br from-red-950 via-stone-900 to-amber-950 rounded-2xl border border-amber-500/50 text-center space-y-3 shadow-xl"
+                    >
+                      <div className="w-12 h-12 bg-red-600/30 text-red-400 rounded-full flex items-center justify-center mx-auto text-3xl border border-red-500/50 animate-pulse">
+                        💣
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black text-red-400 uppercase tracking-widest block">BOOOM!! BOM TRAKTIR MELEDAK!</span>
+                        <h4 className="text-xl font-black text-white mt-0.5">{bombLoser.toUpperCase()}! 💸</h4>
+                        <p className="text-xs text-stone-300 mt-1">Kamu membuka tudung saji bom! Kamu yang bayar seluruh tagihan makan!</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => shareTraktirWhatsApp(bombLoser, 'Bom Kuliner Traktir')}
+                          className="py-2.5 bg-green-600 hover:bg-green-500 text-white font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
+                        >
+                          <Share2 size={14} />
+                          <span>Share WA</span>
+                        </button>
+                        <button
+                          onClick={() => initTraktirBombGame()}
+                          className="py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer"
+                        >
+                          Main Lagi 💣
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+
+              {/* MODE 3: ADU KETUK SUMPIT */}
+              {traktirGameMode === 'tap' && (
+                <div className="space-y-4 pt-1 text-center">
+                  <p className="text-[11px] text-stone-300">
+                    Adu cepat ketuk sumpit 2 pemain dalam 5 detik! Pemain dengan ketukan tersedikit HARUS TRAKTIR!
+                  </p>
+
+                  {tapCountdown !== null ? (
+                    <div className="py-12 text-center space-y-2">
+                      <span className="text-6xl font-black text-amber-400 animate-ping block">{tapCountdown}</span>
+                      <p className="text-xs font-bold text-stone-300 uppercase tracking-widest">SIAP-SIAP KETUK!</p>
+                    </div>
+                  ) : tapIsActive ? (
+                    <div className="space-y-4">
+                      <div className="py-2 bg-stone-950 rounded-2xl border border-stone-800 text-center">
+                        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Sisa Waktu</span>
+                        <span className="text-3xl font-black text-amber-400 font-mono">{tapTimeLeft} Detik</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Player 1 Tapper */}
+                        <button
+                          onClick={() => setTapP1Score(prev => prev + 1)}
+                          className="h-36 bg-gradient-to-br from-amber-500 to-orange-600 text-stone-950 rounded-2xl font-black p-3 flex flex-col justify-between items-center shadow-lg active:scale-95 transition-all cursor-pointer select-none"
+                        >
+                          <span className="text-xs uppercase tracking-wider">👤 {traktirPlayers[0] || 'Pemain 1'}</span>
+                          <span className="text-4xl font-mono">{tapP1Score}</span>
+                          <span className="text-[10px] bg-stone-950/20 px-2 py-0.5 rounded-full uppercase">TAP FAST! 🥢</span>
+                        </button>
+
+                        {/* Player 2 Tapper */}
+                        <button
+                          onClick={() => setTapP2Score(prev => prev + 1)}
+                          className="h-36 bg-gradient-to-br from-red-600 to-amber-700 text-white rounded-2xl font-black p-3 flex flex-col justify-between items-center shadow-lg active:scale-95 transition-all cursor-pointer select-none"
+                        >
+                          <span className="text-xs uppercase tracking-wider">👤 {traktirPlayers[1] || 'Pemain 2'}</span>
+                          <span className="text-4xl font-mono">{tapP2Score}</span>
+                          <span className="text-[10px] bg-stone-950/20 px-2 py-0.5 rounded-full uppercase">TAP FAST! 🥢</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : tapLoser ? (
+                    <motion.div 
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="p-4 bg-gradient-to-br from-red-950 via-stone-900 to-amber-950 rounded-2xl border border-amber-500/50 text-center space-y-3 shadow-xl"
+                    >
+                      <div className="w-12 h-12 bg-amber-500/20 text-amber-300 rounded-full flex items-center justify-center mx-auto text-2xl border border-amber-500/40">
+                        🏆
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest block">HASIL ADU KETUK SUMPIT</span>
+                        <div className="flex justify-center gap-4 text-xs font-bold my-2 text-stone-300">
+                          <span>{traktirPlayers[0] || 'P1'}: <strong className="text-amber-300 font-mono text-sm">{tapP1Score}</strong></span>
+                          <span>vs</span>
+                          <span>{traktirPlayers[1] || 'P2'}: <strong className="text-amber-300 font-mono text-sm">{tapP2Score}</strong></span>
+                        </div>
+                        <h4 className="text-xl font-black text-white mt-1">{tapLoser.toUpperCase()}! 💸</h4>
+                        <p className="text-xs text-stone-300">Ketukan sumpit kurang cepat! Kamu yang wajib bayar makan!</p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          onClick={() => shareTraktirWhatsApp(tapLoser, 'Adu Ketuk Sumpit')}
+                          className="py-2.5 bg-green-600 hover:bg-green-500 text-white font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
+                        >
+                          <Share2 size={14} />
+                          <span>Share WA</span>
+                        </button>
+                        <button
+                          onClick={startTapDuel}
+                          className="py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer"
+                        >
+                          Adu Lagi 🥢
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <button
+                      onClick={startTapDuel}
+                      className="w-full py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:brightness-110 text-stone-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <Zap size={18} />
+                      <span>MULAI ADU KETUK SUMPIT (5 DETIK) 🥢</span>
+                    </button>
+                  )}
+                </div>
+              )}
             </motion.div>
           </>
         )}
