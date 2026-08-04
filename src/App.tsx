@@ -1493,16 +1493,12 @@ export default function App() {
     })
     .then(res => res.json())
     .then(data => {
-      if (data.sendgridSent) {
-        setEmailNotificationToast(`📩 Notifikasi email SendGrid terkirim ke ${recipient} (Status: ${statusText})`);
-      } else {
-        setEmailNotificationToast(`📧 Status pesanan #${order.id} diperbarui. Surat baru tersimpan di Kotak Masuk Digital.`);
-      }
+      setEmailNotificationToast(`🔔 Status pesanan #${order.id} diperbarui: ${statusText}`);
       setTimeout(() => setEmailNotificationToast(null), 5000);
     })
     .catch(err => {
       console.error('SendGrid status email error:', err);
-      setEmailNotificationToast(`📧 Status pesanan #${order.id} diperbarui. Surat baru tersimpan di Kotak Masuk Digital.`);
+      setEmailNotificationToast(`🔔 Status pesanan #${order.id} diperbarui: ${statusText}`);
       setTimeout(() => setEmailNotificationToast(null), 4000);
     });
   };
@@ -4131,16 +4127,7 @@ Aturan Sangat Penting:
             }`}
           >
             <ShoppingBag size={16} />
-            Pesanan ({orders.length})
-          </button>
-          <button 
-            onClick={() => setAdminTab('reservations')}
-            className={`flex-1 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${
-              adminTab === 'reservations' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'
-            }`}
-          >
-            <Bot size={16} />
-            Reservasi ({reservations.length})
+            Pesanan &amp; Detail User ({orders.length})
           </button>
           <button 
             onClick={() => setAdminTab('users' as any)}
@@ -4149,7 +4136,7 @@ Aturan Sangat Penting:
             }`}
           >
             <Users size={16} />
-            Akun Google User
+            Database Google User
           </button>
         </div>
 
@@ -4165,6 +4152,11 @@ Aturan Sangat Penting:
             ) : (
               orders.map((order) => {
                 const isAI = order.orderType === 'AI Chat';
+                const customerDisplayName = order.customerName || user?.displayName || 'Valensia Rainy (Google User)';
+                const customerEmailAddress = order.customerEmail || user?.email || 'valensiarainy73@gmail.com';
+                const customerPhoneNumber = order.customerPhone || user?.phone || '6289518948115';
+                const rawCleanPhone = customerPhoneNumber.replace(/[^0-9]/g, '');
+
                 return (
                   <div key={order.id} className="bg-white p-6 rounded-[32px] shadow-sm border border-stone-100 space-y-4">
                     <div className="flex justify-between items-start flex-wrap gap-2">
@@ -4204,6 +4196,41 @@ Aturan Sangat Penting:
                                 : 'Menunggu'}
                         </span>
                       </div>
+                    </div>
+
+                    {/* Integrated Customer / User Info Box */}
+                    <div className="bg-gradient-to-r from-blue-50/90 to-indigo-50/90 rounded-2xl p-4 border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-base rounded-2xl flex items-center justify-center shrink-0 shadow-sm shadow-blue-200">
+                          {customerDisplayName[0].toUpperCase()}
+                        </div>
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-extrabold text-xs text-stone-900">
+                              {customerDisplayName}
+                            </span>
+                            <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-[9px] font-black uppercase rounded-md border border-blue-200/60">
+                              Google OAuth 2.0
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-stone-600 font-mono font-medium flex items-center gap-1">
+                            <span>📧</span> <span>{customerEmailAddress}</span>
+                          </p>
+                          <p className="text-[11px] text-emerald-700 font-mono font-bold flex items-center gap-1">
+                            <span>📱</span> <span>+{customerPhoneNumber.startsWith('62') ? customerPhoneNumber : '62' + customerPhoneNumber}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <a
+                        href={`https://wa.me/${rawCleanPhone}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all shrink-0 cursor-pointer self-start sm:self-auto"
+                      >
+                        <MessageCircle size={15} />
+                        <span>Chat WhatsApp User</span>
+                      </a>
                     </div>
 
                     {/* Order Details */}
@@ -4291,105 +4318,6 @@ Aturan Sangat Penting:
                         }}
                         className="p-2 text-stone-300 hover:text-red-500 transition-colors cursor-pointer"
                         title="Hapus Pesanan"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        ) : adminTab === 'reservations' ? (
-          <div className="space-y-4">
-            {reservations.length === 0 ? (
-              <div className="bg-white p-12 text-center rounded-[32px] border border-stone-100 shadow-sm text-stone-400">
-                <Bot size={48} className="mx-auto text-stone-200 mb-3" />
-                <p className="font-bold text-stone-600">Belum ada reservasi masuk</p>
-                <p className="text-xs text-stone-400 mt-1">Reservasi yang diproses oleh Koki AI akan muncul di sini.</p>
-              </div>
-            ) : (
-              reservations.map((res) => {
-                return (
-                  <div key={res.id} className="bg-white p-6 rounded-[32px] shadow-sm border border-stone-100 space-y-4">
-                    <div className="flex justify-between items-start flex-wrap gap-2">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">RES #{res.id}</p>
-                          <span className={`px-2.5 py-0.5 text-[9px] font-black rounded-full uppercase tracking-wider ${
-                            res.status === 'confirmed' 
-                              ? 'bg-green-100 text-green-700' 
-                              : res.status === 'cancelled' 
-                                ? 'bg-stone-200 text-stone-600' 
-                                : 'bg-amber-100 text-amber-700'
-                          }`}>
-                            {res.status === 'confirmed' ? 'Dikonfirmasi' : res.status === 'cancelled' ? 'Batal' : 'Menunggu'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-stone-400 font-semibold mt-1">Dibuat: {res.date}</p>
-                      </div>
-                    </div>
-
-                    {/* Booking Details card */}
-                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100 space-y-3">
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <p className="text-[10px] text-stone-400 uppercase font-black tracking-wider">Atas Nama</p>
-                          <p className="font-bold text-stone-800 mt-0.5">{res.bookingName}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-stone-400 uppercase font-black tracking-wider">Jumlah Tamu</p>
-                          <p className="font-bold text-stone-800 mt-0.5">{res.partySize} Orang (Pax)</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-stone-400 uppercase font-black tracking-wider">Tanggal Reservasi</p>
-                          <p className="font-bold text-stone-800 mt-0.5">{res.bookingDate}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-stone-400 uppercase font-black tracking-wider">Jam</p>
-                          <p className="font-bold text-stone-800 mt-0.5">{res.bookingTime}</p>
-                        </div>
-                      </div>
-
-                      <div className="pt-2.5 border-t border-stone-200 mt-2">
-                        <p className="text-[10px] text-stone-400 uppercase font-black tracking-wider">Pesan Asli AI</p>
-                        <p className="text-xs font-medium italic text-stone-500 mt-0.5">
-                          "{res.details}"
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Action controls */}
-                    <div className="pt-3 border-t border-stone-50 flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setReservations(prev => prev.map(r => r.id === res.id ? { ...r, status: 'confirmed' } : r));
-                          }}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-colors ${
-                            res.status === 'confirmed' ? 'bg-green-100 text-green-600 cursor-default' : 'bg-stone-100 text-stone-600 hover:bg-green-50 hover:text-green-600'
-                          }`}
-                        >
-                          Konfirmasi
-                        </button>
-                        <button
-                          onClick={() => {
-                            setReservations(prev => prev.map(r => r.id === res.id ? { ...r, status: 'cancelled' } : r));
-                          }}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-colors ${
-                            res.status === 'cancelled' ? 'bg-stone-200 text-stone-600 cursor-default' : 'bg-stone-100 text-stone-600 hover:bg-red-50 hover:text-red-600'
-                          }`}
-                        >
-                          Batalkan
-                        </button>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          setReservations(prev => prev.filter(r => r.id !== res.id));
-                        }}
-                        className="p-2 text-stone-300 hover:text-red-500 transition-colors cursor-pointer"
-                        title="Hapus Reservasi"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -4703,9 +4631,27 @@ Aturan Sangat Penting:
                       <p className="text-sm text-stone-500">{order.date}</p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <span className="px-3 py-1 bg-green-50 text-green-600 text-[10px] font-bold uppercase rounded-full">
-                        Selesai
-                      </span>
+                      {order.status === 'cooking' ? (
+                        <span className="px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                          Sedang Dimasak 🍳
+                        </span>
+                      ) : order.status === 'done' ? (
+                        <span className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1">
+                          <CheckCircle2 size={10} />
+                          Pesanan Selesai ✨
+                        </span>
+                      ) : order.status === 'cancelled' ? (
+                        <span className="px-3 py-1 bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1">
+                          <X size={10} />
+                          Dibatalkan ❌
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 bg-orange-50 text-orange-700 border border-orange-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                          Sedang Disiapkan 👨‍🍳
+                        </span>
+                      )}
                       <span className="px-3 py-1 bg-stone-100 text-stone-600 text-[10px] font-bold uppercase rounded-full">
                         {order.orderType}
                       </span>
@@ -5315,14 +5261,14 @@ Aturan Sangat Penting:
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider border border-emerald-200/80">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      WhatsApp Order Terkirim
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-700 text-[10px] font-black uppercase tracking-wider border border-orange-200/80">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                      Sedang Disiapkan
                     </span>
                     <span className="text-[10px] text-stone-400 font-bold">{orderPushBanner.timestamp}</span>
                   </div>
                   <h4 className="text-base font-extrabold text-stone-900 leading-tight mt-0.5">
-                    Pesanan Berhasil Diteruskan! 🚀
+                    Pesanan Sedang Disiapkan! 👨‍🍳
                   </h4>
                 </div>
               </div>
@@ -5337,7 +5283,7 @@ Aturan Sangat Penting:
             </div>
 
             <p className="text-xs text-stone-600 mb-3 leading-relaxed">
-              Aplikasi WhatsApp telah dibuka. Pesanan Anda kini tercatat &amp; langsung dapat diproses oleh tim kasir RM Segar.
+              Pesan WhatsApp telah dikirim. Pesanan <strong>#{orderPushBanner.orderId}</strong> kini tercatat dan sedang disiapkan oleh tim dapur RM Segar.
             </p>
 
             {/* Order Details Summary Card */}
@@ -5348,8 +5294,8 @@ Aturan Sangat Penting:
               </div>
               <div className="text-right">
                 <span className="text-[10px] font-bold text-stone-400 uppercase block">{orderPushBanner.totalItems} Item • {orderPushBanner.orderType}</span>
-                <span className="font-bold text-emerald-600 text-xs bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200/60 inline-block mt-0.5">
-                  Terkonfirmasi Kasir
+                <span className="font-bold text-orange-600 text-xs bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-200/60 inline-block mt-0.5">
+                  Sedang Disiapkan 🍳
                 </span>
               </div>
             </div>
