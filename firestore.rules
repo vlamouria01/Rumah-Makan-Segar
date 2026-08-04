@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Orders collection: read/write allowed for backend server & clients
+    match /orders/{orderId} {
+      allow read, write: if true;
+    }
+
+    // Reservations collection: read/write allowed for backend server & clients
+    match /reservations/{reservationId} {
+      allow read, write: if true;
+    }
+
+    // User Profiles collection: read/write allowed for backend server & clients
+    match /user_profiles/{profileId} {
+      allow read, write: if true;
+    }
+
+    // Profiles collection (alias): read/write allowed
+    match /profiles/{profileId} {
+      allow read, write: if true;
+    }
+
+    // Default deny for unhandled paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

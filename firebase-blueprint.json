@@ -1,0 +1,34 @@
+{
+  "entities": {
+    "orders": {
+      "title": "Order",
+      "description": "Customer order details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "items": { "type": "array" },
+        "totalPrice": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["customerName", "items", "totalPrice", "status"]
+    },
+    "reservations": {
+      "title": "Reservation",
+      "description": "Table reservation entries",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "guests": { "type": "number" },
+        "status": { "type": "string" }
+      },
+      "required": ["name", "phone", "date", "time", "guests"]
+    }
+  }
+}
