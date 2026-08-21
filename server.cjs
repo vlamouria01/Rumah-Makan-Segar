@@ -251,6 +251,17 @@ function sanitizeText(str, maxLength = 2e3) {
   const cleaned = str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "").trim();
   return cleaned.slice(0, maxLength);
 }
+function cleanUndefined(obj) {
+  if (obj === null || typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(cleanUndefined);
+  const result = {};
+  for (const key of Object.keys(obj)) {
+    if (obj[key] !== void 0) {
+      result[key] = cleanUndefined(obj[key]);
+    }
+  }
+  return result;
+}
 async function startServer() {
   const app = (0, import_express.default)();
   const PORT = 3e3;
@@ -346,22 +357,25 @@ async function startServer() {
       if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ error: "Keranjang pesanan tidak boleh kosong." });
       }
-      const orderData = {
+      const orderData = cleanUndefined({
         customerName: sanitizeText(customerName || "Pelanggan RM Segar", 100),
         customerPhone: sanitizeText(customerPhone || "", 50),
         customerEmail: sanitizeText(customerEmail || "valensiarainy73@gmail.com", 100),
-        items: items.map((item) => ({
-          id: sanitizeText(String(item.id || ""), 50),
-          name: sanitizeText(String(item.name || ""), 100),
-          price: Number(item.price || 0),
-          quantity: Number(item.quantity || 1),
-          option: item.option ? sanitizeText(String(item.option), 20) : void 0,
-          note: item.note ? sanitizeText(String(item.note), 200) : void 0
-        })),
+        items: items.map((item) => {
+          const itemObj = {
+            id: sanitizeText(String(item.id || ""), 50),
+            name: sanitizeText(String(item.name || ""), 100),
+            price: Number(item.price || 0),
+            quantity: Number(item.quantity || 1)
+          };
+          if (item.option) itemObj.option = sanitizeText(String(item.option), 20);
+          if (item.note) itemObj.note = sanitizeText(String(item.note), 200);
+          return itemObj;
+        }),
         totalPrice: Number(totalPrice || 0),
         status: "Diproses",
         createdAt: (/* @__PURE__ */ new Date()).toISOString()
-      };
+      });
       if (db) {
         const docRef = await (0, import_firestore.addDoc)((0, import_firestore.collection)(db, "orders"), orderData);
         const savedOrder = { id: docRef.id, ...orderData };
@@ -516,7 +530,7 @@ async function startServer() {
       if (!name || !phone || !date || !time) {
         return res.status(400).json({ error: "Nama, nomor telepon, tanggal, dan jam wajib diisi." });
       }
-      const reservationData = {
+      const reservationData = cleanUndefined({
         name: sanitizeText(name, 100),
         phone: sanitizeText(phone, 50),
         date: sanitizeText(date, 50),
@@ -525,7 +539,7 @@ async function startServer() {
         notes: sanitizeText(notes || "", 300),
         status: "Menunggu Konfirmasi",
         createdAt: (/* @__PURE__ */ new Date()).toISOString()
-      };
+      });
       if (db) {
         const docRef = await (0, import_firestore.addDoc)((0, import_firestore.collection)(db, "reservations"), reservationData);
         const savedRes = { id: docRef.id, ...reservationData };
@@ -542,11 +556,30 @@ async function startServer() {
     }
   });
   app.post("/api/auth/send-otp", async (req, res) => {
-    const { target } = req.body || {};
-    if (!target || typeof target !== "string") {
-      return res.status(400).json({ error: "Nomor HP atau email wajib diisi." });
+    const { target, providedToken } = req.body || {};
+    if (!target || typeof target !== "string" || !target.trim()) {
+      return res.status(400).json({ error: "Nomor WhatsApp atau email wajib diisi." });
     }
     const cleanTarget = target.trim().toLowerCase();
+    if (!cleanTarget.includes("@")) {
+      const digitsOnly = cleanTarget.replace(/\D/g, "");
+      let normalizedPhone = digitsOnly;
+      if (normalizedPhone.startsWith("0")) {
+        normalizedPhone = "62" + normalizedPhone.slice(1);
+      } else if (normalizedPhone.startsWith("8")) {
+        normalizedPhone = "62" + normalizedPhone;
+      } else if (!normalizedPhone.startsWith("62")) {
+        normalizedPhone = "62" + normalizedPhone;
+      }
+      const isValidPhone = /^628\d{7,12}$/.test(normalizedPhone);
+      const isRepeatedDummy = /^(\d)\1+$/.test(digitsOnly);
+      if (!isValidPhone || isRepeatedDummy || digitsOnly.length < 10) {
+        return res.status(400).json({
+          error: "INVALID_PHONE_NUMBER",
+          message: "Nomor WhatsApp tidak valid atau tidak terdaftar. Harap masukkan nomor WhatsApp aktif (minimal 10 digit, contoh: 081234567890 atau 089518948115)."
+        });
+      }
+    }
     const existing = otpStore.get(cleanTarget);
     if (existing && existing.lockoutUntil && Date.now() < existing.lockoutUntil) {
       const remainingSecs = Math.ceil((existing.lockoutUntil - Date.now()) / 1e3);
@@ -555,13 +588,21 @@ async function startServer() {
         message: `Terlalu banyak percobaan gagal. Silakan tunggu ${remainingSecs} detik.`
       });
     }
-    const token = Math.floor(1e5 + Math.random() * 9e5).toString();
+    const token = providedToken && typeof providedToken === "string" && /^\d{6}$/.test(providedToken) ? providedToken : Math.floor(1e5 + Math.random() * 9e5).toString();
     const expiresAt = Date.now() + 5 * 60 * 1e3;
     otpStore.set(cleanTarget, {
       token,
       expiresAt,
       attempts: existing ? existing.attempts : 0
     });
+    if (!cleanTarget.includes("@")) {
+      const digitsOnly = cleanTarget.replace(/\D/g, "");
+      const normalized62 = digitsOnly.startsWith("0") ? "62" + digitsOnly.slice(1) : digitsOnly.startsWith("62") ? digitsOnly : "62" + digitsOnly;
+      const normalized08 = normalized62.startsWith("62") ? "0" + normalized62.slice(2) : normalized62;
+      otpStore.set(normalized62, { token, expiresAt, attempts: existing ? existing.attempts : 0 });
+      otpStore.set(normalized08, { token, expiresAt, attempts: existing ? existing.attempts : 0 });
+      otpStore.set(digitsOnly, { token, expiresAt, attempts: existing ? existing.attempts : 0 });
+    }
     console.log(`[BACKEND AUTH] Generated OTP ${token} for target: ${cleanTarget.substring(0, 4)}***`);
     let emailRes = { sent: false, provider: "None" };
     if (cleanTarget.includes("@")) {
@@ -586,7 +627,7 @@ async function startServer() {
     if (!cleanTarget.includes("@")) {
       return res.json({
         success: true,
-        message: `Kode OTP WhatsApp berhasil dibuat untuk ${cleanTarget}.`,
+        message: `Kode OTP WhatsApp (${token}) berhasil dibuat untuk ${cleanTarget}.`,
         token,
         expiresAt,
         isPhone: true
@@ -718,12 +759,12 @@ async function startServer() {
       const cleanTarget = target.trim().toLowerCase();
       const validLang = ["id", "en", "zh"].includes(languagePreference) ? languagePreference : "id";
       const isForceSync = typeof forceSyncLanguage === "boolean" ? forceSyncLanguage : true;
-      const profileData = {
+      const profileData = cleanUndefined({
         target: cleanTarget,
         languagePreference: validLang,
         forceSyncLanguage: isForceSync,
         updatedAt: (/* @__PURE__ */ new Date()).toISOString()
-      };
+      });
       memoryProfiles.set(cleanTarget, profileData);
       if (db) {
         try {
