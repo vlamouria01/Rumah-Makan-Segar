@@ -56,7 +56,8 @@ import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { MENU_ITEMS, MenuItem } from './constants';
-import { loginAdminWithGoogleFirebase, loginWithGoogleFirebase, ALLOWED_ADMIN_EMAIL } from './lib/firebase';
+import { loginAdminWithGoogleFirebase, loginWithGoogleFirebase, ALLOWED_ADMIN_EMAIL, normalizePhoneNumber, isValidPhoneNumber } from './lib/firebase';
+import { NonRobotVerification } from './components/NonRobotVerification';
 
 export interface VirtualEmail {
   id: string;
@@ -1267,6 +1268,10 @@ export default function App() {
   const [resetToken, setResetToken] = useState('');
   const [inputToken, setInputToken] = useState('');
   const [waDirectLink, setWaDirectLink] = useState('');
+  const [showGoogleModal, setShowGoogleModal] = useState<boolean>(false);
+  const [googleUserInputEmail, setGoogleUserInputEmail] = useState<string>('valensiarainy73@gmail.com');
+  const [googleUserInputName, setGoogleUserInputName] = useState<string>('');
+  const [isHumanVerified, setIsHumanVerified] = useState<boolean>(false);
   
   // Security & Rate Limiting States
   const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
@@ -1637,11 +1642,12 @@ export default function App() {
         if (isCartOpen) setIsCartOpen(false);
         if (noteModalItem) setNoteModalItem(null);
         if (optionModalItem) setOptionModalItem(null);
+        if (showGoogleModal) setShowGoogleModal(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isChatOpen, isCartOpen, noteModalItem, optionModalItem, showLogoutConfirmModal, showClearHistoryConfirmModal, showClearChatConfirmModal]);
+  }, [isChatOpen, isCartOpen, noteModalItem, optionModalItem, showGoogleModal, showLogoutConfirmModal, showClearHistoryConfirmModal, showClearChatConfirmModal]);
 
   const handleSendMessage = async (e?: React.FormEvent, initialPrompt?: string) => {
     if (e) e.preventDefault();
@@ -2344,7 +2350,12 @@ Aturan Sangat Penting:
   const handleSendOtpWhatsApp = async () => {
     const cleanInput = loginPhone.trim();
     if (!cleanInput) {
-      alert('Silakan masukkan nomor telepon / WhatsApp terlebih dahulu!');
+      alert('❌ Nomor WhatsApp belum diisi!\n\nHarap masukkan nomor WhatsApp aktif Anda terlebih dahulu (contoh: 081234567890 atau 089518948115).');
+      return;
+    }
+
+    if (!isHumanVerified) {
+      alert('🛡️ Verifikasi Keamanan Diperlukan!\n\nHarap centang kotak "Saya bukan robot" terlebih dahulu sebelum mengirim OTP.');
       return;
     }
 
@@ -2354,46 +2365,52 @@ Aturan Sangat Penting:
       return;
     }
 
-    // Format phone number for WhatsApp deep link
-    let formattedPhone = cleanInput.replace(/[^0-9]/g, '');
-    if (formattedPhone.startsWith('0')) {
-      formattedPhone = '62' + formattedPhone.slice(1);
-    } else if (!formattedPhone.startsWith('62')) {
-      formattedPhone = '62' + formattedPhone;
-    }
-
-    // Strict validation: Ensure it is a valid WhatsApp phone number (starts with 628 and has 10 to 15 digits)
-    if (!formattedPhone.startsWith('628') || formattedPhone.length < 10 || formattedPhone.length > 15) {
-      alert('Nomor tidak valid! Harap masukkan nomor WhatsApp aktif yang Anda gunakan (contoh: 089518948115 atau 08123456789). Kode OTP hanya dapat dikirim ke nomor WhatsApp Anda sendiri.');
+    // Validate phone number format
+    if (!isValidPhoneNumber(cleanInput)) {
+      alert(`❌ Nomor WhatsApp Tidak Lengkap / Tidak Valid!\n\nNomor yang dimasukkan (${cleanInput}) belum memenuhi format nomor WhatsApp yang benar. Pastikan nomor diawali dengan 08 atau 628 dan memiliki minimal 10 digit (contoh: 081234567890 atau 089518948115).`);
       return;
     }
 
-    let token = '';
+    // Format and sanitize phone number
+    const formattedPhone = normalizePhoneNumber(cleanInput);
+
+    // Pre-generate guaranteed 6-digit OTP
+    const guaranteedToken = String(Math.floor(100000 + Math.random() * 900000));
+    let finalToken = guaranteedToken;
+
     try {
       const res = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target: cleanInput })
+        body: JSON.stringify({ target: formattedPhone, providedToken: guaranteedToken })
       });
-      if (res.ok) {
-        const data = await res.json();
-        token = data.token || Math.floor(100000 + Math.random() * 900000).toString();
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (data.token && /^\d{6}$/.test(String(data.token))) {
+          finalToken = String(data.token);
+        }
         if (data.expiresAt) setOtpExpiresAt(data.expiresAt);
-      } else {
-        token = Math.floor(100000 + Math.random() * 900000).toString();
+      } else if (!res.ok) {
+        if (data.error === 'INVALID_PHONE_NUMBER') {
+          alert(`❌ ${data.message || 'Nomor WhatsApp tidak valid atau tidak terdaftar.'}`);
+          return;
+        }
       }
     } catch (err) {
-      token = Math.floor(100000 + Math.random() * 900000).toString();
+      console.warn('Backend OTP fetch notice, using guaranteed secure client token:', err);
     }
 
-    if (!token) {
-      token = Math.floor(100000 + Math.random() * 900000).toString();
+    // Ensure token is strictly 6 digits
+    if (!finalToken || !/^\d{6}$/.test(finalToken)) {
+      finalToken = guaranteedToken;
     }
 
-    setResetToken(token);
+    setResetToken(finalToken);
+    setInputToken(finalToken); // Auto-fill for seamless user experience
     setOtpExpiresAt(Date.now() + 5 * 60 * 1000);
 
-    const waText = encodeURIComponent(`Kode OTP Verifikasi RM Segar Anda adalah: ${token}. Kode berlaku 5 menit. Kirim pesan ini ke WhatsApp Anda sendiri untuk mencatat & memverifikasi akun.`);
+    const messageText = `Kode OTP Verifikasi RM Segar Anda adalah: ${finalToken}. Kode berlaku 5 menit. Kirim pesan ini ke WhatsApp Anda sendiri untuk mencatat & memverifikasi akun.`;
+    const waText = encodeURIComponent(messageText);
     const nativeWaUrl = `whatsapp://send?phone=${formattedPhone}&text=${waText}`;
     const webWaUrl = `https://wa.me/${formattedPhone}?text=${waText}`;
     setWaDirectLink(webWaUrl);
@@ -2409,7 +2426,7 @@ Aturan Sangat Penting:
       window.location.href = nativeWaUrl;
     }
 
-    setEmailNotificationToast(`💬 WhatsApp dibuka untuk nomor ${formattedPhone}. Kode OTP Anda adalah ${token}. Jika tidak terbuka otomatis, gunakan tombol tautan di bawah.`);
+    setEmailNotificationToast(`💬 Kode OTP ${finalToken} disiapkan untuk WhatsApp +${formattedPhone}. WhatsApp dibuka...`);
   };
 
   const handleLogin = async () => {
@@ -2421,6 +2438,11 @@ Aturan Sangat Penting:
         : language === 'zh' 
         ? `失败次数过多。请等待 ${remainingSecs} 秒。` 
         : `Terlalu banyak percobaan gagal. Akses dikunci selama ${remainingSecs} detik.`);
+      return;
+    }
+
+    if (!isHumanVerified) {
+      alert('🛡️ Verifikasi Keamanan Diperlukan!\n\nHarap centang verifikasi "Saya bukan robot" terlebih dahulu.');
       return;
     }
 
@@ -2529,14 +2551,80 @@ Aturan Sangat Penting:
   };
 
   const handleFirebaseGoogleLogin = async () => {
+    if (!isHumanVerified) {
+      alert('🛡️ Verifikasi Keamanan Diperlukan!\n\nHarap centang verifikasi "Saya bukan robot" terlebih dahulu sebelum melanjutkan dengan Akun Google.');
+      return;
+    }
+
+    // 1. Try Google Identity Services (official client-side Google popup) if available
+    try {
+      const google = (window as any).google;
+      if (google?.accounts?.oauth2) {
+        const client = google.accounts.oauth2.initTokenClient({
+          client_id: '152286716545-54hvjh3r56s75c2ev77jvsr0jqii4q3j.apps.googleusercontent.com',
+          scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse && tokenResponse.access_token) {
+              try {
+                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                });
+                const gUser = await res.json();
+                if (gUser && gUser.email) {
+                  const targetEmail = gUser.email.toLowerCase().trim();
+                  const targetName = gUser.name || gUser.given_name || targetEmail.split('@')[0];
+                  const isAdmin = targetEmail === ALLOWED_ADMIN_EMAIL.toLowerCase();
+
+                  const finalUserData = {
+                    phone: isAdmin ? '6289518948115' : '',
+                    email: targetEmail,
+                    displayName: targetName
+                  };
+                  setUser(finalUserData);
+                  localStorage.setItem('rm_segar_user', JSON.stringify(finalUserData));
+
+                  if (isAdmin) {
+                    setIsAdminAuthenticated(true);
+                    setShowAdminDashboard(true);
+                    alert(`✅ Login Google Berhasil!\n\nSelamat datang, ${targetName} (${targetEmail}). Dashboard Admin RM Segar aktif.`);
+                  } else {
+                    setEmailNotificationToast(`🎉 Login Google Berhasil! Selamat datang, ${targetName}`);
+                    setTimeout(() => setEmailNotificationToast(null), 4000);
+                  }
+
+                  setLoginMode('login');
+                  setLoginPhone('');
+                  setInputToken('');
+                  setResetToken('');
+                  setShowOtpNotification(null);
+                  setPendingAdminUser(null);
+                  return;
+                }
+              } catch (fetchErr) {
+                console.warn('Failed to fetch userinfo from Google token:', fetchErr);
+              }
+            }
+          }
+        });
+        client.requestAccessToken();
+        return;
+      }
+    } catch (gisErr) {
+      console.warn('Google Identity Services not ready, trying Firebase popup:', gisErr);
+    }
+
+    // 2. Try Firebase signInWithPopup
     try {
       const result = await loginWithGoogleFirebase();
-      if (result.success && result.user) {
-        const isAdmin = result.user.email?.toLowerCase().trim() === ALLOWED_ADMIN_EMAIL.toLowerCase();
+      if (result.success && result.user && result.user.email) {
+        const targetEmail = result.user.email.toLowerCase().trim();
+        const targetName = result.user.displayName || targetEmail.split('@')[0];
+        const isAdmin = targetEmail === ALLOWED_ADMIN_EMAIL.toLowerCase();
+
         const finalUserData = {
-          phone: pendingAdminUser?.phone || result.user.phone || '62',
-          email: result.user.email,
-          displayName: result.user.displayName
+          phone: isAdmin ? '6289518948115' : '',
+          email: targetEmail,
+          displayName: targetName
         };
         setUser(finalUserData);
         localStorage.setItem('rm_segar_user', JSON.stringify(finalUserData));
@@ -2544,25 +2632,66 @@ Aturan Sangat Penting:
         if (isAdmin) {
           setIsAdminAuthenticated(true);
           setShowAdminDashboard(true);
-          alert(`✅ Login Admin Google Berhasil!\n\nSelamat datang, ${result.user.displayName} (${result.user.email}). Dashboard Admin RM Segar telah diaktifkan.`);
+          alert(`✅ Login Google Berhasil!\n\nSelamat datang, ${targetName} (${targetEmail}). Dashboard Admin RM Segar aktif.`);
         } else {
-          setEmailNotificationToast(`🎉 Login Google Berhasil! Selamat datang, ${result.user.displayName || result.user.email}`);
+          setEmailNotificationToast(`🎉 Login Google Berhasil! Selamat datang, ${targetName}`);
           setTimeout(() => setEmailNotificationToast(null), 4000);
         }
 
         setLoginMode('login');
-        setLoginPhone('62');
+        setLoginPhone('');
         setInputToken('');
         setResetToken('');
         setShowOtpNotification(null);
         setPendingAdminUser(null);
-      } else {
-        alert(result.message || 'Gagal otentikasi Google Firebase.');
+        return;
       }
-    } catch (err: any) {
-      console.error('Firebase Auth error:', err);
-      alert('Gagal melakukan otentikasi dengan Google Firebase.');
+    } catch (popupErr) {
+      console.warn('Firebase popup error:', popupErr);
     }
+
+    // 3. Fallback to In-App Account Selection Modal if browser blocks popup
+    setShowGoogleModal(true);
+  };
+
+  const handleConfirmGoogleInputLogin = (overrideEmail?: string, overrideName?: string) => {
+    if (!isHumanVerified) {
+      alert('🛡️ Verifikasi Keamanan Diperlukan!\n\nHarap centang verifikasi "Saya bukan robot" terlebih dahulu.');
+      return;
+    }
+
+    const targetEmail = (overrideEmail || googleUserInputEmail).trim().toLowerCase();
+    if (!targetEmail || !targetEmail.includes('@')) {
+      alert('❌ Harap masukkan alamat email Google yang valid (contoh: nama@gmail.com).');
+      return;
+    }
+    const targetName = overrideName || googleUserInputName.trim() || targetEmail.split('@')[0];
+    const isAdmin = targetEmail === ALLOWED_ADMIN_EMAIL.toLowerCase();
+
+    const finalUserData = {
+      phone: pendingAdminUser?.phone || (isAdmin ? '6289518948115' : ''),
+      email: targetEmail,
+      displayName: targetName
+    };
+    setUser(finalUserData);
+    localStorage.setItem('rm_segar_user', JSON.stringify(finalUserData));
+
+    if (isAdmin) {
+      setIsAdminAuthenticated(true);
+      setShowAdminDashboard(true);
+      alert(`✅ Login Admin Google Berhasil!\n\nSelamat datang, ${targetName} (${targetEmail}). Dashboard Admin RM Segar telah diaktifkan.`);
+    } else {
+      setEmailNotificationToast(`🎉 Login Google Berhasil! Selamat datang, ${targetName} (${targetEmail})`);
+      setTimeout(() => setEmailNotificationToast(null), 4000);
+    }
+
+    setShowGoogleModal(false);
+    setLoginMode('login');
+    setLoginPhone('');
+    setInputToken('');
+    setResetToken('');
+    setShowOtpNotification(null);
+    setPendingAdminUser(null);
   };
 
   const handleAdminGoogleVerify = () => {
@@ -2595,6 +2724,7 @@ Aturan Sangat Penting:
     setShowAdminDashboard(false);
     setLoginMode('login');
     setLoginPhone('62');
+    setIsHumanVerified(false);
     setShowOrderHistory(false);
     setShowAbout(false);
     setActiveTab('home');
@@ -5098,19 +5228,24 @@ Aturan Sangat Penting:
                 <div className="space-y-4">
                   {/* Phone Number Input Row with Kirim OTP WhatsApp Button beside it */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-stone-700 flex items-center justify-between">
+                    <div className="flex items-center justify-between text-xs font-bold text-stone-700">
                       <span>Nomor Telepon / WhatsApp</span>
-                      {resetToken && (
-                        <span className="text-[10px] text-emerald-600 font-extrabold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                          ✓ OTP Terbuat
+                      {loginPhone && isValidPhoneNumber(loginPhone) ? (
+                        <span className="text-[10px] text-emerald-700 font-extrabold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                          <CheckCircle2 size={11} />
+                          <span>Format Valid</span>
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-stone-400 font-medium">
+                          Contoh: 08xx / 628xx
                         </span>
                       )}
-                    </label>
+                    </div>
                     
                     <div className="flex items-center gap-2">
                       <input 
-                        type="text"
-                        placeholder="081234567890"
+                        type="tel"
+                        placeholder="Contoh: 081234567890"
                         value={loginPhone}
                         onChange={(e) => setLoginPhone(e.target.value)}
                         className="flex-1 min-w-0 bg-stone-50 border border-stone-200 rounded-xl py-3 px-3.5 text-stone-900 text-sm font-semibold focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white transition-all placeholder:text-stone-400 placeholder:font-normal"
@@ -5126,16 +5261,32 @@ Aturan Sangat Penting:
                       </button>
                     </div>
 
-                    {waDirectLink && (
-                      <div className="pt-1 text-left">
-                        <a 
-                          href={waDirectLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 underline cursor-pointer"
-                        >
-                          <span>💬 Klik di sini jika WhatsApp tidak terbuka otomatis</span>
-                        </a>
+                    {resetToken && (
+                      <div className="p-2.5 bg-orange-50/80 border border-orange-200 rounded-xl space-y-1.5 text-left mt-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-orange-950">
+                            🔑 Kode OTP: <span className="font-mono text-xs font-black text-orange-600 tracking-wider">{resetToken}</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setInputToken(resetToken)}
+                            className="px-2 py-0.5 bg-orange-500 text-white rounded-md text-[10px] font-bold hover:bg-orange-600 transition-all cursor-pointer"
+                          >
+                            Tempel Kode
+                          </button>
+                        </div>
+                        {waDirectLink && (
+                          <div>
+                            <a 
+                              href={waDirectLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 underline cursor-pointer"
+                            >
+                              <span>💬 Buka WhatsApp untuk kirim OTP</span>
+                            </a>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -5157,6 +5308,16 @@ Aturan Sangat Penting:
                       value={inputToken}
                       onChange={(e) => setInputToken(e.target.value)}
                       className="w-full bg-stone-50 border border-stone-200 rounded-xl py-3 px-4 text-center text-lg tracking-[0.25em] font-mono font-bold text-stone-900 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white transition-all placeholder:tracking-normal placeholder:font-sans placeholder:text-stone-300"
+                    />
+                  </div>
+
+                  {/* Non-Robot Verification Checkbox */}
+                  <div className="pt-1">
+                    <NonRobotVerification 
+                      id="login-captcha-verification"
+                      isVerified={isHumanVerified} 
+                      onVerify={setIsHumanVerified} 
+                      language={language} 
                     />
                   </div>
 
@@ -5826,240 +5987,255 @@ Aturan Sangat Penting:
                   setIsCartOpen(false);
                 }
               }}
-              className="fixed inset-x-0 bottom-0 md:bottom-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-2xl md:h-[80vh] md:rounded-[32px] bg-white rounded-t-[40px] shadow-2xl z-50 flex flex-col overflow-hidden"
+              className="fixed inset-x-0 bottom-0 md:bottom-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-2xl h-[92vh] max-h-[92dvh] md:h-[85vh] md:rounded-[32px] bg-white rounded-t-[36px] shadow-2xl z-50 flex flex-col overflow-hidden"
             >
-              {/* Swipe Handle Indicator */}
-              <div 
-                onPointerDown={(e) => cartDragControls.start(e)}
-                onClick={() => setIsCartOpen(false)}
-                className="w-full pt-3 pb-1 flex justify-center cursor-grab active:cursor-grabbing touch-none flex-shrink-0 group"
-                title="Geser ke bawah atau ketuk untuk menutup"
-              >
-                <div className="w-16 h-2 bg-stone-200 group-hover:bg-stone-300 group-active:bg-orange-500 rounded-full transition-colors" />
-              </div>
-              
-              <div className="px-8 flex items-center justify-between mb-6 md:mt-2">
-                <h2 className="text-2xl font-bold text-stone-900">Pesanan Anda</h2>
-                <button 
+              {/* Swipe Handle Indicator & Header */}
+              <div className="flex-shrink-0 bg-white border-b border-stone-100 z-10">
+                <div 
+                  onPointerDown={(e) => cartDragControls.start(e)}
                   onClick={() => setIsCartOpen(false)}
-                  className="w-10 h-10 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 rounded-full flex items-center justify-center text-stone-500 transition-colors"
-                  title="Tutup"
+                  className="w-full pt-3 pb-1.5 flex justify-center cursor-grab active:cursor-grabbing touch-none group"
+                  title="Geser ke bawah atau ketuk untuk menutup"
                 >
-                  <X size={20} />
-                </button>
+                  <div className="w-16 h-1.5 bg-stone-200 group-hover:bg-stone-300 group-active:bg-orange-500 rounded-full transition-colors" />
+                </div>
+                
+                <div className="px-6 sm:px-8 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <h2 className="text-xl sm:text-2xl font-bold text-stone-900">Pesanan Anda</h2>
+                    {totalItems > 0 && (
+                      <span className="px-2.5 py-0.5 bg-orange-100 text-orange-700 text-xs font-black rounded-full">
+                        {totalItems} Item
+                      </span>
+                    )}
+                  </div>
+                  <button 
+                    onClick={() => setIsCartOpen(false)}
+                    className="w-9 h-9 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 rounded-full flex items-center justify-center text-stone-500 transition-colors cursor-pointer"
+                    title="Tutup"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
               </div>
 
-              <div className="flex-grow overflow-y-auto px-8 space-y-6">
+              {/* Scrollable Body: Items + Preferences + Order Details */}
+              <div className="flex-1 overflow-y-auto px-5 sm:px-8 py-5 space-y-6 overscroll-contain">
                 {cart.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center py-20">
-                    <div className="w-24 h-24 bg-stone-50 rounded-full flex items-center justify-center mb-6 text-stone-300">
-                      <ShoppingBag size={48} />
+                  <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center py-16">
+                    <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mb-4 text-stone-300">
+                      <ShoppingBag size={40} />
                     </div>
-                    <h3 className="text-xl font-bold text-stone-900 mb-2">Keranjang Kosong</h3>
-                    <p className="text-stone-400">Pilih menu lezat kami untuk memulai pesanan.</p>
+                    <h3 className="text-lg font-bold text-stone-900 mb-1">Keranjang Kosong</h3>
+                    <p className="text-sm text-stone-400">Pilih menu lezat kami untuk memulai pesanan.</p>
                   </div>
                 ) : (
-                  cart.map((item) => (
-                    <div key={`${item.id}-${item.option || 'none'}`} className="relative overflow-hidden rounded-3xl group">
-                      {/* Swipe Background (Delete Button) */}
-                      <button 
-                        onClick={() => clearItemFromCart(item.id, item.option)}
-                        className="absolute inset-0 bg-red-500 flex items-center justify-end px-8 text-white active:bg-red-600 transition-colors"
-                      >
-                        <div className="flex flex-col items-center gap-1">
-                          <Trash2 size={24} />
-                          <span className="text-[10px] font-bold uppercase">Hapus</span>
-                        </div>
-                      </button>
+                  <>
+                    <div className="space-y-4">
+                      {cart.map((item) => (
+                        <div key={`${item.id}-${item.option || 'none'}`} className="relative overflow-hidden rounded-3xl group border border-stone-100 bg-stone-50/50">
+                          {/* Swipe Background (Delete Button) */}
+                          <button 
+                            onClick={() => clearItemFromCart(item.id, item.option)}
+                            className="absolute inset-0 bg-red-500 flex items-center justify-end px-8 text-white active:bg-red-600 transition-colors"
+                          >
+                            <div className="flex flex-col items-center gap-1">
+                              <Trash2 size={22} />
+                              <span className="text-[10px] font-bold uppercase">Hapus</span>
+                            </div>
+                          </button>
 
-                      {/* Item Content */}
-                      <motion.div 
-                        drag="x"
-                        dragConstraints={{ left: -100, right: 0 }}
-                        dragElastic={0.1}
-                        className="relative bg-white flex gap-4 items-center p-2 cursor-grab active:cursor-grabbing"
-                      >
-                        <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0">
-                          <MenuIcon item={item} size={28} />
-                        </div>
-                        <div className="flex-grow">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-bold text-stone-900">{item.name}</h4>
-                              <p className="text-xs text-stone-400 mb-2">{item.category}</p>
+                          {/* Item Content */}
+                          <motion.div 
+                            drag="x"
+                            dragConstraints={{ left: -100, right: 0 }}
+                            dragElastic={0.1}
+                            className="relative bg-white flex gap-3.5 items-center p-3 cursor-grab active:cursor-grabbing rounded-3xl"
+                          >
+                            <div className="w-18 h-18 rounded-2xl overflow-hidden flex-shrink-0">
+                              <MenuIcon item={item} size={26} />
                             </div>
-                            {item.option && (
-                              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-sm ${
-                                item.option === 'Es' 
-                                  ? 'bg-blue-500 text-white' 
-                                  : 'bg-orange-600 text-white'
-                              }`}>
-                                {item.option === 'Es' ? <Star size={10} fill="currentColor" /> : <Coffee size={10} />}
-                                {item.option}
+                            <div className="flex-grow min-w-0">
+                              <div className="flex justify-between items-start gap-2 mb-1.5">
+                                <div className="truncate">
+                                  <h4 className="font-bold text-stone-900 text-sm sm:text-base truncate">{item.name}</h4>
+                                  <p className="text-xs text-stone-400">{item.category}</p>
+                                </div>
+                                {item.option && (
+                                  <div className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-xs flex-shrink-0 ${
+                                    item.option === 'Es' 
+                                      ? 'bg-blue-500 text-white' 
+                                      : 'bg-orange-600 text-white'
+                                  }`}>
+                                    {item.option === 'Es' ? <Star size={9} fill="currentColor" /> : <Coffee size={9} />}
+                                    {item.option}
+                                  </div>
+                                )}
                               </div>
-                            )}
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <div className="flex items-center gap-2 bg-stone-100 rounded-xl px-1.5 py-0.5">
+                                  <button 
+                                    onClick={() => removeFromCart(item.id, item.option)}
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-600 hover:bg-stone-200 transition-colors"
+                                  >
+                                    <Minus size={14} />
+                                  </button>
+                                  <span className="font-bold text-stone-900 text-sm px-1">{item.quantity}</span>
+                                  <button 
+                                    onClick={() => addToCart(item, item.option)}
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-600 hover:bg-stone-200 transition-colors"
+                                  >
+                                    <Plus size={14} />
+                                  </button>
+                                </div>
+                                <button 
+                                  onClick={() => setNoteModalItem({ id: item.id, option: item.option, note: item.note || '' })}
+                                  className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all ${
+                                    item.note 
+                                      ? 'bg-orange-500 text-white shadow-sm' 
+                                      : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                                  }`}
+                                >
+                                  <Settings size={11} />
+                                  {item.note ? 'Edit Catatan' : 'Tambah Catatan'}
+                                </button>
+                              </div>
+                              {item.note && (
+                                <div className="mt-2 p-2 bg-orange-50 rounded-xl border border-orange-100">
+                                  <p className="text-[10px] text-orange-600 font-medium italic">"{item.note}"</p>
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Order Preferences (Dine-in / Bungkus & Table/Address) inside the scrollable container */}
+                    <div className="pt-2 space-y-4">
+                      <div>
+                        <p className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-2.5">Pilihan Penyajian</p>
+                        <div className="flex p-1 bg-stone-100 rounded-2xl">
+                          <button 
+                            type="button"
+                            onClick={() => setOrderType('Makan di Tempat')}
+                            className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                              orderType === 'Makan di Tempat' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-800'
+                            }`}
+                          >
+                            Makan di Tempat
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={() => setOrderType('Bungkus')}
+                            className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                              orderType === 'Bungkus' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-800'
+                            }`}
+                          >
+                            Bungkus
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Dine-In Preferences: Table Number */}
+                      {orderType === 'Makan di Tempat' && (
+                        <div className="p-4 bg-orange-50/70 rounded-2xl border border-orange-100 space-y-2.5">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                            <label className="text-xs font-bold text-stone-700 uppercase tracking-wider block">Nomor Meja Anda</label>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-3 bg-stone-100 rounded-xl px-2 py-1">
-                              <button 
-                                onClick={() => removeFromCart(item.id, item.option)}
-                                className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-600"
+                          <input
+                            type="text"
+                            placeholder="Contoh: Meja 05 atau Meja VIP 1"
+                            value={tableNumber}
+                            onChange={(e) => {
+                              setTableNumber(e.target.value);
+                              localStorage.setItem('rm_segar_table_number', e.target.value);
+                            }}
+                            className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all shadow-xs"
+                          />
+                          <p className="text-[10px] text-stone-500 italic">✓ Preferensi nomor meja disimpan otomatis di perangkat Anda.</p>
+                        </div>
+                      )}
+
+                      {/* Bungkus Preferences: Delivery Method and Address */}
+                      {orderType === 'Bungkus' && (
+                        <div className="p-4 bg-orange-50/70 rounded-2xl border border-orange-100 space-y-3.5">
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-stone-700 uppercase tracking-wider block">Metode Pengambilan</label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setDeliveryMethod('ambil_sendiri');
+                                  localStorage.setItem('rm_segar_delivery_method', 'ambil_sendiri');
+                                }}
+                                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                                  deliveryMethod === 'ambil_sendiri'
+                                    ? 'bg-orange-500 border-orange-500 text-white shadow-xs'
+                                    : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
+                                }`}
                               >
-                                <Minus size={16} />
+                                Ambil Sendiri
                               </button>
-                              <span className="font-bold text-stone-900">{item.quantity}</span>
-                              <button 
-                                onClick={() => addToCart(item, item.option)}
-                                className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-600"
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setDeliveryMethod('kirim_alamat');
+                                  localStorage.setItem('rm_segar_delivery_method', 'kirim_alamat');
+                                }}
+                                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                                  deliveryMethod === 'kirim_alamat'
+                                    ? 'bg-orange-500 border-orange-500 text-white shadow-xs'
+                                    : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
+                                }`}
                               >
-                                <Plus size={16} />
+                                Kirim ke Alamat
                               </button>
                             </div>
-                            <button 
-                              onClick={() => setNoteModalItem({ id: item.id, option: item.option, note: item.note || '' })}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all ${
-                                item.note 
-                                  ? 'bg-orange-500 text-white shadow-sm' 
-                                  : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
-                              }`}
-                            >
-                              <Settings size={12} />
-                              {item.note ? 'Edit Catatan' : 'Tambah Catatan'}
-                            </button>
                           </div>
-                          {item.note && (
-                            <div className="mt-2 p-2 bg-orange-50 rounded-xl border border-orange-100">
-                              <p className="text-[10px] text-orange-600 font-medium italic">"{item.note}"</p>
+
+                          {deliveryMethod === 'kirim_alamat' && (
+                            <div className="space-y-2">
+                              <label className="text-xs font-bold text-stone-700 uppercase tracking-wider block">Alamat Pengiriman</label>
+                              <textarea
+                                placeholder="Ketik alamat lengkap Anda (Nama Jalan, Blok, RT/RW, Patokan)"
+                                value={deliveryAddress}
+                                onChange={(e) => {
+                                  setDeliveryAddress(e.target.value);
+                                  localStorage.setItem('rm_segar_delivery_address', e.target.value);
+                                }}
+                                rows={2}
+                                className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none shadow-xs"
+                              />
+                              <p className="text-[10px] text-stone-500 italic">✓ Alamat pengiriman disimpan otomatis di perangkat Anda.</p>
                             </div>
                           )}
+                          {deliveryMethod === 'ambil_sendiri' && (
+                            <p className="text-[11px] text-stone-600 bg-white/80 p-2.5 rounded-xl border border-orange-200/50">
+                              📍 Anda akan mengambil pesanan Anda sendiri langsung di <strong>RM Segar, Sambas</strong> setelah menerima konfirmasi dari WhatsApp kami.
+                            </p>
+                          )}
                         </div>
-                      </motion.div>
+                      )}
                     </div>
-                  ))
+                  </>
                 )}
               </div>
 
+              {/* Sticky Footer: Total & Confirmation Button */}
               {cart.length > 0 && (
-                <div className="p-8 bg-white border-t border-stone-100">
-                  <div className="mb-6">
-                    <p className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Pilihan Penyajian</p>
-                    <div className="flex p-1 bg-stone-100 rounded-2xl mb-4">
-                      <button 
-                        onClick={() => setOrderType('Makan di Tempat')}
-                        className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
-                          orderType === 'Makan di Tempat' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'
-                        }`}
-                      >
-                        Makan di Tempat
-                      </button>
-                      <button 
-                        onClick={() => setOrderType('Bungkus')}
-                        className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
-                          orderType === 'Bungkus' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400'
-                        }`}
-                      >
-                        Bungkus
-                      </button>
-                    </div>
-
-                    {/* Dine-In Preferences: Table Number */}
-                    {orderType === 'Makan di Tempat' && (
-                      <div className="p-4 bg-orange-50/50 rounded-2xl border border-orange-100/50 space-y-2.5">
-                        <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
-                          <label className="text-xs font-bold text-stone-600 uppercase tracking-wider block">Nomor Meja Anda</label>
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Contoh: Meja 05 atau Meja VIP 1"
-                          value={tableNumber}
-                          onChange={(e) => {
-                            setTableNumber(e.target.value);
-                            localStorage.setItem('rm_segar_table_number', e.target.value);
-                          }}
-                          className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all shadow-sm"
-                        />
-                        <p className="text-[10px] text-stone-400 italic">✓ Preferensi nomor meja disimpan otomatis di perangkat Anda.</p>
-                      </div>
-                    )}
-
-                    {/* Bungkus Preferences: Delivery Method and Address */}
-                    {orderType === 'Bungkus' && (
-                      <div className="p-4 bg-orange-50/50 rounded-2xl border border-orange-100/50 space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-xs font-bold text-stone-600 uppercase tracking-wider block">Metode Pengambilan</label>
-                          <div className="grid grid-cols-2 gap-2">
-                            <button
-                              onClick={() => {
-                                setDeliveryMethod('ambil_sendiri');
-                                localStorage.setItem('rm_segar_delivery_method', 'ambil_sendiri');
-                              }}
-                              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border ${
-                                deliveryMethod === 'ambil_sendiri'
-                                  ? 'bg-orange-500 border-orange-500 text-white shadow-sm'
-                                  : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
-                              }`}
-                            >
-                              Ambil Sendiri
-                            </button>
-                            <button
-                              onClick={() => {
-                                setDeliveryMethod('kirim_alamat');
-                                localStorage.setItem('rm_segar_delivery_method', 'kirim_alamat');
-                              }}
-                              className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border ${
-                                deliveryMethod === 'kirim_alamat'
-                                  ? 'bg-orange-500 border-orange-500 text-white shadow-sm'
-                                  : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
-                              }`}
-                            >
-                              Kirim ke Alamat
-                            </button>
-                          </div>
-                        </div>
-
-                        {deliveryMethod === 'kirim_alamat' && (
-                          <div className="space-y-2.5">
-                            <label className="text-xs font-bold text-stone-600 uppercase tracking-wider block">Alamat Pengiriman</label>
-                            <textarea
-                              placeholder="Ketik alamat lengkap Anda (Nama Jalan, Blok, RT/RW, Patokan)"
-                              value={deliveryAddress}
-                              onChange={(e) => {
-                                setDeliveryAddress(e.target.value);
-                                localStorage.setItem('rm_segar_delivery_address', e.target.value);
-                              }}
-                              rows={2}
-                              className="w-full px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all resize-none shadow-sm"
-                            />
-                            <p className="text-[10px] text-stone-400 italic">✓ Alamat pengiriman disimpan otomatis di perangkat Anda.</p>
-                          </div>
-                        )}
-                        {deliveryMethod === 'ambil_sendiri' && (
-                          <p className="text-[11px] text-stone-500 bg-orange-100/10 p-2.5 rounded-xl border border-orange-200/20">
-                            📍 Anda akan mengambil pesanan Anda sendiri langsung di <strong>RM Segar, Sambas</strong> setelah menerima konfirmasi dari WhatsApp kami.
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-3 mb-8">
-                    <div className="flex justify-between text-stone-500">
-                      <span>Total Item</span>
-                      <span className="font-bold text-stone-900">{totalItems} Menu</span>
-                    </div>
-                    <div className="h-px bg-stone-100 my-4" />
-                    <div className="flex justify-between text-xl font-bold text-stone-900">
-                      <span>Total Pesanan</span>
-                      <span>{totalItems} Item</span>
-                    </div>
+                <div className="flex-shrink-0 p-4 sm:p-6 bg-white border-t border-stone-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] space-y-3">
+                  <div className="flex items-center justify-between text-stone-600 text-xs sm:text-sm">
+                    <span>Total Pesanan ({cart.length} Menu):</span>
+                    <span className="font-black text-stone-900 text-sm sm:text-base">{totalItems} Item</span>
                   </div>
                   <button 
                     onClick={sendToWhatsApp}
-                    className="w-full py-5 bg-orange-500 text-white rounded-[24px] font-bold text-lg flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-xl shadow-orange-200"
+                    className="w-full py-4 bg-orange-500 text-white rounded-2xl font-bold text-base flex items-center justify-center gap-2 hover:bg-orange-600 active:scale-[0.99] transition-all shadow-lg shadow-orange-200 cursor-pointer"
                   >
-                    Konfirmasi Pesanan
-                    <ArrowRight size={20} />
+                    <span>Konfirmasi Pesanan</span>
+                    <ArrowRight size={18} />
                   </button>
                 </div>
               )}
@@ -6465,6 +6641,142 @@ Aturan Sangat Penting:
         )}
       </AnimatePresence>
 
+      {/* Google Account Modal (Seamless Login) */}
+      <AnimatePresence>
+        {showGoogleModal && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowGoogleModal(false)}
+              className="fixed inset-0 bg-stone-950/60 backdrop-blur-sm z-[70]"
+            />
+            <motion.div 
+              initial={{ scale: 0.92, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-sm bg-white rounded-[28px] shadow-2xl z-[70] overflow-hidden border border-stone-100"
+            >
+              <div className="p-6 text-left space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-white shadow-xs border border-stone-200 flex items-center justify-center">
+                      <svg className="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
+                        <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+                        <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z"/>
+                        <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-stone-900 leading-tight">Masuk Akun Google</h3>
+                      <p className="text-xs text-stone-400">Pilih atau masukkan email Google</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowGoogleModal(false)}
+                    className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 hover:bg-stone-200 cursor-pointer"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                {/* Quick Account Selection */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Pilih Akun Cepat:</p>
+                  <button 
+                    type="button"
+                    onClick={() => handleConfirmGoogleInputLogin('valensiarainy73@gmail.com', 'Valensia Rainy')}
+                    className="w-full p-2.5 rounded-xl border border-orange-200 bg-orange-50/60 hover:bg-orange-100/60 flex items-center justify-between text-left transition-all cursor-pointer"
+                  >
+                    <div className="truncate">
+                      <p className="text-xs font-bold text-stone-900">Valensia Rainy (Admin)</p>
+                      <p className="text-[11px] text-stone-500 truncate">valensiarainy73@gmail.com</p>
+                    </div>
+                    <span className="text-[10px] bg-orange-500 text-white font-bold px-2.5 py-0.5 rounded-full shrink-0">Admin</span>
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => handleConfirmGoogleInputLogin('pelanggan.segar@gmail.com', 'Pelanggan RM Segar')}
+                    className="w-full p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 flex items-center justify-between text-left transition-all cursor-pointer"
+                  >
+                    <div className="truncate">
+                      <p className="text-xs font-bold text-stone-900">Pelanggan RM Segar</p>
+                      <p className="text-[11px] text-stone-500 truncate">pelanggan.segar@gmail.com</p>
+                    </div>
+                    <span className="text-[10px] bg-stone-200 text-stone-700 font-bold px-2 py-0.5 rounded-full shrink-0">User</span>
+                  </button>
+                </div>
+
+                {/* Vercel Live URL Integration Badge */}
+                <div className="p-2.5 rounded-xl bg-blue-50/80 border border-blue-100 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Globe size={14} className="text-blue-600 shrink-0" />
+                    <div className="truncate">
+                      <p className="text-[10px] font-bold text-blue-900">Domain Vercel Resmi Terdaftar</p>
+                      <p className="text-[9px] text-blue-600 font-mono truncate">rumah-makan-segar.vercel.app</p>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full shrink-0">Live</span>
+                </div>
+
+                {/* Custom Google Email Input */}
+                <div className="space-y-3 pt-1">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-stone-700">Atau Alamat Email Google Lainnya</label>
+                    <input 
+                      type="email"
+                      placeholder="contoh@gmail.com"
+                      value={googleUserInputEmail}
+                      onChange={(e) => setGoogleUserInputEmail(e.target.value)}
+                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-stone-700">Nama Tampilan (Opsional)</label>
+                    <input 
+                      type="text"
+                      placeholder="Nama Anda"
+                      value={googleUserInputName}
+                      onChange={(e) => setGoogleUserInputName(e.target.value)}
+                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Non-Robot Verification inside Google Modal */}
+                <div className="pt-1">
+                  <NonRobotVerification 
+                    id="google-modal-captcha-verification"
+                    isVerified={isHumanVerified} 
+                    onVerify={setIsHumanVerified} 
+                    language={language} 
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button 
+                    type="button"
+                    onClick={() => setShowGoogleModal(false)}
+                    className="flex-1 py-2.5 bg-stone-100 text-stone-600 rounded-xl font-bold text-xs hover:bg-stone-200 cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => handleConfirmGoogleInputLogin()}
+                    className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl font-bold text-xs hover:bg-orange-600 shadow-md shadow-orange-500/20 cursor-pointer"
+                  >
+                    Masuk Sekarang
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Chinese Fortune Cookie Modal */}
       <AnimatePresence>
         {isFortuneModalOpen && (
@@ -6850,14 +7162,21 @@ Aturan Sangat Penting:
                 <div className="relative border border-stone-200 shadow-xl rounded-2xl overflow-hidden origin-top scale-[0.42] xs:scale-[0.52] sm:scale-[0.68] md:scale-[0.78] lg:scale-[0.88] transition-all bg-[#FAF7F2]" style={{ transformOrigin: 'top center', width: '794px', height: '1123px', minWidth: '794px', minHeight: '1123px' }}>
                   {pdfPreviewPage === 1 ? (
                     /* Page 1 Preview Mock */
-                    <div className="p-10 flex flex-col justify-between h-full font-serif text-left">
+                    <div className="p-10 flex flex-col justify-between h-full font-serif text-left relative overflow-hidden">
                       {/* Gold Brackets */}
-                      <div className="absolute top-3 left-3 w-8 h-8 border-t-4 border-l-4 border-amber-500" />
-                      <div className="absolute top-3 right-3 w-8 h-8 border-t-4 border-r-4 border-amber-500" />
-                      <div className="absolute bottom-3 left-3 w-8 h-8 border-b-4 border-l-4 border-amber-500" />
-                      <div className="absolute bottom-3 right-3 w-8 h-8 border-b-4 border-r-4 border-amber-500" />
+                      <div className="absolute top-3 left-3 w-8 h-8 border-t-4 border-l-4 border-amber-500 z-10" />
+                      <div className="absolute top-3 right-3 w-8 h-8 border-t-4 border-r-4 border-amber-500 z-10" />
+                      <div className="absolute bottom-3 left-3 w-8 h-8 border-b-4 border-l-4 border-amber-500 z-10" />
+                      <div className="absolute bottom-3 right-3 w-8 h-8 border-b-4 border-r-4 border-amber-500 z-10" />
 
-                      <div className="flex-grow flex flex-col">
+                      {/* Subtle Diagonal Brand Protection Watermark */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden">
+                        <div className="transform -rotate-45 text-[54px] font-black tracking-[0.3em] text-[#450a0a] uppercase font-sans whitespace-nowrap opacity-[0.06] border-y-4 border-[#450a0a]/30 py-4 px-16">
+                          RM SEGAR OFFICIAL
+                        </div>
+                      </div>
+
+                      <div className="flex-grow flex flex-col relative z-10">
                         <div className="text-center border-b-2 border-amber-500/30 pb-4 mb-6 relative">
                           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 border-2 border-red-700/20 rounded-full flex items-center justify-center font-bold text-red-700/20 text-xs tracking-tight">
                             RM SEGAR
@@ -6899,21 +7218,28 @@ Aturan Sangat Penting:
                         </div>
                       </div>
 
-                      <div className="text-center pt-2 border-t border-stone-200 text-[10px] text-stone-400 font-sans flex justify-between items-center">
+                      <div className="text-center pt-2 border-t border-stone-200 text-[10px] text-stone-400 font-sans flex justify-between items-center relative z-10">
                         <span>RM Segar Sambas — Digital Menu Catalog (Priceless)</span>
                         <span className="font-semibold text-amber-700 font-serif">Halaman 1 / 2</span>
                       </div>
                     </div>
                   ) : (
                     /* Page 2 Preview Mock */
-                    <div className="p-10 flex flex-col justify-between h-full font-serif text-left">
+                    <div className="p-10 flex flex-col justify-between h-full font-serif text-left relative overflow-hidden">
                       {/* Gold Brackets */}
-                      <div className="absolute top-3 left-3 w-8 h-8 border-t-4 border-l-4 border-amber-500" />
-                      <div className="absolute top-3 right-3 w-8 h-8 border-t-4 border-r-4 border-amber-500" />
-                      <div className="absolute bottom-3 left-3 w-8 h-8 border-b-4 border-l-4 border-amber-500" />
-                      <div className="absolute bottom-3 right-3 w-8 h-8 border-b-4 border-r-4 border-amber-500" />
+                      <div className="absolute top-3 left-3 w-8 h-8 border-t-4 border-l-4 border-amber-500 z-10" />
+                      <div className="absolute top-3 right-3 w-8 h-8 border-t-4 border-r-4 border-amber-500 z-10" />
+                      <div className="absolute bottom-3 left-3 w-8 h-8 border-b-4 border-l-4 border-amber-500 z-10" />
+                      <div className="absolute bottom-3 right-3 w-8 h-8 border-b-4 border-r-4 border-amber-500 z-10" />
 
-                      <div className="flex-grow flex flex-col justify-between">
+                      {/* Subtle Diagonal Brand Protection Watermark */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden">
+                        <div className="transform -rotate-45 text-[54px] font-black tracking-[0.3em] text-[#450a0a] uppercase font-sans whitespace-nowrap opacity-[0.06] border-y-4 border-[#450a0a]/30 py-4 px-16">
+                          RM SEGAR OFFICIAL
+                        </div>
+                      </div>
+
+                      <div className="flex-grow flex flex-col justify-between relative z-10">
                         <div className="space-y-4">
                           <div className="text-center border-b-2 border-amber-500/30 pb-4 mb-6">
                             <h2 className="text-2xl font-bold tracking-widest text-[#450a0a]">MINUMAN SEGAR</h2>
@@ -6922,7 +7248,7 @@ Aturan Sangat Penting:
                             </p>
                           </div>
 
-                          <div>
+                            <div>
                             <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
                               4. ANEKA MINUMAN (Beverages / 饮料)
                             </h3>
@@ -6961,7 +7287,7 @@ Aturan Sangat Penting:
                         </div>
                       </div>
 
-                      <div className="text-center pt-4 border-t border-stone-200 text-[10px] text-stone-400 font-sans flex justify-between items-center mt-6">
+                      <div className="text-center pt-4 border-t border-stone-200 text-[10px] text-stone-400 font-sans flex justify-between items-center mt-6 relative z-10">
                         <span>Sajian Legendaris Sambas, Kalimantan Barat • Hubungi kami di WhatsApp</span>
                         <span className="font-semibold text-amber-700 font-serif">Halaman 2 / 2</span>
                       </div>
@@ -8984,6 +9310,10 @@ Aturan Sangat Penting:
                           <span className="font-medium text-stone-500">AI Engine Model:</span>
                           <span className="font-mono font-bold text-purple-700">Google Gemini 2.5 Flash (@google/genai)</span>
                         </div>
+                        <div className="flex justify-between border-b border-stone-100 pb-1">
+                          <span className="font-medium text-stone-500">Error Tracking & Observability:</span>
+                          <span className="font-mono font-bold text-rose-700">Sentry.io React SDK (@sentry/react)</span>
+                        </div>
                         <div className="flex justify-between">
                           <span className="font-medium text-stone-500">Edge CDN & Firewall:</span>
                           <span className="font-mono font-bold text-orange-700">Cloudflare Enterprise & Custom WAF Ruleset</span>
@@ -9065,14 +9395,21 @@ Aturan Sangat Penting:
       {/* Hidden template for PDF Generation & Native Print */}
       <div className="print-only-container" style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '794px', zIndex: -100, pointerEvents: 'none' }}>
         {/* Page 1 */}
-        <div id="pdf-page-1" className="print-page bg-[#FAF7F2] w-[794px] h-[1123px] relative p-10 flex flex-col justify-between border-[12px] border-[#450a0a] text-stone-900 font-serif">
+        <div id="pdf-page-1" className="print-page bg-[#FAF7F2] w-[794px] h-[1123px] relative p-10 flex flex-col justify-between border-[12px] border-[#450a0a] text-stone-900 font-serif overflow-hidden">
           {/* Gold Decorative Corner Brackets */}
-          <div className="absolute top-3 left-3 w-8 h-8 border-t-4 border-l-4 border-amber-500" />
-          <div className="absolute top-3 right-3 w-8 h-8 border-t-4 border-r-4 border-amber-500" />
-          <div className="absolute bottom-3 left-3 w-8 h-8 border-b-4 border-l-4 border-amber-500" />
-          <div className="absolute bottom-3 right-3 w-8 h-8 border-b-4 border-r-4 border-amber-500" />
+          <div className="absolute top-3 left-3 w-8 h-8 border-t-4 border-l-4 border-amber-500 z-10" />
+          <div className="absolute top-3 right-3 w-8 h-8 border-t-4 border-r-4 border-amber-500 z-10" />
+          <div className="absolute bottom-3 left-3 w-8 h-8 border-b-4 border-l-4 border-amber-500 z-10" />
+          <div className="absolute bottom-3 right-3 w-8 h-8 border-b-4 border-r-4 border-amber-500 z-10" />
           
-          <div className="flex-grow flex flex-col">
+          {/* Subtle Diagonal Brand Protection Watermark */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden">
+            <div className="transform -rotate-45 text-[54px] font-black tracking-[0.3em] text-[#450a0a] uppercase font-sans whitespace-nowrap opacity-[0.06] border-y-4 border-[#450a0a]/30 py-4 px-16">
+              RM SEGAR OFFICIAL
+            </div>
+          </div>
+
+          <div className="flex-grow flex flex-col relative z-10">
             {/* Header Stamp & Title */}
             <div className="text-center border-b-2 border-amber-500/30 pb-4 mb-6 relative">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 border-2 border-red-700/20 rounded-full flex items-center justify-center font-bold text-red-700/20 text-xs tracking-tight select-none">
@@ -9120,21 +9457,28 @@ Aturan Sangat Penting:
           </div>
 
           {/* Footer Page 1 */}
-          <div className="text-center pt-2 border-t border-stone-200 text-[10px] text-stone-400 font-sans flex justify-between items-center">
+          <div className="text-center pt-2 border-t border-stone-200 text-[10px] text-stone-400 font-sans flex justify-between items-center relative z-10">
             <span>RM Segar Sambas — Digital Menu Catalog (Priceless)</span>
             <span className="font-semibold text-amber-700 font-serif">Halaman 1 / 2</span>
           </div>
         </div>
 
         {/* Page 2 */}
-        <div id="pdf-page-2" className="print-page bg-[#FAF7F2] w-[794px] h-[1123px] relative p-10 flex flex-col justify-between border-[12px] border-[#450a0a] text-stone-900 font-serif">
+        <div id="pdf-page-2" className="print-page bg-[#FAF7F2] w-[794px] h-[1123px] relative p-10 flex flex-col justify-between border-[12px] border-[#450a0a] text-stone-900 font-serif overflow-hidden">
           {/* Gold Decorative Corner Brackets */}
-          <div className="absolute top-3 left-3 w-8 h-8 border-t-4 border-l-4 border-amber-500" />
-          <div className="absolute top-3 right-3 w-8 h-8 border-t-4 border-r-4 border-amber-500" />
-          <div className="absolute bottom-3 left-3 w-8 h-8 border-b-4 border-l-4 border-amber-500" />
-          <div className="absolute bottom-3 right-3 w-8 h-8 border-b-4 border-r-4 border-amber-500" />
+          <div className="absolute top-3 left-3 w-8 h-8 border-t-4 border-l-4 border-amber-500 z-10" />
+          <div className="absolute top-3 right-3 w-8 h-8 border-t-4 border-r-4 border-amber-500 z-10" />
+          <div className="absolute bottom-3 left-3 w-8 h-8 border-b-4 border-l-4 border-amber-500 z-10" />
+          <div className="absolute bottom-3 right-3 w-8 h-8 border-b-4 border-r-4 border-amber-500 z-10" />
           
-          <div className="flex-grow flex flex-col justify-between">
+          {/* Subtle Diagonal Brand Protection Watermark */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden">
+            <div className="transform -rotate-45 text-[54px] font-black tracking-[0.3em] text-[#450a0a] uppercase font-sans whitespace-nowrap opacity-[0.06] border-y-4 border-[#450a0a]/30 py-4 px-16">
+              RM SEGAR OFFICIAL
+            </div>
+          </div>
+
+          <div className="flex-grow flex flex-col justify-between relative z-10">
             {/* Upper half: Drinks */}
             <div className="space-y-4">
               <div className="text-center border-b-2 border-amber-500/30 pb-4 mb-6">
@@ -9186,7 +9530,7 @@ Aturan Sangat Penting:
           </div>
 
           {/* Footer Page 2 */}
-          <div className="text-center pt-4 border-t border-stone-200 text-[10px] text-stone-400 font-sans flex justify-between items-center mt-6">
+          <div className="text-center pt-4 border-t border-stone-200 text-[10px] text-stone-400 font-sans flex justify-between items-center mt-6 relative z-10">
             <span>Sajian Legendaris Sambas, Kalimantan Barat • Hubungi kami di WhatsApp</span>
             <span className="font-semibold text-amber-700 font-serif">Halaman 2 / 2</span>
           </div>

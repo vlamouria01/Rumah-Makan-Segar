@@ -16,6 +16,7 @@
   "dependencies": {
     "@google/genai": "^1.48.0",
     "@sendgrid/mail": "^8.1.6",
+    "@sentry/react": "^10.70.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
     "dotenv": "^17.2.3",
