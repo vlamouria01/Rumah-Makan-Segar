@@ -2,29 +2,54 @@ import * as Sentry from '@sentry/react';
 
 // Inisialisasi Sentry
 const metaEnv = (import.meta as any).env || {};
-const SENTRY_DSN = metaEnv.VITE_SENTRY_DSN || '';
+const rawDsn = String(metaEnv.VITE_SENTRY_DSN || '').trim();
+
+/**
+ * Validasi ketat format DSN resmi Sentry (harus berupa URL valid berawalan https://, memiliki public key dan project id angka)
+ * Contoh valid: https://1234567890abcdef1234567890abcdef@o123456.ingest.sentry.io/123456
+ */
+function getValidSentryDsn(dsn: string): string | null {
+  if (!dsn || dsn.length < 10) return null;
+  try {
+    const url = new URL(dsn);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+    if (!url.username && !url.password && !url.hostname) return null;
+    // DSN Sentry selalu memiliki pathname berupa project ID (misal /1234567)
+    if (!url.pathname || url.pathname === '/' || url.pathname.length < 2) return null;
+    return dsn;
+  } catch {
+    return null;
+  }
+}
 
 export function initSentry() {
-  if (SENTRY_DSN) {
-    Sentry.init({
-      dsn: SENTRY_DSN,
-      integrations: [
-        Sentry.browserTracingIntegration(),
-        Sentry.replayIntegration({
-          maskAllText: false,
-          blockAllMedia: false,
-        }),
-      ],
-      // Performance Monitoring
-      tracesSampleRate: 1.0,
-      // Session Replay
-      replaysSessionSampleRate: 0.1,
-      replaysOnErrorSampleRate: 1.0,
-      environment: metaEnv.MODE || 'development',
-    });
-    console.log('✅ Sentry.io monitoring initialized with DSN.');
+  const validDsn = getValidSentryDsn(rawDsn);
+
+  if (validDsn) {
+    try {
+      Sentry.init({
+        dsn: validDsn,
+        integrations: [
+          Sentry.browserTracingIntegration(),
+          Sentry.replayIntegration({
+            maskAllText: false,
+            blockAllMedia: false,
+          }),
+        ],
+        // Performance Monitoring
+        tracesSampleRate: 1.0,
+        // Session Replay
+        replaysSessionSampleRate: 0.1,
+        replaysOnErrorSampleRate: 1.0,
+        environment: metaEnv.MODE || 'development',
+      });
+      console.log('✅ Sentry.io monitoring initialized with DSN.');
+    } catch (err) {
+      console.warn('⚠️ Sentry.init failed gracefully:', err);
+    }
   } else {
-    console.info('ℹ️ Sentry.io: VITE_SENTRY_DSN belum diisi. Mode offline/simulasi aktif.');
+    // Mode offline / aman jika VITE_SENTRY_DSN kosong atau berisi string nama app "Rumah Makan Segar"
+    console.info('ℹ️ Sentry.io: DSN belum dikonfigurasi atau tidak valid. Mode offline/simulasi aktif.');
   }
 }
 

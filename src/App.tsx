@@ -1268,9 +1268,6 @@ export default function App() {
   const [resetToken, setResetToken] = useState('');
   const [inputToken, setInputToken] = useState('');
   const [waDirectLink, setWaDirectLink] = useState('');
-  const [showGoogleModal, setShowGoogleModal] = useState<boolean>(false);
-  const [googleUserInputEmail, setGoogleUserInputEmail] = useState<string>('valensiarainy73@gmail.com');
-  const [googleUserInputName, setGoogleUserInputName] = useState<string>('');
   const [isHumanVerified, setIsHumanVerified] = useState<boolean>(false);
   
   // Security & Rate Limiting States
@@ -1642,12 +1639,11 @@ export default function App() {
         if (isCartOpen) setIsCartOpen(false);
         if (noteModalItem) setNoteModalItem(null);
         if (optionModalItem) setOptionModalItem(null);
-        if (showGoogleModal) setShowGoogleModal(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isChatOpen, isCartOpen, noteModalItem, optionModalItem, showGoogleModal, showLogoutConfirmModal, showClearHistoryConfirmModal, showClearChatConfirmModal]);
+  }, [isChatOpen, isCartOpen, noteModalItem, optionModalItem, showLogoutConfirmModal, showClearHistoryConfirmModal, showClearChatConfirmModal]);
 
   const handleSendMessage = async (e?: React.FormEvent, initialPrompt?: string) => {
     if (e) e.preventDefault();
@@ -2551,78 +2547,15 @@ Aturan Sangat Penting:
   };
 
   const handleFirebaseGoogleLogin = async () => {
-    if (!isHumanVerified) {
-      alert('🛡️ Verifikasi Keamanan Diperlukan!\n\nHarap centang verifikasi "Saya bukan robot" terlebih dahulu sebelum melanjutkan dengan Akun Google.');
-      return;
-    }
-
-    // 1. Try Google Identity Services (official client-side Google popup) if available
-    try {
-      const google = (window as any).google;
-      if (google?.accounts?.oauth2) {
-        const client = google.accounts.oauth2.initTokenClient({
-          client_id: '152286716545-54hvjh3r56s75c2ev77jvsr0jqii4q3j.apps.googleusercontent.com',
-          scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-          callback: async (tokenResponse: any) => {
-            if (tokenResponse && tokenResponse.access_token) {
-              try {
-                const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-                });
-                const gUser = await res.json();
-                if (gUser && gUser.email) {
-                  const targetEmail = gUser.email.toLowerCase().trim();
-                  const targetName = gUser.name || gUser.given_name || targetEmail.split('@')[0];
-                  const isAdmin = targetEmail === ALLOWED_ADMIN_EMAIL.toLowerCase();
-
-                  const finalUserData = {
-                    phone: isAdmin ? '6289518948115' : '',
-                    email: targetEmail,
-                    displayName: targetName
-                  };
-                  setUser(finalUserData);
-                  localStorage.setItem('rm_segar_user', JSON.stringify(finalUserData));
-
-                  if (isAdmin) {
-                    setIsAdminAuthenticated(true);
-                    setShowAdminDashboard(true);
-                    alert(`✅ Login Google Berhasil!\n\nSelamat datang, ${targetName} (${targetEmail}). Dashboard Admin RM Segar aktif.`);
-                  } else {
-                    setEmailNotificationToast(`🎉 Login Google Berhasil! Selamat datang, ${targetName}`);
-                    setTimeout(() => setEmailNotificationToast(null), 4000);
-                  }
-
-                  setLoginMode('login');
-                  setLoginPhone('');
-                  setInputToken('');
-                  setResetToken('');
-                  setShowOtpNotification(null);
-                  setPendingAdminUser(null);
-                  return;
-                }
-              } catch (fetchErr) {
-                console.warn('Failed to fetch userinfo from Google token:', fetchErr);
-              }
-            }
-          }
-        });
-        client.requestAccessToken();
-        return;
-      }
-    } catch (gisErr) {
-      console.warn('Google Identity Services not ready, trying Firebase popup:', gisErr);
-    }
-
-    // 2. Try Firebase signInWithPopup
     try {
       const result = await loginWithGoogleFirebase();
-      if (result.success && result.user && result.user.email) {
-        const targetEmail = result.user.email.toLowerCase().trim();
-        const targetName = result.user.displayName || targetEmail.split('@')[0];
+      if (result.success && result.user) {
+        const targetEmail = (result.user.email || '').toLowerCase().trim();
+        const targetName = result.user.displayName || targetEmail.split('@')[0] || 'Pengguna Google';
         const isAdmin = targetEmail === ALLOWED_ADMIN_EMAIL.toLowerCase();
 
         const finalUserData = {
-          phone: isAdmin ? '6289518948115' : '',
+          phone: result.user.phone || (isAdmin ? '6289518948115' : ''),
           email: targetEmail,
           displayName: targetName
         };
@@ -2632,9 +2565,11 @@ Aturan Sangat Penting:
         if (isAdmin) {
           setIsAdminAuthenticated(true);
           setShowAdminDashboard(true);
-          alert(`✅ Login Google Berhasil!\n\nSelamat datang, ${targetName} (${targetEmail}). Dashboard Admin RM Segar aktif.`);
+          alert(`✅ Login Admin Google Berhasil!\n\nSelamat datang, ${targetName} (${targetEmail}).`);
         } else {
-          setEmailNotificationToast(`🎉 Login Google Berhasil! Selamat datang, ${targetName}`);
+          setIsAdminAuthenticated(false);
+          setShowAdminDashboard(false);
+          setEmailNotificationToast(`🎉 Login Berhasil! Selamat datang, ${targetName}`);
           setTimeout(() => setEmailNotificationToast(null), 4000);
         }
 
@@ -2644,54 +2579,12 @@ Aturan Sangat Penting:
         setResetToken('');
         setShowOtpNotification(null);
         setPendingAdminUser(null);
-        return;
+      } else if (result.message && !result.message.includes('popup-closed-by-user')) {
+        alert(result.message);
       }
-    } catch (popupErr) {
-      console.warn('Firebase popup error:', popupErr);
+    } catch (err: any) {
+      console.warn('Google login error:', err);
     }
-
-    // 3. Fallback to In-App Account Selection Modal if browser blocks popup
-    setShowGoogleModal(true);
-  };
-
-  const handleConfirmGoogleInputLogin = (overrideEmail?: string, overrideName?: string) => {
-    if (!isHumanVerified) {
-      alert('🛡️ Verifikasi Keamanan Diperlukan!\n\nHarap centang verifikasi "Saya bukan robot" terlebih dahulu.');
-      return;
-    }
-
-    const targetEmail = (overrideEmail || googleUserInputEmail).trim().toLowerCase();
-    if (!targetEmail || !targetEmail.includes('@')) {
-      alert('❌ Harap masukkan alamat email Google yang valid (contoh: nama@gmail.com).');
-      return;
-    }
-    const targetName = overrideName || googleUserInputName.trim() || targetEmail.split('@')[0];
-    const isAdmin = targetEmail === ALLOWED_ADMIN_EMAIL.toLowerCase();
-
-    const finalUserData = {
-      phone: pendingAdminUser?.phone || (isAdmin ? '6289518948115' : ''),
-      email: targetEmail,
-      displayName: targetName
-    };
-    setUser(finalUserData);
-    localStorage.setItem('rm_segar_user', JSON.stringify(finalUserData));
-
-    if (isAdmin) {
-      setIsAdminAuthenticated(true);
-      setShowAdminDashboard(true);
-      alert(`✅ Login Admin Google Berhasil!\n\nSelamat datang, ${targetName} (${targetEmail}). Dashboard Admin RM Segar telah diaktifkan.`);
-    } else {
-      setEmailNotificationToast(`🎉 Login Google Berhasil! Selamat datang, ${targetName} (${targetEmail})`);
-      setTimeout(() => setEmailNotificationToast(null), 4000);
-    }
-
-    setShowGoogleModal(false);
-    setLoginMode('login');
-    setLoginPhone('');
-    setInputToken('');
-    setResetToken('');
-    setShowOtpNotification(null);
-    setPendingAdminUser(null);
   };
 
   const handleAdminGoogleVerify = () => {
@@ -4150,8 +4043,8 @@ Aturan Sangat Penting:
                 </svg>
               </div>
               <div>
-                <h4 className="font-extrabold text-sm text-blue-100">Profil Akun Google User Terhubung</h4>
-                <p className="text-[10px] text-blue-300 font-medium">Informasi Gmail &amp; Nomor Telepon Pengguna Google</p>
+                <h4 className="font-extrabold text-sm text-blue-100">Profil Akun Google Terhubung</h4>
+                <p className="text-[10px] text-blue-300 font-medium">Informasi Akun &amp; Kontak Pelanggan</p>
               </div>
             </div>
             <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black uppercase rounded-full tracking-wider flex items-center gap-1">
@@ -4163,7 +4056,7 @@ Aturan Sangat Penting:
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-1">
             <div className="bg-white/5 p-3.5 rounded-2xl border border-white/10 flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-blue-300">Gmail Akun Google User</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-blue-300">Alamat Email Google</p>
                 <p className="font-mono font-extrabold text-white text-sm mt-0.5">
                   {user?.email || 'valensiarainy73@gmail.com'}
                 </p>
@@ -4174,7 +4067,7 @@ Aturan Sangat Penting:
             <div className="bg-white/5 p-3.5 rounded-2xl border border-white/10 flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-blue-300">Nomor Telepon Google User</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-blue-300">Nomor WhatsApp / Telepon</p>
                   <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-200 font-bold border border-blue-400/30">
                     {revealedPhoneUsers['banner'] ? 'Full Number' : 'Otomatis 4 Digit Akhir'}
                   </span>
@@ -4266,7 +4159,7 @@ Aturan Sangat Penting:
             }`}
           >
             <Users size={16} />
-            Database Google User
+            Data Pelanggan
           </button>
         </div>
 
@@ -4464,19 +4357,19 @@ Aturan Sangat Penting:
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-wider">
-                    Google OAuth Database
+                    Google Terverifikasi
                   </span>
                   <span className="text-[10px] text-blue-200 font-bold">Terhubung Otomatis</span>
                 </div>
-                <h3 className="text-xl font-extrabold tracking-tight">Daftar Akun Google User (Pelanggan)</h3>
+                <h3 className="text-xl font-extrabold tracking-tight">Daftar Pelanggan Terdaftar</h3>
                 <p className="text-xs text-blue-100 max-w-lg leading-relaxed">
-                  Menampilkan seluruh informasi akun Google yang terhubung, mencakup alamat Gmail resmi dan nomor telepon pelanggan RM Segar Sambas.
+                  Menampilkan data akun Google dan kontak pelanggan RM Segar Sambas.
                 </p>
               </div>
 
               <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 self-stretch md:self-auto justify-between md:justify-start">
                 <div className="text-right">
-                  <p className="text-[10px] uppercase font-extrabold text-blue-200">Total Google Users</p>
+                  <p className="text-[10px] uppercase font-extrabold text-blue-200">Total Pelanggan</p>
                   <p className="text-lg font-black text-white">
                     {user?.email ? 1 : 1} Akun Terverifikasi
                   </p>
@@ -5060,7 +4953,7 @@ Aturan Sangat Penting:
                   ) : (
                     <span className="px-3 py-1 bg-green-100 text-green-700 text-[11px] font-black uppercase rounded-full border border-green-200 flex items-center gap-1.5 shadow-xs">
                       <span className="w-2 h-2 rounded-full bg-green-500" />
-                      Akun Pelanggan (Multi-User)
+                      Akun Pelanggan Aktif
                     </span>
                   )}
                 </div>
@@ -5137,7 +5030,7 @@ Aturan Sangat Penting:
 
 
 
-            {/* Interactive Language Selection Card with Automatic Background Database Sync */}
+            {/* Language Selection Card */}
             <div className="w-full md:col-span-2 p-5 bg-white rounded-2xl shadow-sm border border-stone-100 flex flex-col space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 text-stone-700">
@@ -5149,16 +5042,6 @@ Aturan Sangat Penting:
                     <span className="text-[10px] text-stone-400 font-bold">{TRANSLATIONS[language].phoneLanguage}</span>
                   </div>
                 </div>
-                {user ? (
-                  <span className="px-2.5 py-1 bg-green-50 text-green-700 text-[10px] font-extrabold rounded-full border border-green-200 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                    Sync Otomatis DB
-                  </span>
-                ) : (
-                  <span className="px-2.5 py-1 bg-stone-50 text-stone-500 text-[10px] font-extrabold rounded-full border border-stone-200">
-                    Otomatis Lokal
-                  </span>
-                )}
               </div>
 
               <div className="grid grid-cols-3 gap-2 pt-1">
@@ -5180,13 +5063,6 @@ Aturan Sangat Penting:
                   </button>
                 ))}
               </div>
-
-              {user && lastLanguageSyncedAt && (
-                <div className="pt-2 border-t border-stone-100 flex items-center justify-between text-[10px] text-stone-400 font-medium px-1">
-                  <span>Akun: <strong className="text-stone-700">{maskSensitiveIdentifier(user.phone || user.email)}</strong></span>
-                  <span className="text-green-600 font-bold">✓ Tersinkron otomatis ke DB ({new Date(lastLanguageSyncedAt).toLocaleTimeString()})</span>
-                </div>
-              )}
             </div>
             
             {user && (
@@ -6641,141 +6517,7 @@ Aturan Sangat Penting:
         )}
       </AnimatePresence>
 
-      {/* Google Account Modal (Seamless Login) */}
-      <AnimatePresence>
-        {showGoogleModal && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowGoogleModal(false)}
-              className="fixed inset-0 bg-stone-950/60 backdrop-blur-sm z-[70]"
-            />
-            <motion.div 
-              initial={{ scale: 0.92, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.92, opacity: 0, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] max-w-sm bg-white rounded-[28px] shadow-2xl z-[70] overflow-hidden border border-stone-100"
-            >
-              <div className="p-6 text-left space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-white shadow-xs border border-stone-200 flex items-center justify-center">
-                      <svg className="w-5 h-5" viewBox="0 0 24 24">
-                        <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
-                        <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
-                        <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z"/>
-                        <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-stone-900 leading-tight">Masuk Akun Google</h3>
-                      <p className="text-xs text-stone-400">Pilih atau masukkan email Google</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => setShowGoogleModal(false)}
-                    className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 hover:bg-stone-200 cursor-pointer"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
 
-                {/* Quick Account Selection */}
-                <div className="space-y-2">
-                  <p className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">Pilih Akun Cepat:</p>
-                  <button 
-                    type="button"
-                    onClick={() => handleConfirmGoogleInputLogin('valensiarainy73@gmail.com', 'Valensia Rainy')}
-                    className="w-full p-2.5 rounded-xl border border-orange-200 bg-orange-50/60 hover:bg-orange-100/60 flex items-center justify-between text-left transition-all cursor-pointer"
-                  >
-                    <div className="truncate">
-                      <p className="text-xs font-bold text-stone-900">Valensia Rainy (Admin)</p>
-                      <p className="text-[11px] text-stone-500 truncate">valensiarainy73@gmail.com</p>
-                    </div>
-                    <span className="text-[10px] bg-orange-500 text-white font-bold px-2.5 py-0.5 rounded-full shrink-0">Admin</span>
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => handleConfirmGoogleInputLogin('pelanggan.segar@gmail.com', 'Pelanggan RM Segar')}
-                    className="w-full p-2.5 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 flex items-center justify-between text-left transition-all cursor-pointer"
-                  >
-                    <div className="truncate">
-                      <p className="text-xs font-bold text-stone-900">Pelanggan RM Segar</p>
-                      <p className="text-[11px] text-stone-500 truncate">pelanggan.segar@gmail.com</p>
-                    </div>
-                    <span className="text-[10px] bg-stone-200 text-stone-700 font-bold px-2 py-0.5 rounded-full shrink-0">User</span>
-                  </button>
-                </div>
-
-                {/* Vercel Live URL Integration Badge */}
-                <div className="p-2.5 rounded-xl bg-blue-50/80 border border-blue-100 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Globe size={14} className="text-blue-600 shrink-0" />
-                    <div className="truncate">
-                      <p className="text-[10px] font-bold text-blue-900">Domain Vercel Resmi Terdaftar</p>
-                      <p className="text-[9px] text-blue-600 font-mono truncate">rumah-makan-segar.vercel.app</p>
-                    </div>
-                  </div>
-                  <span className="text-[9px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full shrink-0">Live</span>
-                </div>
-
-                {/* Custom Google Email Input */}
-                <div className="space-y-3 pt-1">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-stone-700">Atau Alamat Email Google Lainnya</label>
-                    <input 
-                      type="email"
-                      placeholder="contoh@gmail.com"
-                      value={googleUserInputEmail}
-                      onChange={(e) => setGoogleUserInputEmail(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-stone-700">Nama Tampilan (Opsional)</label>
-                    <input 
-                      type="text"
-                      placeholder="Nama Anda"
-                      value={googleUserInputName}
-                      onChange={(e) => setGoogleUserInputName(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 text-xs text-stone-900 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Non-Robot Verification inside Google Modal */}
-                <div className="pt-1">
-                  <NonRobotVerification 
-                    id="google-modal-captcha-verification"
-                    isVerified={isHumanVerified} 
-                    onVerify={setIsHumanVerified} 
-                    language={language} 
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button 
-                    type="button"
-                    onClick={() => setShowGoogleModal(false)}
-                    className="flex-1 py-2.5 bg-stone-100 text-stone-600 rounded-xl font-bold text-xs hover:bg-stone-200 cursor-pointer"
-                  >
-                    Batal
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => handleConfirmGoogleInputLogin()}
-                    className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl font-bold text-xs hover:bg-orange-600 shadow-md shadow-orange-500/20 cursor-pointer"
-                  >
-                    Masuk Sekarang
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
 
       {/* Chinese Fortune Cookie Modal */}
       <AnimatePresence>
