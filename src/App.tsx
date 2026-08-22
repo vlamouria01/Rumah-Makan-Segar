@@ -49,7 +49,8 @@ import {
   Server,
   Network,
   Eye,
-  EyeOff
+  EyeOff,
+  Phone
 } from 'lucide-react';
 import { motion, AnimatePresence, useDragControls } from 'motion/react';
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
@@ -1166,6 +1167,7 @@ export default function App() {
   const [adminEmailInput, setAdminEmailInput] = useState('');
   const [adminTab, setAdminTab] = useState<'orders' | 'reservations'>('orders');
   const [confirmedAIMessages, setConfirmedAIMessages] = useState<Record<number, boolean>>({});
+  const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
   const [user, setUser] = useState<{ phone?: string; email?: string } | null>(() => {
     try {
       const saved = localStorage.getItem('rm_segar_user');
@@ -3298,6 +3300,12 @@ Aturan Sangat Penting:
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const sendToWhatsApp = () => {
+    // Require login before making an order
+    if (!user || (!user.phone && !user.email)) {
+      setShowLoginRequiredModal(true);
+      return;
+    }
+
     const phoneNumber = "6281258394293";
     const orderDetails = cart.map(item => {
       let detail = `- ${item.name}${item.option ? ` (${item.option})` : ''} (${item.quantity}x)`;
@@ -6106,15 +6114,120 @@ Aturan Sangat Penting:
                     <span>Total Pesanan ({cart.length} Menu):</span>
                     <span className="font-black text-stone-900 text-sm sm:text-base">{totalItems} Item</span>
                   </div>
+
+                  {!user && (
+                    <div className="flex items-center justify-between p-2.5 bg-amber-50 rounded-xl border border-amber-200/80 text-xs">
+                      <div className="flex items-center gap-1.5 text-amber-800 font-medium">
+                        <Lock size={14} className="text-amber-600 shrink-0" />
+                        <span>Wajib login akun sebelum pesan</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginRequiredModal(true)}
+                        className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold transition-all shadow-xs cursor-pointer"
+                      >
+                        Login Sekarang
+                      </button>
+                    </div>
+                  )}
+
                   <button 
                     onClick={sendToWhatsApp}
                     className="w-full py-4 bg-orange-500 text-white rounded-2xl font-bold text-base flex items-center justify-center gap-2 hover:bg-orange-600 active:scale-[0.99] transition-all shadow-lg shadow-orange-200 cursor-pointer"
                   >
-                    <span>Konfirmasi Pesanan</span>
+                    <span>{user ? 'Konfirmasi Pesanan' : 'Login & Pesan Sekarang'}</span>
                     <ArrowRight size={18} />
                   </button>
                 </div>
               )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Wajib Login Sebelum Pesan */}
+      <AnimatePresence>
+        {showLoginRequiredModal && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLoginRequiredModal(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[999]"
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 max-w-md mx-auto bg-white rounded-3xl p-6 shadow-2xl z-[1000] border border-stone-100 overflow-hidden"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-stone-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                    <Lock size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-stone-900 text-base">Silakan Login Terlebih Dahulu</h3>
+                    <p className="text-xs text-stone-500">Wajib login untuk mengirim pesanan ke kasir</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowLoginRequiredModal(false)}
+                  className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 hover:bg-stone-200 cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="py-5 space-y-4">
+                <p className="text-xs text-stone-600 leading-relaxed bg-orange-50/70 p-3.5 rounded-2xl border border-orange-100">
+                  Untuk keamanan dan pencatatan riwayat nota pesanan Anda, silakan masuk menggunakan akun Google atau nomor WhatsApp aktif Anda.
+                </p>
+
+                {/* Google Sign In Direct Button */}
+                <button 
+                  type="button"
+                  onClick={async () => {
+                    await handleFirebaseGoogleLogin();
+                    setShowLoginRequiredModal(false);
+                  }}
+                  className="w-full py-3.5 bg-white border-2 border-stone-200 hover:border-orange-400 hover:bg-stone-50 text-stone-800 rounded-2xl font-bold text-sm shadow-xs active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
+                    <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+                    <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z"/>
+                    <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/>
+                  </svg>
+                  <span>Lanjutkan dengan Akun Google</span>
+                </button>
+
+                {/* Login via WhatsApp Tab Link */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLoginRequiredModal(false);
+                    setIsCartOpen(false);
+                    setActiveTab('profile');
+                  }}
+                  className="w-full py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-2xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Phone size={15} className="text-emerald-600" />
+                  <span>Masuk via Nomor WhatsApp / OTP</span>
+                </button>
+              </div>
+
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowLoginRequiredModal(false)}
+                  className="text-xs text-stone-400 hover:text-stone-600 font-semibold cursor-pointer"
+                >
+                  Nanti saja, tutup jendela
+                </button>
+              </div>
             </motion.div>
           </>
         )}
