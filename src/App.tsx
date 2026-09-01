@@ -1248,10 +1248,22 @@ function App() {
       console.warn("Backend API not reachable (e.g. on Vercel), falling back to Firestore/Local:", apiErr);
     }
 
-    // 2. Direct Firestore DB check
+    // 2. Direct Firestore DB check (first check revoked_orders, then active orders)
     let foundOrder: any = null;
     if (db) {
       try {
+        // Check if explicitly revoked / deleted
+        const revokedDocRef = doc(db, "revoked_orders", cleanId);
+        const revokedDocSnap = await getDoc(revokedDocRef);
+        if (revokedDocSnap.exists()) {
+          return {
+            status: 'deleted' as const,
+            order: null,
+            isAuthentic: false,
+            message: `🚫 LINK VERIFIKASI TELAH OTOMATIS DIHAPUS\n\nPesanan #${cleanId} telah dihapus atau dibatalkan dari sistem database resmi RM Segar (rumah-makan-segar.vercel.app). Tautan verifikasi ini otomatis hangus.`
+          };
+        }
+
         const docRef = doc(db, "orders", cleanId);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -1855,6 +1867,13 @@ function App() {
     if (db) {
       try {
         await deleteDoc(doc(db, "orders", orderId));
+        await setDoc(doc(db, "revoked_orders", orderId), {
+          orderId: orderId,
+          isRevoked: true,
+          revokedAt: new Date().toISOString(),
+          reason: 'deleted',
+          isDeleted: true
+        });
       } catch (fsErr) {
         console.warn("Firestore delete order doc error:", fsErr);
       }
@@ -1878,9 +1897,17 @@ function App() {
     if (db) {
       try {
         const snap = await getDocs(collection(db, "orders"));
-        snap.forEach(d => {
-          deleteDoc(d.ref).catch(() => {});
-        });
+        for (const d of snap.docs) {
+          const oId = d.id;
+          await deleteDoc(d.ref).catch(() => {});
+          await setDoc(doc(db, "revoked_orders", oId), {
+            orderId: oId,
+            isRevoked: true,
+            revokedAt: new Date().toISOString(),
+            reason: 'cleared_all',
+            isDeleted: true
+          }).catch(() => {});
+        }
       } catch (fsErr) {
         console.warn("Firestore clear orders error:", fsErr);
       }

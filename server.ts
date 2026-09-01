@@ -122,6 +122,7 @@ import {
   addDoc, 
   deleteDoc, 
   doc, 
+  setDoc,
   query, 
   orderBy, 
   limit, 
@@ -699,7 +700,7 @@ async function startServer() {
         details: 'Pesanan dihapus dari sistem kasir/admin'
       });
 
-      // Delete from Firestore
+      // Delete from Firestore & Record to revoked_orders
       if (db) {
         try {
           const snapshot = await getDocs(collection(db, "orders"));
@@ -709,8 +710,14 @@ async function startServer() {
               await deleteDoc(doc(db, "orders", docSnap.id));
             }
           }
+          await setDoc(doc(db, "revoked_orders", orderIdParam), {
+            orderId: orderIdParam,
+            revokedAt: new Date().toISOString(),
+            reason: 'deleted',
+            isDeleted: true
+          });
         } catch (e) {
-          console.warn("Firestore deleteDoc error:", e);
+          console.warn("Firestore deleteDoc/revoked_orders error:", e);
         }
       }
 
@@ -870,6 +877,12 @@ async function startServer() {
               timestamp: new Date().toISOString(),
               details: 'Semua riwayat pesanan dibersihkan'
             });
+            setDoc(doc(db, "revoked_orders", id), {
+              orderId: id,
+              revokedAt: new Date().toISOString(),
+              reason: 'cleared_all',
+              isDeleted: true
+            }).catch(() => {});
           }
         });
         const deletePromises = snapshot.docs.map(d => deleteDoc(doc(db, "orders", d.id)));

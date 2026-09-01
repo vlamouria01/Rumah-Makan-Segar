@@ -7,6 +7,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Revoked / deleted orders collection for instant link auto-revocation
+    match /revoked_orders/{orderId} {
+      allow read, write: if true;
+    }
+
     // Reservations collection: read/write allowed for backend server & clients
     match /reservations/{reservationId} {
       allow read, write: if true;
