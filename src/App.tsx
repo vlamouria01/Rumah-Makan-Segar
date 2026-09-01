@@ -3667,63 +3667,66 @@ ${orderDetails}
       exit={{ opacity: 0 }}
       className="space-y-8"
     >
-      {/* AI Recommendation Section */}
-      <section className="px-4 md:px-8 lg:px-10" id="tour-ai-chat">
-        <div className="bg-gradient-to-br from-red-950 via-stone-950 to-red-950 border border-amber-500/20 rounded-[32px] p-6 md:p-8 lg:p-10 shadow-xl relative overflow-hidden">
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-11 h-11 bg-gradient-to-tr from-red-600 to-red-500 rounded-xl flex items-center justify-center text-white border border-amber-400/40 shadow-md">
-                <Bot size={24} className="text-amber-100" />
-              </div>
-              <div>
-                <h3 className="text-amber-100 font-bold tracking-wide">{TRANSLATIONS[language].kokiAsk}</h3>
-                <p className="text-stone-300 text-xs">{TRANSLATIONS[language].chatChef}</p>
-              </div>
-            </div>
-            
-            <button 
-              onClick={startAIChat}
-              className="w-full py-3.5 bg-gradient-to-r from-red-600 to-red-500 text-white hover:from-red-700 hover:to-red-600 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-950/40 active:scale-95 border border-amber-500/30 text-amber-50 font-serif"
-            >
-              <MessageSquare size={18} className="text-amber-200" />
-              {TRANSLATIONS[language].kokiStart}
-            </button>
-          </div>
-          
-          {/* Decorative background elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full -mr-16 -mt-16 blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-red-600/15 rounded-full -ml-12 -mb-12 blur-2xl" />
-          {/* Subtle oriental frame pattern trace */}
-          <div className="absolute inset-2 border border-amber-500/10 rounded-[26px] pointer-events-none" />
-        </div>
-      </section>
+      {/* Action Banners (Chef Chat & Fortune Cookie) */}
+      <section className="px-4 md:px-8 lg:px-10 space-y-4 max-w-xl mx-auto w-full" id="tour-ai-chat">
+        {/* Chef Teng Recommendation Banner */}
+        <div className="bg-gradient-to-br from-[#260c0c] via-[#1c0808] to-[#120404] border-2 border-red-950/70 rounded-[32px] p-5 md:p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
+          <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-36 h-36 bg-red-600/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute inset-1.5 border border-red-500/10 rounded-[28px] pointer-events-none" />
 
-      {/* Chinese Fortune Cookie Banner */}
-      <section className="px-4 md:px-8 lg:px-10">
-        <div className="bg-gradient-to-r from-red-800 via-red-900 to-red-800 border-2 border-amber-400/30 rounded-[32px] p-5 md:p-6 shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute inset-1.5 border border-amber-400/10 rounded-[28px] pointer-events-none" />
-          
-          <div className="flex items-center gap-4 relative z-10">
-            <div className="w-14 h-14 bg-gradient-to-tr from-amber-400 to-amber-200 rounded-2xl flex items-center justify-center text-red-700 border border-amber-300 shadow-md transform -rotate-3 select-none flex-shrink-0">
-              <span className="text-3xl font-bold font-serif leading-none">⭐</span>
+          {/* Top Row: Icon + Text */}
+          <div className="flex items-center gap-3.5 relative z-10">
+            <div className="w-14 h-14 bg-gradient-to-br from-[#ef233c] to-[#d90429] rounded-2xl flex items-center justify-center text-white border border-red-400/40 shadow-md flex-shrink-0">
+              <Bot size={28} className="text-white" strokeWidth={2.2} />
             </div>
             <div>
-              <h3 className="text-amber-200 font-black text-lg tracking-wide font-serif">
-                {language === 'en' ? 'Lucky Fortune Cookie' : 'Biskuit Keberuntungan Hoki'}
+              <h3 className="text-white font-extrabold text-base md:text-lg tracking-tight font-sans">
+                {TRANSLATIONS[language].kokiAsk}
               </h3>
-              <p className="text-amber-100/85 text-xs mt-0.5 max-w-sm font-sans font-medium">
-                {language === 'en' ? 'Crack open a daily fortune to discover your lucky menu recommendation!' : 'Pecahkan biskuitnya untuk tahu ramalan hari ini & rekomendasi menu hokimu!'}
+              <p className="text-stone-300 text-xs md:text-sm mt-0.5 font-medium font-sans">
+                {TRANSLATIONS[language].chatChef}
+              </p>
+            </div>
+          </div>
+
+          {/* Bottom Button */}
+          <button 
+            onClick={startAIChat}
+            className="w-full mt-4 py-3.5 px-4 bg-gradient-to-r from-[#e50914] via-[#f0142f] to-[#e50914] hover:brightness-110 text-white rounded-2xl font-bold text-sm md:text-base flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-red-950/40 active:scale-98 border border-red-400/30 font-serif tracking-wide cursor-pointer relative z-10"
+          >
+            <MessageSquare size={18} className="text-amber-200" />
+            <span>{TRANSLATIONS[language].kokiStart}</span>
+          </button>
+        </div>
+
+        {/* Lucky Fortune Cookie Banner */}
+        <div className="bg-gradient-to-br from-[#801010] via-[#6d0b0b] to-[#550606] border-2 border-red-950/70 rounded-[32px] p-5 md:p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
+          <div className="absolute top-0 right-0 w-36 h-36 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute inset-1.5 border border-amber-500/15 rounded-[28px] pointer-events-none" />
+          
+          {/* Top Row: Icon + Text */}
+          <div className="flex items-center gap-3.5 relative z-10">
+            <div className="w-14 h-14 bg-gradient-to-br from-[#fed766] via-[#facc15] to-[#eab308] rounded-2xl flex items-center justify-center text-[#991b1b] shadow-md border border-amber-300/80 flex-shrink-0 select-none">
+              <span className="text-3xl font-black font-serif leading-none">福</span>
+            </div>
+            <div>
+              <h3 className="text-[#fef08a] font-black text-base md:text-lg tracking-wide font-serif">
+                {language === 'en' ? 'Lucky Fortune Cookie' : 'Biskuit Hoki Keberuntungan'}
+              </h3>
+              <p className="text-amber-100/90 text-xs md:text-sm mt-0.5 leading-snug font-sans font-medium max-w-sm">
+                {language === 'en' ? 'Crack open a daily fortune to discover your lucky menu recommendation!' : 'Pecahkan biskuit hoki untuk rekomendasi menu keberuntunganmu!'}
               </p>
             </div>
           </div>
           
+          {/* Bottom Button */}
           <button 
             onClick={openFortuneCookie}
-            className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 hover:from-amber-500 hover:to-amber-400 text-stone-900 font-black text-sm rounded-2xl shadow-lg shadow-amber-500/10 border border-amber-200 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer font-serif tracking-wide"
+            className="w-full mt-4 py-3.5 px-4 bg-gradient-to-r from-[#f59e0b] via-[#fbbf24] to-[#f59e0b] hover:brightness-105 text-stone-950 rounded-2xl font-black text-sm md:text-base flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-amber-950/30 active:scale-98 border border-amber-300 font-serif tracking-wide cursor-pointer relative z-10"
           >
-            <span>⭐</span>
-            <span>{language === 'en' ? 'Check Luck' : 'Cek Hoki Kuliner'}</span>
+            <span className="text-base select-none">🏮</span>
+            <span>{language === 'en' ? 'Check Luck' : 'Cek Hoki'}</span>
           </button>
         </div>
       </section>
@@ -7264,10 +7267,10 @@ ${orderDetails}
               
               {/* Header */}
               <div className="relative bg-gradient-to-r from-red-800 via-red-900 to-red-800 p-6 text-center border-b border-amber-400/30">
-                <div className="absolute top-2 left-4 text-xs font-serif text-amber-300">⭐</div>
-                <div className="absolute top-2 right-4 text-xs font-serif text-amber-300">⭐</div>
+                <div className="absolute top-2 left-4 text-sm select-none">🏮</div>
+                <div className="absolute top-2 right-4 text-sm select-none">🏮</div>
                 <h3 className="text-xl font-bold font-serif text-amber-300 tracking-wider">
-                  {language === 'en' ? 'CHINESE FORTUNE COOKIE' : 'BISKUIT KEBERUNTUNGAN'}
+                  {language === 'en' ? 'LUCKY FORTUNE COOKIE' : 'BISKUIT HOKI KEBERUNTUNGAN'}
                 </h3>
                 <p className="text-[10px] uppercase font-sans font-black tracking-widest text-amber-200/70 mt-1">
                   {language === 'en' ? 'RM SEGAR HOKI GENERATOR' : 'RAMALAN KULINER HOKI RM SEGAR'}
@@ -7411,13 +7414,13 @@ ${orderDetails}
                       className="bg-gradient-to-b from-amber-50 to-amber-100 text-stone-900 border-2 border-amber-400 rounded-2xl p-4 md:p-5 shadow-2xl w-full max-w-sm flex flex-col items-center relative my-1"
                     >
                       {/* Scroll Red Ribbon */}
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 bg-red-600 text-white font-serif text-[10px] px-3 py-0.5 rounded-full border border-amber-300 shadow-md whitespace-nowrap">
-                        {currentFortune.chineseProverb}
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2.5 bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white font-serif text-[10px] md:text-xs font-bold px-3.5 py-0.5 rounded-full border border-amber-300 shadow-md whitespace-nowrap">
+                        {(currentFortune as any).proverb || (currentFortune as any).chineseProverb || 'Rezeki Melimpah Ruah'}
                       </div>
                       
-                      {/* Traditional Seal watermark or header */}
-                      <div className="text-red-600 text-2xl font-serif font-black mb-1 select-none opacity-85 mt-2">
-                        ⭐
+                      {/* Traditional 福 Seal watermark or header */}
+                      <div className="text-red-700 text-3xl font-serif font-black mb-1 select-none opacity-90 mt-1.5">
+                        福
                       </div>
 
                       {/* Luck Level */}
@@ -7427,7 +7430,7 @@ ${orderDetails}
 
                       {/* Fortune text */}
                       <p className="text-xs md:text-sm font-medium font-serif leading-relaxed text-stone-800 px-1 my-1.5 border-y border-amber-300/60 py-2.5 italic">
-                        "{currentFortune.advice[language]}"
+                        "{(currentFortune as any).fortuneText?.[language] || (currentFortune as any).advice?.[language] || (currentFortune as any).fortuneText?.id || ''}"
                       </p>
 
                       {/* Lucky Menu recommendation title */}
@@ -7439,7 +7442,7 @@ ${orderDetails}
 
                       {/* Actual Menu Item matching card */}
                       {(() => {
-                        const luckyItem = MENU_ITEMS.find(m => m.id === currentFortune.menuId);
+                        const luckyItem = MENU_ITEMS.find(m => m.id === (currentFortune as any).foodId || m.id === (currentFortune as any).menuId);
                         if (!luckyItem) return null;
                         return (
                           <div className="w-full bg-white/70 border border-amber-300/50 rounded-2xl p-3 flex items-center justify-between gap-3 mt-1 shadow-xs hover:bg-white transition-all">
@@ -7469,9 +7472,10 @@ ${orderDetails}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 relative z-10 w-full px-2">
                       <button
                         onClick={() => setFortuneState('idle')}
-                        className="w-full sm:flex-1 py-3 bg-stone-800 hover:bg-stone-700 text-amber-300 font-bold text-xs md:text-sm rounded-xl border border-amber-500/20 active:scale-95 transition-all font-serif cursor-pointer"
+                        className="w-full sm:flex-1 py-3 bg-stone-800 hover:bg-stone-700 text-amber-300 font-bold text-xs md:text-sm rounded-xl border border-amber-500/20 active:scale-95 transition-all font-serif cursor-pointer flex items-center justify-center gap-1.5"
                       >
-                        {language === 'en' ? 'CRACK ANOTHER COOKIE ⭐' : 'COBA BISKUIT LAIN ⭐'}
+                        <span>🏮</span>
+                        <span>{language === 'en' ? 'CRACK ANOTHER COOKIE' : 'COBA BISKUIT LAIN'}</span>
                       </button>
                       <button
                         onClick={() => setIsFortuneModalOpen(false)}
