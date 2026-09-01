@@ -589,8 +589,14 @@ Data atau segel pesanan #${cleanId} tidak cocok dengan data asli di server. Link
               await (0, import_firestore.deleteDoc)((0, import_firestore.doc)(db, "orders", docSnap.id));
             }
           }
+          await (0, import_firestore.setDoc)((0, import_firestore.doc)(db, "revoked_orders", orderIdParam), {
+            orderId: orderIdParam,
+            revokedAt: (/* @__PURE__ */ new Date()).toISOString(),
+            reason: "deleted",
+            isDeleted: true
+          });
         } catch (e) {
-          console.warn("Firestore deleteDoc error:", e);
+          console.warn("Firestore deleteDoc/revoked_orders error:", e);
         }
       }
       return res.json({
@@ -730,6 +736,13 @@ Data atau segel pesanan #${cleanId} tidak cocok dengan data asli di server. Link
               reason: "deleted",
               timestamp: (/* @__PURE__ */ new Date()).toISOString(),
               details: "Semua riwayat pesanan dibersihkan"
+            });
+            (0, import_firestore.setDoc)((0, import_firestore.doc)(db, "revoked_orders", id), {
+              orderId: id,
+              revokedAt: (/* @__PURE__ */ new Date()).toISOString(),
+              reason: "cleared_all",
+              isDeleted: true
+            }).catch(() => {
             });
           }
         });
