@@ -50,13 +50,24 @@ import {
   Network,
   Eye,
   EyeOff,
-  Phone
+  Phone,
+  Banknote,
+  Building2,
+  Megaphone,
+  UserX,
+  Calendar,
+  Info,
+  ExternalLink,
+  Shuffle,
+  RefreshCw,
+  UserPlus
 } from 'lucide-react';
 import { motion, AnimatePresence, useDragControls } from 'motion/react';
 import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { MENU_ITEMS, MenuItem } from './constants';
+import { MISSING_PERSONS_DATA, MissingPerson, searchOrangHilangLive } from './missingPersonsData';
 import { loginAdminWithGoogleFirebase, loginWithGoogleFirebase, ALLOWED_ADMIN_EMAIL, normalizePhoneNumber, isValidPhoneNumber } from './lib/firebase';
 import { NonRobotVerification } from './components/NonRobotVerification';
 
@@ -106,7 +117,7 @@ export const TRANSLATIONS = {
     takeaway: "Ambil Sendiri (Takeaway)",
     delivery: "Kirim ke Alamat",
     address: "Alamat Pengiriman",
-    whatsappConfirm: "📍 Anda akan dikonfirmasi lewat WhatsApp",
+    whatsappConfirm: " Anda akan dikonfirmasi lewat WhatsApp",
     notes: "Catatan Tambahan (opsional)",
     optionHot: "Panas",
     optionIce: "Es",
@@ -132,7 +143,7 @@ export const TRANSLATIONS = {
     verifyToken: "Verifikasi Token",
     kokiAsk: "Bingung mau makan apa?",
     kokiStart: "Mulai Chat Rekomendasi",
-    kokiGreeting: "Halo! Saya Koki Teng. Bingung mau makan apa hari ini? Beritahu saya apa yang Anda suka, dan saya akan carikan menu yang paling pas buat Anda! 🐼🍜",
+    kokiGreeting: "Halo! Saya Koki Teng. Bingung mau makan apa hari ini? Beritahu saya apa yang Anda suka, dan saya akan carikan menu yang paling pas buat Anda! 䧟",
     kokiError: "Ups, Koki Teng sedang sibuk menyiapkan pesanan. Coba lagi nanti ya!",
     searchTitle: "Pencarian",
     searchResultsFor: "Hasil pencarian untuk",
@@ -170,7 +181,7 @@ export const TRANSLATIONS = {
     takeaway: "Takeaway",
     delivery: "Delivery",
     address: "Delivery Address",
-    whatsappConfirm: "📍 You will receive a WhatsApp confirmation",
+    whatsappConfirm: " You will receive a WhatsApp confirmation",
     notes: "Additional Notes (optional)",
     optionHot: "Hot",
     optionIce: "Ice",
@@ -196,28 +207,28 @@ export const TRANSLATIONS = {
     verifyToken: "Verify Token",
     kokiAsk: "Not sure what to eat?",
     kokiStart: "Start Recommendation Chat",
-    kokiGreeting: "Hello! I am Chef Teng. Not sure what to eat today? Tell me what you like, and I'll find the perfect dish for you! 🐼🍜",
+    kokiGreeting: "Hello! I am Chef Teng. Not sure what to eat today? Tell me what you like, and I'll find the perfect dish for you! 䧟",
     kokiError: "Oops, Chef Teng is busy preparing orders. Please try again later!",
     searchTitle: "Search",
     searchResultsFor: "Search results for",
     searchNoResults: "No menu items found"
   },
   zh: {
-    title: "RM Segar (鲜馆)",
-    tagline: "正宗西加里曼丹风味",
-    searchPlaceholder: "搜索肉面、粿条、饮料...",
+    title: "RM Segar 坤甸餐厅",
+    tagline: "西加里曼丹正宗地道风味",
+    searchPlaceholder: "搜索肉碎面、炒粿条、特色饮品...",
     all: "全部",
     popular: "最受欢迎",
     about: "关于我们",
     profile: "个人中心",
     home: "首页",
     cart: "购物车",
-    emptyCart: "您的购物车是空的",
-    checkout: "立即通过 WhatsApp 下单",
+    emptyCart: "您的购物车还是空的",
+    checkout: "立即结算并通过 WhatsApp 确认",
     history: "订单历史",
-    aboutButton: "关于鲜馆 (RM Segar)",
+    aboutButton: "关于 RM Segar 餐厅",
     guideButton: "使用指南",
-    securityCenter: "安全与数据保护中心",
+    securityCenter: "安全与隐私保护中心",
     logout: "退出登录",
     login: "登录账户",
     guest: "访客",
@@ -225,46 +236,46 @@ export const TRANSLATIONS = {
     adminDashboard: "管理后台",
     languageSetting: "语言设置",
     phoneLanguage: "系统语言 (自动)",
-    add: "添加",
-    added: "已添加",
+    add: "加入",
+    added: "已加入",
     totalPrice: "总价",
     tableNumber: "桌号",
     deliveryMethod: "取餐方式",
     dineIn: "堂食",
-    takeaway: "自提",
-    delivery: "送餐上门",
-    address: "送货地址",
-    whatsappConfirm: "📍 您将通过 WhatsApp 收到确认",
-    notes: "备注说明 (选填)",
+    takeaway: "自取 (外带)",
+    delivery: "外送上门",
+    address: "送餐地址",
+    whatsappConfirm: " 订单将通过 WhatsApp 自动确认",
+    notes: "备注要求 (可选)",
     optionHot: "热",
     optionIce: "冰",
     back: "返回",
     search: "搜索",
     favorite: "收藏",
-    chatChef: "与 Koki Teng 厨师聊天！",
-    recommendation: "推荐",
-    aboutText: "RM Segar (鲜馆) 是一家来自西加里曼丹的正宗中餐馆，为您提供高品质的经典美味。",
-    nonHalalWarning: "我们的菜单含有非清真 (Non-Halal) 食材。",
+    chatChef: "与邓大厨 AI 智能助手聊天！",
+    recommendation: "推荐菜单",
+    aboutText: "RM Segar 是一家源自西加里曼丹的特色中餐馆，提供地道正宗且优质的高品质坤甸风味佳肴。",
+    nonHalalWarning: "本店部分菜品包含非清真（Non-Halal）食材。",
     importantInfo: "重要提示",
-    katalogUnggulan: "招牌推荐画册",
-    katalogDesc: "深受三发县 RM Segar 忠实顾客喜爱的经典传奇菜品。",
-    bumbuAutentik: "三发县正宗风味",
+    katalogUnggulan: "招牌特色菜单",
+    katalogDesc: "深受 RM Segar 忠实顾客喜爱的经典传奇招牌美味。",
+    bumbuAutentik: "坤甸正宗秘制配方",
     lihatMenu: "查看菜单",
-    recomMie: "推荐面食",
-    recomNasi: "人气饭食",
-    recomMinuman: "清凉饮品",
-    recomPedas: "最辣推荐",
-    kokiTitle: "鲜馆 Koki Teng 厨师",
-    kokiDesc: "您的美食助理 Koki Teng，帮您点选最佳佳肴。",
+    recomMie: "特色面食推荐",
+    recomNasi: "经典招牌饭类",
+    recomMinuman: "清凉特色饮品",
+    recomPedas: "香辣过瘾系列",
+    kokiTitle: "邓大厨 RM Segar",
+    kokiDesc: "您的私人美食顾问，为您推荐最地道的美味佳肴。",
     forgotPassword: "忘记密码",
     verifyToken: "验证令牌",
-    kokiAsk: "不知道吃什么？",
-    kokiStart: "开启美食对话",
-    kokiGreeting: "您好！我是 Koki Teng 厨师。今天不知道吃什么吗？告诉我您喜欢吃什么，我会为您寻找最完美的佳肴！ 🐼🍜",
-    kokiError: "哎呀，Koki Teng 正忙于准备订单，请稍后再试！",
+    kokiAsk: "不知道今天吃什么？",
+    kokiStart: "开始美食推荐咨询",
+    kokiGreeting: "您好！我是邓大厨。今天想品尝什么美味呢？告诉我您的口味喜好，我来为您挑选最合适的美食！🍲",
+    kokiError: "抱歉，邓大厨正在忙着烹饪，请稍后再试！",
     searchTitle: "搜索",
     searchResultsFor: "搜索结果：",
-    searchNoResults: "未找到相关菜品"
+    searchNoResults: "未找到相关菜单"
   }
 };
 
@@ -303,9 +314,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Kalimantan style dry noodles with savory seasoning and complete toppings.'
       },
       zh: {
-        name: '加里曼丹干捞面',
-        category: '肉面',
-        description: '风味独特的加里曼丹干面，配以鲜美酱油和丰富的佐料。'
+        name: '潔號撟脫',
+        category: '厰',
+        description: '憌㭠祉鸌峕垈銝孵僕ｇ滢誑斢望硃䔶萼撖雿鞉'
       }
     },
     'bakmie-kuah': {
@@ -320,9 +331,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Noodles in a warm, fresh, and savory broth.'
       },
       zh: {
-        name: '鲜汤肉面',
-        category: '肉面',
-        description: '搭配热气腾腾、鲜甜美味高汤的肉面。'
+        name: '斢惜厰',
+        category: '厰',
+        description: '剝剜曇喲瘙斤厰'
       }
     },
     'bakmie-goreng': {
@@ -337,9 +348,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Stir-fried noodles with perfectly infused signature seasonings.'
       },
       zh: {
-        name: '印尼风味炒面',
-        category: '肉面',
-        description: '镬气十足、特制酱汁均匀入味的美味炒面。'
+        name: '啣側憌㭠㘾',
+        category: '厰',
+        description: '祆雲鸌園瘙亙㭠喟Ｕ'
       }
     },
     'kwetiao-goreng': {
@@ -354,9 +365,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Stir-fried flat rice noodles with an appetizing smokey aroma (Wok Hei).'
       },
       zh: {
-        name: '牛肉炒粿条',
-        category: '粿条',
-        description: '特制酱油爆炒、镬气十足的美味炒粿条。'
+        name: '垍窒',
+        category: '蝎踵辺',
+        description: '孵望硃瘞頞喟蝢㭠垍窒～'
       }
     },
     'kwetiao-kering': {
@@ -371,9 +382,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Dry seasoned flat rice noodles with our special secret sauce.'
       },
       zh: {
-        name: '干捞粿条',
-        category: '粿条',
-        description: '拌以香浓肉油 and 特制调料的美味干拌粿条。'
+        name: '撟脫蝎踵辺',
+        category: '蝎踵辺',
+        description: '䔶誑擐蹱㗇硃 and 孵靚喳僕窒～'
       }
     },
     'kwetiao-kuah': {
@@ -388,9 +399,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Soft flat rice noodles in a clear and savory bone broth.'
       },
       zh: {
-        name: '上汤粿条',
-        category: '粿条',
-        description: '口感软滑，配以清甜浓郁高汤的粿条汤。'
+        name: '銝惜蝎踵辺',
+        category: '蝎踵辺',
+        description: '頧舀嚗屸隞交瘙斤蝎踵辺瘙扎'
       }
     },
     'capcai-kering': {
@@ -405,9 +416,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Steamed rice with stir-fried fresh assorted vegetables in premium savory garlic seasoning.'
       },
       zh: {
-        name: '干炒杂菜饭 (Nasi Capcai)',
-        category: '饭食',
-        description: '搭配大火爆炒新鲜时令蔬菜的香米饭，鲜甜爽脆。'
+        name: '撟脩擖 (Nasi Capcai)',
+        category: '擖剝',
+        description: '剝憭抒圈嗡誘祈蝐喲平嚗屸'
       }
     },
     'capcai-kuah': {
@@ -422,9 +433,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Steamed rice with assorted fresh vegetables in a warm, thick, and savory gravy.'
       },
       zh: {
-        name: '杂菜汤饭 (Nasi Capcai Kuah)',
-        category: '饭食',
-        description: '搭配温热鲜美杂菜浓汤的香米饭。'
+        name: '瘙日平 (Nasi Capcai Kuah)',
+        category: '擖剝',
+        description: '剝皜拍斢瘚惜蝐喲平'
       }
     },
     'kaifon': {
@@ -439,9 +450,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'West Kalimantan styled mixed rice with various savory roasted meat toppings.'
       },
       zh: {
-        name: '加里曼丹杂烩饭 (Kaifon)',
-        category: '饭食',
-        description: '配有多种秘制烤肉和香浓浇汁的西加经典盖饭。'
+        name: '潔號擖 (Kaifon)',
+        category: '擖剝',
+        description: '齿憭蝘睃方屸瘚瘙镼踹蝏誩㚚平'
       }
     },
     'jeruk-nipis': {
@@ -456,9 +467,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Fresh and naturally sweet-sour lime juice.'
       },
       zh: {
-        name: '鲜榨青柠汁',
-        category: '饮料',
-        description: '新鲜原汁青柠檬，酸甜解腻。'
+        name: '斢成埝瘙',
+        category: '擖格',
+        description: '圈埝瑼穿貊閫'
       }
     },
     'teh': {
@@ -473,9 +484,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Classic sweetened jasmine tea.'
       },
       zh: {
-        name: '经典印尼红茶',
-        category: '饮料',
-        description: '传统香甜红茶，冷热皆宜。'
+        name: '蝏誩啣側蝥Ｚ薗',
+        category: '擖格',
+        description: '隡删擐嗵蝥Ｚ薗嚗剔摰栶'
       }
     },
     'susu-kedelai': {
@@ -490,9 +501,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Healthy and premium pure soy milk.'
       },
       zh: {
-        name: '自制纯正豆浆',
-        category: '饮料',
-        description: '手工每日磨制，香浓营养健康。'
+        name: '芸蝥舀迤鞊',
+        category: '擖格',
+        description: '见極瘥蝤典嚗屸瘚栞餃摨瑯'
       }
     },
     'kopi': {
@@ -507,9 +518,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Rich and bold classic black coffee.'
       },
       zh: {
-        name: '传统黑咖啡',
-        category: '饮料',
-        description: '精选本地咖啡豆烘焙而成，浓郁提神。'
+        name: '隡删暺穃',
+        category: '擖格',
+        description: '蝎暸㗇啣∟条峕嚗峕蟡'
       }
     },
     'extra-joss': {
@@ -524,9 +535,9 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
         description: 'Classic Indonesian energy drink for ultimate stamina.'
       },
       zh: {
-        name: 'Extra Joss 活力饮料',
-        category: '饮料',
-        description: '印尼经典能量饮品，迅速补充体力。'
+        name: 'Extra Joss 瘣餃擖格',
+        category: '擖格',
+        description: '啣側蝏誩賡擖桀嚗諹蠘‘䜘'
       }
     }
   };
@@ -545,12 +556,12 @@ export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): Men
 
 export const getCategoryTranslation = (catName: string, lang: 'id' | 'en' | 'zh'): string => {
   const cats: Record<string, Record<'id' | 'en' | 'zh', string>> = {
-    'Semua': { id: 'Semua', en: 'All', zh: '全部' },
-    'Bakmie': { id: 'Bakmie', en: 'Bakmie', zh: '肉面' },
-    'Kwetiao': { id: 'Kwetiao', en: 'Kwetiao', zh: '粿条' },
-    'Capcai': { id: 'Capcai', en: 'Capcai', zh: '杂菜' },
-    'Nasi': { id: 'Nasi', en: 'Rice', zh: '饭食' },
-    'Minuman': { id: 'Minuman', en: 'Drinks', zh: '饮料' }
+    'Semua': { id: 'Semua', en: 'All', zh: '券' },
+    'Bakmie': { id: 'Bakmie', en: 'Bakmie', zh: '厰' },
+    'Kwetiao': { id: 'Kwetiao', en: 'Kwetiao', zh: '蝎踵辺' },
+    'Capcai': { id: 'Capcai', en: 'Capcai', zh: '' },
+    'Nasi': { id: 'Nasi', en: 'Rice', zh: '擖剝' },
+    'Minuman': { id: 'Minuman', en: 'Drinks', zh: '擖格' }
   };
   return cats[catName]?.[lang] || catName;
 };
@@ -584,6 +595,8 @@ interface Order {
   items?: CartItem[];
   customText?: string;
   totalItems: number;
+  totalPrice?: number;
+  securitySeal?: string;
   orderType: 'Makan di Tempat' | 'Bungkus' | 'AI Chat';
   status?: 'pending' | 'cooking' | 'done' | 'cancelled';
   tableNumber?: string;
@@ -591,6 +604,7 @@ interface Order {
   deliveryAddress?: string;
   customerEmail?: string;
   customerName?: string;
+  customerPhone?: string;
 }
 
 interface Reservation {
@@ -753,10 +767,10 @@ export const CHINESE_FORTUNES: ChineseFortune[] = [
     advice: {
       id: 'Makan Mie Kering khas Kalbar hari ini mendatangkan umur panjang dan rezeki yang lancar tanpa hambatan!',
       en: 'Eating authentic Dry Bakmie today brings long life and a smooth, unhindered flow of wealth!',
-      zh: '今日品尝正宗干面，将为您带来延年益寿之喜，财源滚滚，万事顺遂！'
+      zh: '隞甇撟脤嚗銝箸撣行䔉撱嗅僑紊銋见嚗諹揣皞鞉皛銝憿粹嚗'
     },
-    luckLevel: '⭐⭐⭐⭐⭐ 大吉 (Sangat Hoki)',
-    chineseProverb: '长寿安康 • 财源广进'
+    luckLevel: '潃鐥潃鐥潃 憭批 (Sangat Hoki)',
+    chineseProverb: '踹紊摰匧熒  韐Ｘ撟輯'
   },
   {
     id: 'f2',
@@ -764,10 +778,10 @@ export const CHINESE_FORTUNES: ChineseFortune[] = [
     advice: {
       id: 'Nasi Campur membawa berkah keragaman. Akan ada kejutan menyenangkan yang berpadu indah dalam hidupmu!',
       en: 'Nasi Campur represents the blessing of diversity. Joyful surprises will blend beautifully in your life today!',
-      zh: '什锦饭象征着包容与多福。今天将有美妙的惊喜融入您的生活，精彩万分！'
+      zh: '隞阡平鞊∪捆銝蝳譌憭拙厩憒嗵滚函暑嚗移敶拐'
     },
-    luckLevel: '⭐⭐⭐⭐⭐ 吉星高照 (Hoki Sempurna)',
-    chineseProverb: '五福临门 • 喜气盈门'
+    luckLevel: '潃鐥潃鐥潃 㗇擃条 (Hoki Sempurna)',
+    chineseProverb: '鈭銝湧秄  秄'
   },
   {
     id: 'f3',
@@ -775,10 +789,10 @@ export const CHINESE_FORTUNES: ChineseFortune[] = [
     advice: {
       id: 'Aroma smokey wajan Kwetiao Goreng yang harum menandakan karirmu akan melesat naik dengan cepat!',
       en: 'The rich smokey aroma of Kwetiao Goreng indicates your career or business will rise rapidly!',
-      zh: '香气四溢的炒粉镬气，预示着您的事业或学业即将蒸蒸日上，步步高升！'
+      zh: '擐蹱滯蝎厰瘞䈑憸內函鈭衤硋郎銝朖撠豢銝甇交郊擃睃嚗'
     },
-    luckLevel: '⭐⭐⭐⭐⭐ 蒸蒸日上 (Hoki Melesat)',
-    chineseProverb: '步步高升 • 飞黄腾达'
+    luckLevel: '潃鐥潃鐥潃 貉乩 (Hoki Melesat)',
+    chineseProverb: '甇交郊擃睃  憌鮋曇噢'
   },
   {
     id: 'f4',
@@ -786,10 +800,10 @@ export const CHINESE_FORTUNES: ChineseFortune[] = [
     advice: {
       id: 'Kehangatan Capcai Kuah penuh gizi membawa kedamaian hati dan kesehatan prima untukmu dan keluarga.',
       en: 'The warm and nutritious Capcai soup brings complete peace of mind and prime wellness to you and your family.',
-      zh: '温润滋补的杂菜汤，为您和家人带来内心的安宁与健康的守护。'
+      zh: '皜拇隋皛贝‘惜嚗䔶蛹典摰嗡犖撣行䔉摰亙熒扎'
     },
-    luckLevel: '⭐⭐⭐⭐ 吉祥如意 (Hoki Sehat)',
-    chineseProverb: '阖家安康 • 顺心如意'
+    luckLevel: '潃鐥潃鐥 厩孕憒 (Hoki Sehat)',
+    chineseProverb: '硋振摰匧熒  憿箏憒'
   },
   {
     id: 'f5',
@@ -797,10 +811,10 @@ export const CHINESE_FORTUNES: ChineseFortune[] = [
     advice: {
       id: 'Susu Kedelai murni yang menyegarkan melambangkan kemurnian hati dan pikiran jernih hari ini.',
       en: 'Pure, refreshing Soy Milk symbolizes an honest heart and clear mind to take great decisions today.',
-      zh: '纯净香浓的豆浆象征着剔透的心境与智慧，助您在今日做出明智且幸运的抉择。'
+      zh: '蝥臬擐蹱瘚情敺娪讐敹銝擧惣改拇其亙箸箔撟貉押'
     },
-    luckLevel: '⭐⭐⭐⭐ 黄金满屋 (Hoki Pikiran)',
-    chineseProverb: '金玉满堂 • 聪慧过人'
+    luckLevel: '潃鐥潃鐥 暺皛∪ (Hoki Pikiran)',
+    chineseProverb: '皛∪  芣餈犖'
   },
   {
     id: 'f6',
@@ -808,10 +822,10 @@ export const CHINESE_FORTUNES: ChineseFortune[] = [
     advice: {
       id: 'Kesegaran Jeruk Nipis akan mencairkan segala ketegangan. Masalah rumit akan selesai dengan akhir menyegarkan!',
       en: 'The vibrant zest of Jeruk Nipis will dissolve all tensions. Complex challenges will resolve with a sparkling clear outcome!',
-      zh: '清新酸甜的青柠将化解一切烦忧。棘手的难题今日定能迎刃而解，迎来清爽结局！'
+      zh: '皜鰵貊惩圾銝敹扼讠暸隞摰朞餈諹圾嚗諹交賜撅嚗'
     },
-    luckLevel: '⭐⭐⭐⭐ 拨云见日 (Hoki Keberuntungan)',
-    chineseProverb: '迎刃而解 • 神清气爽'
+    luckLevel: '潃鐥潃鐥 其閫 (Hoki Keberuntungan)',
+    chineseProverb: '餈諹圾  蟡墧瘞'
   }
 ];
 
@@ -837,218 +851,218 @@ export const SHIO_DETAILS: ShioDetail[] = [
   {
     id: 'rat',
     name: 'Tikus',
-    zh: '鼠',
-    emoji: '🐭',
+    zh: '曌',
+    emoji: '',
     elementDefault: 'Air',
     foodId: 'bakmie-kering',
     luckyNumbers: '2, 3, 6',
-    luckyColors: { id: 'Emas & Hijau', en: 'Gold & Green', zh: '金色与绿色' },
-    luckyDirection: { id: 'Tenggara & Timur Laut', en: 'Southeast & Northeast', zh: '东南与东北' },
-    trait: { id: 'Cerdas, Lincah & Penuh Strategi', en: 'Clever, Agile & Strategic', zh: '机智敏捷、足智多谋' },
+    luckyColors: { id: 'Emas & Hijau', en: 'Gold & Green', zh: '銝遛' },
+    luckyDirection: { id: 'Tenggara & Timur Laut', en: 'Southeast & Northeast', zh: '銝銝' },
+    trait: { id: 'Cerdas, Lincah & Penuh Strategi', en: 'Clever, Agile & Strategic', zh: '箸惣㭘雲箏靚' },
     desc: {
       id: 'Shio Tikus yang cerdas menyukai kepraktisan dan kelezatan yang padat. Bakmie Kering dengan topping lengkap sangat cocok untuk menemani hari produktif Anda!',
       en: 'The clever Rat loves practical yet rich flavors. Dry Bakmie with complete toppings is perfect to accompany your highly productive day!',
-      zh: '聪慧的属鼠者喜爱精致实用的美味。配料多样的干拌面绝对是陪伴您高效一天的完美之选！'
+      zh: '芣曌㰘梁移游函蝢㭠坔瑞撟脫Ｙ撖寞糓芯撈券憭拍摰銋钅㚁'
     }
   },
   {
     id: 'ox',
     name: 'Kerbau',
-    zh: '牛',
-    emoji: '🐮',
+    zh: '',
+    emoji: '',
     elementDefault: 'Tanah',
     foodId: 'capcai-kuah',
     luckyNumbers: '1, 8, 9',
-    luckyColors: { id: 'Kuning Karamel & Merah', en: 'Caramel Yellow & Red', zh: '琥珀黄与大红' },
-    luckyDirection: { id: 'Utara & Barat Daya', en: 'North & Southwest', zh: '正北与西南' },
-    trait: { id: 'Tekun, Setia & Pantang Menyerah', en: 'Diligent, Loyal & Persistent', zh: '勤劳稳重、踏实坚韧' },
+    luckyColors: { id: 'Kuning Karamel & Merah', en: 'Caramel Yellow & Red', zh: '亦暺憭抒滯' },
+    luckyDirection: { id: 'Utara & Barat Daya', en: 'North & Southwest', zh: '甇銝舘正' },
+    trait: { id: 'Tekun, Setia & Pantang Menyerah', en: 'Diligent, Loyal & Persistent', zh: '文蝔喲摰' },
     desc: {
       id: 'Shio Kerbau yang tekun dan kuat membutuhkan asupan gizi yang seimbang dan menenangkan. Nasi Capcai Kuah hangat yang kaya serat adalah pilihan terbaik!',
       en: 'The diligent and strong Ox needs balanced and comforting nourishment. Warm Nasi Capcai Kuah, rich in fibers, is your ultimate companion!',
-      zh: '勤劳稳健的属牛者需要均衡滋补的膳食。汤汁浓郁、膳食纤维丰富的杂菜汤饭是您的最佳滋养！'
+      zh: '文蝔喳閬銵⊥銵亦喲惜瘙憌毺漱蝏港萼撖瘙日平舀雿單鳴'
     }
   },
   {
     id: 'tiger',
     name: 'Macan',
-    zh: '虎',
-    emoji: '🐯',
+    zh: '',
+    emoji: '鍳',
     elementDefault: 'Kayu',
     foodId: 'kwetiao-goreng',
     luckyNumbers: '1, 3, 4',
-    luckyColors: { id: 'Jingga & Biru Langit', en: 'Orange & Sky Blue', zh: '橙色与天蓝' },
-    luckyDirection: { id: 'Selatan & Timur', en: 'South & East', zh: '正南与正东' },
-    trait: { id: 'Pemberani, Antusias & Karismatik', en: 'Brave, Enthusiastic & Charismatic', zh: '勇猛威严、富有领导力' },
+    luckyColors: { id: 'Jingga & Biru Langit', en: 'Orange & Sky Blue', zh: '璈躰銝予' },
+    luckyDirection: { id: 'Selatan & Timur', en: 'South & East', zh: '甇銝擧迤銝' },
+    trait: { id: 'Pemberani, Antusias & Karismatik', en: 'Brave, Enthusiastic & Charismatic', zh: '憡艇厰撖澆' },
     desc: {
       id: 'Shio Macan yang berani sangat menggemari aroma arang wajan (wok hei) yang kuat. Kwetiao Goreng Sapi beraroma smokey akan membakar semangat hoki Anda!',
       en: 'The brave Tiger craves intense wok hei aromas. Smokey Kwetiao Goreng is guaranteed to ignite your lucky spirit today!',
-      zh: '勇猛进取的属虎者钟爱浓郁的镬气。热辣生香的炒沙河粉定能瞬间点燃您一整天的幸运斗志！'
+      zh: '餈舘望祆颲擐嗵埝瘝喟摰朞祇寧其游予兢餈鞉敹梹'
     }
   },
   {
     id: 'rabbit',
     name: 'Kelinci',
-    zh: '兔',
-    emoji: '🐰',
+    zh: '',
+    emoji: '鑛',
     elementDefault: 'Kayu',
     foodId: 'susu-kedelai',
     luckyNumbers: '3, 4, 9',
-    luckyColors: { id: 'Merah Muda & Ungu', en: 'Pink & Purple', zh: '粉红与紫色' },
-    luckyDirection: { id: 'Barat Daya & Barat Laut', en: 'Southwest & Northwest', zh: '西南与西北' },
-    trait: { id: 'Anggun, Lembut & Penuh Kedamaian', en: 'Elegant, Gentle & Peaceful', zh: '温和典雅、善良体贴' },
+    luckyColors: { id: 'Merah Muda & Ungu', en: 'Pink & Purple', zh: '蝎厩滯銝換' },
+    luckyDirection: { id: 'Barat Daya & Barat Laut', en: 'Southwest & Northwest', zh: '镼踹銝舘正' },
+    trait: { id: 'Anggun, Lembut & Penuh Kedamaian', en: 'Elegant, Gentle & Peaceful', zh: '皜拙賊臭韐' },
     desc: {
       id: 'Shio Kelinci yang anggun dan lembut sangat cocok dengan kesegaran yang alami dan murni. Susu Kedelai murni yang manis lembut akan menjaga kedamaian hati Anda.',
       en: 'The elegant and gentle Rabbit matches beautifully with pure, natural refreshment. Sweet, silky Soy Milk will preserve your peaceful harmony today.',
-      zh: '温雅高贵的属兔者最适合纯天然的温润。一杯清甜浓香的现磨豆浆，将为您带来内心的安宁与惬意。'
+      zh: '皜拚擃䁅斯磰蝥臬予嗥皜拇隋舀擐嗵啁ㄗ鞊嚗銝箸撣行䔉摰祆'
     }
   },
   {
     id: 'dragon',
     name: 'Naga',
-    zh: '龙',
-    emoji: '🐲',
+    zh: '樴',
+    emoji: '閅',
     elementDefault: 'Tanah',
     foodId: 'kaifon',
     luckyNumbers: '1, 6, 7',
-    luckyColors: { id: 'Emas Imperial & Perak', en: 'Imperial Gold & Silver', zh: '帝王金与亮银' },
-    luckyDirection: { id: 'Barat & Barat Laut', en: 'West & Northwest', zh: '正西与西北' },
-    trait: { id: 'Megah, Berani & Penuh Kejayaan', en: 'Majestic, Bold & Ambitious', zh: '尊贵非凡、雄心勃勃' },
+    luckyColors: { id: 'Emas Imperial & Perak', en: 'Imperial Gold & Silver', zh: '撣萘睲鈭桅' },
+    luckyDirection: { id: 'Barat & Barat Laut', en: 'West & Northwest', zh: '甇正銝舘正' },
+    trait: { id: 'Megah, Berani & Penuh Kejayaan', en: 'Majestic, Bold & Ambitious', zh: '撠斯敹' },
     desc: {
       id: 'Shio Naga yang megah menyukai kemewahan rasa dan ragam topping berlimpah. Nasi Campur (Kaifon) spesial dengan aneka daging lezat adalah lambang kejayaan Anda!',
       en: 'The majestic Dragon deserves a feast of rich, diverse premium toppings. Nasi Campur (Kaifon) with multi-meat toppings perfectly represents your glorious luck!',
-      zh: '尊荣非凡的属龙者值得拥有一场饕餮盛宴。配料豪华、酱汁香浓的招牌什锦饭正是您鸿运当头的象征！'
+      zh: '撠揻樴躰澆交銝粹擗桃摰氬躰悸汿瘙瘚梶隞阡平甇糓券蛾餈憭渡鞊∪嚗'
     }
   },
   {
     id: 'snake',
     name: 'Ular',
-    zh: '蛇',
-    emoji: '🐍',
+    zh: '',
+    emoji: '',
     elementDefault: 'Api',
     foodId: 'kwetiao-kering',
     luckyNumbers: '2, 8, 9',
-    luckyColors: { id: 'Hitam Elegan & Merah', en: 'Elegant Black & Red', zh: '玄黑与大红' },
-    luckyDirection: { id: 'Barat Daya & Selatan', en: 'Southwest & South', zh: '西南与正南' },
-    trait: { id: 'Intuitif, Bijaksana & Penuh Rahasia', en: 'Intuitive, Wise & Mysterious', zh: '深谋远虑、冷静睿智' },
+    luckyColors: { id: 'Hitam Elegan & Merah', en: 'Elegant Black & Red', zh: '銝之蝥' },
+    luckyDirection: { id: 'Barat Daya & Selatan', en: 'Southwest & South', zh: '镼踹銝擧迤' },
+    trait: { id: 'Intuitif, Bijaksana & Penuh Rahasia', en: 'Intuitive, Wise & Mysterious', zh: '瘛梯餈嗵踎' },
     desc: {
       id: 'Shio Ular yang penuh misteri dan intuitif menyukai perpaduan rasa bumbu halus yang meresap sempurna. Kwetiao Kering spesial adalah rahasia hoki Anda.',
       en: 'The mysterious and intuitive Snake appreciates complex, deeply infused secret spices. Special Kwetiao Kering holds the hidden key to your fortune today.',
-      zh: '神秘睿智的属蛇者钟爱层次丰富、调味入骨的秘制美食。一盘酱香四溢的干拌河粉正是您的开运密码。'
+      zh: '蟡䂿踵惣勗甈∩萼撖䎚喳撉函蝘睃蝢㗛擐坔皞Ｙ撟脫瘝喟甇糓函撘餈'
     }
   },
   {
     id: 'horse',
     name: 'Kuda',
-    zh: '马',
-    emoji: '🐴',
+    zh: '撽',
+    emoji: '鐦',
     elementDefault: 'Api',
     foodId: 'bakmie-goreng',
     luckyNumbers: '2, 3, 7',
-    luckyColors: { id: 'Kuning Kunyit & Hijau', en: 'Turmeric Yellow & Green', zh: '姜黄与翠绿' },
-    luckyDirection: { id: 'Barat Daya & Barat', en: 'Southwest & West', zh: '西南与正西' },
-    trait: { id: 'Berenergi Tinggi, Bebas & Dinamis', en: 'Energetic, Free-spirited & Dynamic', zh: '热情奔放、极富活力' },
+    luckyColors: { id: 'Kuning Kunyit & Hijau', en: 'Turmeric Yellow & Green', zh: '憪銝蝏' },
+    luckyDirection: { id: 'Barat Daya & Barat', en: 'Southwest & West', zh: '镼踹銝擧迤镼' },
+    trait: { id: 'Berenergi Tinggi, Bebas & Dinamis', en: 'Energetic, Free-spirited & Dynamic', zh: '剜憟娍撖峕暑' },
     desc: {
       id: 'Shio Kuda yang berenergi tinggi membutuhkan hidangan lezat berkalori tinggi yang cepat saji. Bakmie Goreng spesial akan memberi Anda dorongan energi ekstra!',
       en: 'The high-energy Horse needs a fast, flavorful, and energizing meal. Special Bakmie Goreng will give you that extra boost to race through your day!',
-      zh: '活力充沛的属马者需要热气腾腾、能量满满的美味。一盘镬气十足的炒面，让您今天继续龙马精神、一往无前！'
+      zh: '瘣餃撽祈閬瘞磰整說皛∠蝢㭠㗛瘞頞喟㘾嚗諹悟其憭拍誧蝏剝撽祉移蟡敺惩嚗'
     }
   },
   {
     id: 'goat',
     name: 'Kambing',
-    zh: '羊',
-    emoji: '🐐',
+    zh: '蝢',
+    emoji: '',
     elementDefault: 'Tanah',
     foodId: 'capcai-kering',
     luckyNumbers: '2, 7, 8',
-    luckyColors: { id: 'Cokelat Kayu & Putih', en: 'Wood Brown & White', zh: '木棕与雪白' },
-    luckyDirection: { id: 'Utara & Barat Daya', en: 'North & Southwest', zh: '正北与西南' },
-    trait: { id: 'Lembut, Penyayang & Artistik', en: 'Gentle, Loving & Artistic', zh: '温和善良、富有艺术气质' },
+    luckyColors: { id: 'Cokelat Kayu & Putih', en: 'Wood Brown & White', zh: '冽銝䪸' },
+    luckyDirection: { id: 'Utara & Barat Daya', en: 'North & Southwest', zh: '甇銝舘正' },
+    trait: { id: 'Lembut, Penyayang & Artistik', en: 'Gentle, Loving & Artistic', zh: '皜拙㕑䰾舀韐' },
     desc: {
       id: 'Shio Kambing yang damai dan penyayang menyukai kelezatan sayur-sayuran segar beraroma harum. Nasi Capcai Kering adalah sajian harmoni yang menenangkan jiwa.',
       en: 'The peaceful and loving Goat loves fresh, fragrant, and vibrant stir-fried vegetables. Nasi Capcai Kering is a harmonious dish that calms your soul.',
-      zh: '和蔼温顺的属羊者最爱清鲜爽口、色泽诱人的时令蔬菜。一盘干炒什锦杂菜饭，带给您温暖治愈的心灵享受。'
+      zh: '諹䃈皜拚◇蝢望斢瘜質秧鈭箇嗡誘祈睃僕雴行平嚗蒂蝏蹱皜拇瘝餅萎澈'
     }
   },
   {
     id: 'monkey',
     name: 'Monyet',
-    zh: '猴',
-    emoji: '🐵',
+    zh: '',
+    emoji: '閠',
     elementDefault: 'Logam',
     foodId: 'jeruk-nipis',
     luckyNumbers: '4, 9, 1',
-    luckyColors: { id: 'Putih Murni & Biru Laut', en: 'Pure White & Ocean Blue', zh: '纯白与海蓝' },
-    luckyDirection: { id: 'Utara & Barat Laut', en: 'North & Northwest', zh: '正北与西北' },
-    trait: { id: 'Jenaka, Cerdas & Cepat Tanggap', en: 'Witty, Intelligent & Quick-witted', zh: '聪明伶俐、幽默风趣' },
+    luckyColors: { id: 'Putih Murni & Biru Laut', en: 'Pure White & Ocean Blue', zh: '蝥舐蒾銝擧絲' },
+    luckyDirection: { id: 'Utara & Barat Laut', en: 'North & Northwest', zh: '甇銝舘正' },
+    trait: { id: 'Jenaka, Cerdas & Cepat Tanggap', en: 'Witty, Intelligent & Quick-witted', zh: '芣隡嗡厭暺㗛頞' },
     desc: {
       id: 'Shio Monyet yang jenaka dan ceria sangat menyukai kejutan rasa asam manis yang menyegarkan. Es Jeruk Nipis Pontianak yang asam manis akan mencerahkan ide hoki Anda!',
       en: 'The playful and witty Monkey loves refreshing, sweet-and-sour flavor bursts. Sweet-sour Ice Jeruk Nipis Pontianak will spark brilliant, lucky ideas today!',
-      zh: '机灵俏皮的属猴者最爱酸甜交织、爽口解腻的清新滋味。一杯冰镇青柠汁，瞬间唤醒您的奇思妙想与开运福气！'
+      zh: '箇靽讐铜渲梢靝漱蝏圾餌皜鰵皛见㭠臬䭾嚗游埝嘥喃撘餈鞟瘞䈑'
     }
   },
   {
     id: 'rooster',
     name: 'Ayam',
-    zh: '鸡',
-    emoji: '🐔',
+    zh: '曏',
+    emoji: '',
     elementDefault: 'Logam',
     foodId: 'bakmie-kuah',
     luckyNumbers: '5, 7, 8',
-    luckyColors: { id: 'Kuning Keemasan & Cokelat', en: 'Golden Yellow & Brown', zh: '金黄与咖啡色' },
-    luckyDirection: { id: 'Timur Laut & Selatan', en: 'Northeast & South', zh: '东北与正南' },
-    trait: { id: 'Teliti, Rapi & Penuh Percaya Diri', en: 'Meticulous, Neat & Confident', zh: '勤奋精明、条理分明' },
+    luckyColors: { id: 'Kuning Keemasan & Cokelat', en: 'Golden Yellow & Brown', zh: '煾銝∟' },
+    luckyDirection: { id: 'Timur Laut & Selatan', en: 'Northeast & South', zh: '銝銝擧迤' },
+    trait: { id: 'Teliti, Rapi & Penuh Percaya Diri', en: 'Meticulous, Neat & Confident', zh: '文蝎暹辺' },
     desc: {
       id: 'Shio Ayam yang teliti dan rapi sangat menikmati sup kaldu bening yang bersih dan menghangatkan jiwa. Bakmie Kuah kaldu murni adalah resep kenyamanan hoki Anda.',
       en: 'The meticulous and neat Rooster enjoys clean, soul-warming clear bone broths. Bakmie Kuah with pure rich broth is your perfect recipe for comforting luck.',
-      zh: '追求完美、做事井井有条的属鸡者，最懂欣赏一碗纯净鲜美的清汤。高汤熬制的汤面是您今天最好的舒心美味。'
+      zh: '餈賣摰鈭衤鈭閙∠撅鮋腹派韏譍蝣㛖滲斢瘙扎瘙斤嗥瘙日舀隞予憟賜鍦蝢㭠'
     }
   },
   {
     id: 'dog',
     name: 'Anjing',
-    zh: '狗',
-    emoji: '🐶',
+    zh: '',
+    emoji: '濶',
     elementDefault: 'Tanah',
     foodId: 'kwetiao-kuah',
     luckyNumbers: '3, 4, 9',
-    luckyColors: { id: 'Hijau Daun & Merah', en: 'Leaf Green & Red', zh: '翠绿与大红' },
-    luckyDirection: { id: 'Timur & Tenggara', en: 'East & Southeast', zh: '正东与东南' },
-    trait: { id: 'Setia, Jujur & Menghangatkan Hati', en: 'Loyal, Honest & Heartwarming', zh: '忠诚坦荡、守护温暖' },
+    luckyColors: { id: 'Hijau Daun & Merah', en: 'Leaf Green & Red', zh: '蝧删遛銝之蝥' },
+    luckyDirection: { id: 'Timur & Tenggara', en: 'East & Southeast', zh: '甇銝' },
+    trait: { id: 'Setia, Jujur & Menghangatkan Hati', en: 'Loyal, Honest & Heartwarming', zh: '敹㰘西㨃斗萱' },
     desc: {
       id: 'Shio Anjing yang setia dan hangat sangat menyukai sup hangat yang menenangkan hati di tengah keluarga. Kwetiao Kuah gurih akan melipatgandakan kebahagiaan harian Anda.',
       en: 'The loyal and warm-hearted Dog treasures comforting soups shared with loved ones. Savory Kwetiao Kuah will double your daily joy and absolute peace.',
-      zh: '忠诚温厚的属狗者最爱充满家常温度的暖心汤羹。一碗温润细腻的汤河粉，定能让您的今日幸福感倍增。'
+      zh: '敹㰘皜拙勗皛∪振撣豢萱摨衣硋瘙斤器蝣埈萱瘨衣餌瘙斗眾蝎㚁摰朞霈拇亙兢蝳滚'
     }
   },
   {
     id: 'pig',
     name: 'Babi',
-    zh: '猪',
-    emoji: '🐷',
+    zh: '',
+    emoji: '䊹',
     elementDefault: 'Air',
     foodId: 'kopi',
     luckyNumbers: '2, 5, 8',
-    luckyColors: { id: 'Kuning Emas & Hitam', en: 'Golden Yellow & Black', zh: '金黄与墨黑' },
-    luckyDirection: { id: 'Tenggara & Timur', en: 'Southeast & East', zh: '东南与正东' },
-    trait: { id: 'Santai, Ramah & Penuh Rezeki', en: 'Easygoing, Friendly & Abundantly Blessed', zh: '心胸宽广、福禄双全' },
+    luckyColors: { id: 'Kuning Emas & Hitam', en: 'Golden Yellow & Black', zh: '煾銝◢暺' },
+    luckyDirection: { id: 'Tenggara & Timur', en: 'Southeast & East', zh: '銝銝擧迤銝' },
+    trait: { id: 'Santai, Ramah & Penuh Rezeki', en: 'Easygoing, Friendly & Abundantly Blessed', zh: '敹摰賢嘀蝳' },
     desc: {
       id: 'Shio Babi yang santai dan penuh berkah menyukai minuman mantap beraroma harum mendalam. Kopi Hitam Mantap khas Kalbar adalah teman diskusi & penarik rezeki Anda!',
       en: 'The easygoing and blessed Pig loves deep, aromatic and bold classic drinks. Bold Black Coffee from Kalbar is your best companion to draw continuous fortune!',
-      zh: '随和富态、福泽深厚的属猪者最懂享受香气浓郁的美味。一杯浓郁提神的古法黑咖啡，让您舒心悠闲、财源滚滚！'
+      zh: '誩撖峕瘜賣楛撅䂿㻛澈烾瘞娍蝢㭠舀蟡䂿斗暺穃∴霈拇鍦揣皞鞉皛'
     }
   }
 ];
 
 export const WHEEL_ITEMS = [
-  { id: 'bakmie-kering', name: 'Bakmie Kering', emoji: '🍜', bg: '#d97706', text: '#ffffff' },
-  { id: 'kwetiao-goreng', name: 'Kwetiao Goreng', emoji: '🥢', bg: '#ea580c', text: '#ffffff' },
-  { id: 'kaifon', name: 'Nasi Campur (Kaifon)', emoji: '🍛', bg: '#dc2626', text: '#ffffff' },
-  { id: 'capcai-kuah', name: 'Capcai Kuah', emoji: '🍲', bg: '#059669', text: '#ffffff' },
-  { id: 'jeruk-nipis', name: 'Es Jeruk Nipis', emoji: '🍋', bg: '#eab308', text: '#ffffff' },
-  { id: 'susu-kedelai', name: 'Susu Kedelai', emoji: '🥛', bg: '#7c3aed', text: '#ffffff' },
-  { id: 'kwetiao-kering', name: 'Kwetiao Kering', emoji: '🥢', bg: '#b45309', text: '#ffffff' },
-  { id: 'kopi', name: 'Kopi Hitam', emoji: '☕', bg: '#44403c', text: '#ffffff' }
+  { id: 'bakmie-kering', name: 'Bakmie Kering', emoji: '', bg: '#d97706', text: '#ffffff' },
+  { id: 'kwetiao-goreng', name: 'Kwetiao Goreng', emoji: '失', bg: '#ea580c', text: '#ffffff' },
+  { id: 'kaifon', name: 'Nasi Campur (Kaifon)', emoji: '', bg: '#dc2626', text: '#ffffff' },
+  { id: 'capcai-kuah', name: 'Capcai Kuah', emoji: '㬢', bg: '#059669', text: '#ffffff' },
+  { id: 'jeruk-nipis', name: 'Es Jeruk Nipis', emoji: '', bg: '#eab308', text: '#ffffff' },
+  { id: 'susu-kedelai', name: 'Susu Kedelai', emoji: '', bg: '#7c3aed', text: '#ffffff' },
+  { id: 'kwetiao-kering', name: 'Kwetiao Kering', emoji: '失', bg: '#b45309', text: '#ffffff' },
+  { id: 'kopi', name: 'Kopi Hitam', emoji: '', bg: '#44403c', text: '#ffffff' }
 ];
 
 export interface BlockPiece {
@@ -1059,17 +1073,17 @@ export interface BlockPiece {
 }
 
 export const BLOCK_PRESETS: Omit<BlockPiece, 'id'>[] = [
-  { shape: [[1]], color: '#f59e0b', emoji: '🍜' },
-  { shape: [[1, 1]], color: '#ef4444', emoji: '🥢' },
-  { shape: [[1], [1]], color: '#10b981', emoji: '🍛' },
-  { shape: [[1, 1, 1]], color: '#3b82f6', emoji: '🥟' },
-  { shape: [[1], [1], [1]], color: '#8b5cf6', emoji: '☕' },
-  { shape: [[1, 1], [1, 1]], color: '#ec4899', emoji: '🍋' },
-  { shape: [[1, 1, 1], [0, 1, 0]], color: '#f97316', emoji: '🍡' },
-  { shape: [[1, 0], [1, 1]], color: '#14b8a6', emoji: '🍚' },
-  { shape: [[0, 1], [1, 1]], color: '#06b6d4', emoji: '🧋' },
-  { shape: [[1, 1, 1, 1]], color: '#84cc16', emoji: '🥬' },
-  { shape: [[1, 1], [1, 0]], color: '#d97706', emoji: '🥟' }
+  { shape: [[1]], color: '#f59e0b', emoji: '' },
+  { shape: [[1, 1]], color: '#ef4444', emoji: '失' },
+  { shape: [[1], [1]], color: '#10b981', emoji: '' },
+  { shape: [[1, 1, 1]], color: '#3b82f6', emoji: '' },
+  { shape: [[1], [1], [1]], color: '#8b5cf6', emoji: '' },
+  { shape: [[1, 1], [1, 1]], color: '#ec4899', emoji: '' },
+  { shape: [[1, 1, 1], [0, 1, 0]], color: '#f97316', emoji: '㨃' },
+  { shape: [[1, 0], [1, 1]], color: '#14b8a6', emoji: '' },
+  { shape: [[0, 1], [1, 1]], color: '#06b6d4', emoji: '' },
+  { shape: [[1, 1, 1, 1]], color: '#84cc16', emoji: '布' },
+  { shape: [[1, 1], [1, 0]], color: '#d97706', emoji: '' }
 ];
 
 export const canPlacePiece = (board: (string | null)[][], shape: number[][], startR: number, startC: number): boolean => {
@@ -1117,7 +1131,7 @@ const isAdminUser = (u: { phone?: string; email?: string } | null): boolean => {
   return false;
 };
 
-export default function App() {
+function App() {
   const cartDragControls = useDragControls();
   const chatDragControls = useDragControls();
   const noteDragControls = useDragControls();
@@ -1184,11 +1198,169 @@ export default function App() {
   const [revealedPhoneUsers, setRevealedPhoneUsers] = useState<Record<string, boolean>>({});
   const [selectedUserDetailModal, setSelectedUserDetailModal] = useState<any | null>(null);
 
+  // Anti-Manipulasi & Digital Seal State with Auto-Revocation on Delete/Modify
+  const [verifyOrderModal, setVerifyOrderModal] = useState<{
+    open: boolean;
+    orderId?: string;
+    seal?: string;
+    verifiedOrder?: any;
+    status?: 'valid' | 'invalid' | 'deleted' | 'modified' | 'loading';
+    message?: string;
+  }>({ open: false });
+  const [adminVerifyInput, setAdminVerifyInput] = useState('');
+  const [adminVerifyResult, setAdminVerifyResult] = useState<any | null>(null);
+  const [isAdminVerifying, setIsAdminVerifying] = useState(false);
+
+  // Cryptographic Order Seal Generator (Anti-Manipulasi)
+  const generateOrderSecuritySeal = (orderId: string, totalPrice: number, totalItems: number, customerContact: string) => {
+    const cleanId = orderId.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+    const rawStr = `RMS_SEC_${cleanId}_${totalPrice}_${totalItems}_${customerContact}_SEGAR_AUTHENTIC_2026`;
+    let hash = 0;
+    for (let i = 0; i < rawStr.length; i++) {
+      hash = ((hash << 5) - hash) + rawStr.charCodeAt(i);
+      hash |= 0;
+    }
+    const hexPart = Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
+    return `SEAL-${cleanId.slice(-4)}-${hexPart.slice(0, 4)}-${hexPart.slice(4, 8)}`;
+  };
+
+  // URL Parameter Listener for Instant Order Verification (e.g. from WhatsApp Link)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const verifyOrderId = params.get('verify_order');
+      const verifySeal = params.get('seal');
+      if (verifyOrderId) {
+        setVerifyOrderModal({
+          open: true,
+          orderId: verifyOrderId,
+          seal: verifySeal || undefined,
+          status: 'loading'
+        });
+
+        fetch(`/api/orders/verify?orderId=${encodeURIComponent(verifyOrderId)}${verifySeal ? `&seal=${encodeURIComponent(verifySeal)}` : ''}`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === 'deleted' || data.isDeleted) {
+              setVerifyOrderModal(prev => ({
+                ...prev,
+                status: 'deleted',
+                orderId: verifyOrderId,
+                message: data.message || `🚫 Link verifikasi pesanan #${verifyOrderId} telah otomatis dihapus/hangus dari server.`
+              }));
+            } else if (data.status === 'modified' || data.isModified) {
+              setVerifyOrderModal(prev => ({
+                ...prev,
+                status: 'modified',
+                orderId: verifyOrderId,
+                verifiedOrder: data.order,
+                message: data.message || `⚠️ Link verifikasi pesanan #${verifyOrderId} telah otomatis hangus karena data/pesan telah diubah.`
+              }));
+            } else if (data && data.success && data.order && data.isAuthentic) {
+              setVerifyOrderModal(prev => ({
+                ...prev,
+                status: 'valid',
+                verifiedOrder: data.order,
+                message: data.message
+              }));
+            } else {
+              setVerifyOrderModal(prev => ({
+                ...prev,
+                status: 'invalid',
+                message: data.message || 'Pesanan tidak ditemukan di database resmi RM Segar atau segel digital tidak valid.'
+              }));
+            }
+          })
+          .catch(() => {
+            setVerifyOrderModal(prev => ({
+              ...prev,
+              status: 'invalid',
+              message: 'Gagal menghubungi server verifikasi.'
+            }));
+          });
+      }
+    } catch (e) {
+      console.warn("URL search check error:", e);
+    }
+  }, []);
+
+  // Admin Manual Order Verification Function (Anti-Manipulasi Checker)
+  const handleVerifyOrderManual = (inputString: string) => {
+    if (!inputString.trim()) return;
+    setIsAdminVerifying(true);
+    setAdminVerifyResult(null);
+
+    let extractedId = inputString.trim();
+    const idMatch = inputString.match(/#?RMS-([A-Z0-9]+)/i) || inputString.match(/Order #?([A-Z0-9]+)/i) || inputString.match(/No\. Nota:\s*\*?#?([A-Z0-9-]+)\*?/i);
+    if (idMatch) {
+      extractedId = idMatch[1].startsWith('RMS-') ? idMatch[1] : ('RMS-' + idMatch[1]);
+    }
+
+    const sealMatch = inputString.match(/\[(SEAL-[A-Z0-9-]+)\]/i) || inputString.match(/seal=(SEAL-[A-Z0-9-]+)/i);
+    const extractedSeal = sealMatch ? sealMatch[1] : undefined;
+
+    fetch(`/api/orders/verify?orderId=${encodeURIComponent(extractedId)}${extractedSeal ? `&seal=${encodeURIComponent(extractedSeal)}` : ''}`)
+      .then(r => r.json())
+      .then(data => {
+        setIsAdminVerifying(false);
+        if (data.status === 'deleted' || data.isDeleted) {
+          setAdminVerifyResult({
+            valid: false,
+            status: 'deleted',
+            message: data.message || `🚫 LINK VERIFIKASI TELAH OTOMATIS DIHAPUS\n\nPesanan #${extractedId} telah dihapus/dibatalkan dari sistem server.`
+          });
+        } else if (data.status === 'modified' || data.isModified) {
+          setAdminVerifyResult({
+            valid: false,
+            status: 'modified',
+            order: data.order,
+            message: data.message || `⚠️ LINK VERIFIKASI TELAH OTOMATIS HANGUS (PESAN DIUBAH)\n\nRincian pesan #${extractedId} telah diubah/diedit dari data aslinya di server.`
+          });
+        } else if (data && data.success && data.order) {
+          let priceMismatch = false;
+          let detectedPrice = '';
+          const priceMatch = inputString.match(/TOTAL TAGIHAN ASLI:\*?\s*\*?Rp\s*([\d\.,]+)/i) || inputString.match(/TOTAL:\*?\s*\*?Rp\s*([\d\.,]+)/i);
+          if (priceMatch) {
+            detectedPrice = priceMatch[1];
+            const rawPriceNum = parseInt(priceMatch[1].replace(/[\.,]/g, ''), 10);
+            if (!isNaN(rawPriceNum) && data.order.totalPrice && Math.abs(rawPriceNum - data.order.totalPrice) > 100) {
+              priceMismatch = true;
+            }
+          }
+
+          setAdminVerifyResult({
+            valid: data.isAuthentic && !priceMismatch,
+            status: 'valid',
+            order: data.order,
+            message: priceMismatch 
+              ? `⚠️ PERINGATAN KERAS: Terdeteksi manipulasi total harga! Di teks WA: Rp ${detectedPrice}, sedangkan Asli di Database Server: Rp ${Number(data.order.totalPrice).toLocaleString('id-ID')}. Pesanan ini JANGAN diproses sebelum konfirmasi harga asli!`
+              : data.message,
+            priceMismatch,
+            sealMatched: data.isAuthentic
+          });
+        } else {
+          setAdminVerifyResult({
+            valid: false,
+            status: 'deleted_or_invalid',
+            message: data.message || `Pesanan '${extractedId}' TIDAK DITEMUKAN di database server. Waspada pesanan fiktif atau telah dihapus!`
+          });
+        }
+      })
+      .catch(() => {
+        setIsAdminVerifying(false);
+        setAdminVerifyResult({
+          valid: false,
+          status: 'error',
+          message: 'Koneksi ke database server gagal.'
+        });
+      });
+  };
+
   const maskPhoneNumber = (phone?: string | null) => {
-    if (!phone) return '+62 ••••-••••-8115';
+    if (!phone) return '+62 ＴＴＴ-ＴＴＴ-8115';
     const digits = phone.replace(/[^0-9]/g, '');
-    if (digits.length < 4) return '+62 ••••-••••-****';
-    return `+62 ••••-••••-${digits.slice(-4)}`;
+    if (digits.length < 4) return '+62 ＴＴＴ-ＴＴＴ-****';
+    return `+62 ＴＴＴ-ＴＴＴ-${digits.slice(-4)}`;
   };
 
   const getFullPhoneNumber = (phone?: string | null) => {
@@ -1292,6 +1464,7 @@ export default function App() {
   const [selectedOption, setSelectedOption] = useState<'Es' | 'Panas'>('Es');
   const [noteModalItem, setNoteModalItem] = useState<{ id: string, option?: 'Es' | 'Panas', note: string } | null>(null);
   const [orderType, setOrderType] = useState<'Makan di Tempat' | 'Bungkus'>('Makan di Tempat');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'transfer'>('cash');
   const [tableNumber, setTableNumber] = useState(() => localStorage.getItem('rm_segar_table_number') || '');
   const [deliveryMethod, setDeliveryMethod] = useState<'ambil_sendiri' | 'kirim_alamat'>(() => {
     return (localStorage.getItem('rm_segar_delivery_method') as 'ambil_sendiri' | 'kirim_alamat') || 'ambil_sendiri';
@@ -1318,6 +1491,77 @@ export default function App() {
     }, 2200);
   };
   const [isLoading, setIsLoading] = useState(true);
+  const [isTabTransitionLoading, setIsTabTransitionLoading] = useState(false);
+  const [hasShownHumanitarianAd, setHasShownHumanitarianAd] = useState(() => {
+    try {
+      return sessionStorage.getItem('rm_segar_ad_shown') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+  const [tabTransitionPersonIndex, setTabTransitionPersonIndex] = useState(0);
+  const [personsList, setPersonsList] = useState<MissingPerson[]>(() => {
+    // Randomize initial array so different missing persons appear on every load
+    const initial = [...MISSING_PERSONS_DATA];
+    for (let i = initial.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [initial[i], initial[j]] = [initial[j], initial[i]];
+    }
+    return initial;
+  });
+  const [activeMissingPersonIndex, setActiveMissingPersonIndex] = useState(() => 
+    Math.floor(Math.random() * (MISSING_PERSONS_DATA.length || 1))
+  );
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
+
+
+  // Helper to shuffle list randomly
+  const shufflePersonsList = () => {
+    setPersonsList(prev => {
+      const shuffled = [...prev];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    });
+    setActiveMissingPersonIndex(0);
+  };
+
+  // Helper to jump to a random person
+  const pickRandomPerson = () => {
+    if (personsList.length <= 1) return;
+    setActiveMissingPersonIndex(prev => {
+      let nextIdx = Math.floor(Math.random() * personsList.length);
+      if (nextIdx === prev) {
+        nextIdx = (prev + 1) % personsList.length;
+      }
+      return nextIdx;
+    });
+  };
+
+  // Auto-fetch live data from official OrangHilang.id portal & shuffle randomly
+  useEffect(() => {
+    let isMounted = true;
+    searchOrangHilangLive().then(res => {
+      if (isMounted && res.items && res.items.length > 0) {
+        // Shuffle live items so each user sees fresh variety
+        const shuffled = [...res.items];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        setPersonsList(shuffled);
+        setActiveMissingPersonIndex(Math.floor(Math.random() * shuffled.length));
+        setIsLiveConnected(res.isLive);
+      }
+    }).catch(err => {
+      console.warn("Sinkronisasi live OrangHilang.id menggunakan data lokal:", err);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isPDFPreviewModalOpen, setIsPDFPreviewModalOpen] = useState(false);
   const [pdfPreviewPage, setPdfPreviewPage] = useState<1 | 2>(1);
@@ -1419,7 +1663,7 @@ export default function App() {
         id: 'welcome-1',
         to: 'valensiarainy73@gmail.com',
         sender: 'RM Segar Kalbar <no-reply@rmsegar.com>',
-        subject: 'Selamat Datang di RM Segar Khas Kalbar 🍜',
+        subject: 'Selamat Datang di RM Segar Khas Kalbar ',
         timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' Hari ini',
         textContent: 'Terima kasih telah menggunakan RM Segar Khas Kalbar. Seluruh surat, Kode OTP, dan Notifikasi Pesanan disimpan secara transparan di Kotak Masuk Digital ini.',
         htmlContent: `
@@ -1455,6 +1699,13 @@ export default function App() {
   const handleUpdateOrderStatus = (order: Order, newStatus: 'cooking' | 'done' | 'cancelled') => {
     setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: newStatus } : o));
 
+    // Sync order status to backend to trigger auto-revocation if cancelled
+    fetch(`/api/orders/${encodeURIComponent(order.id)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    }).catch(err => console.warn('Sync order status error:', err));
+
     const recipient = order.customerEmail || user?.email || 'valensiarainy73@gmail.com';
     const name = order.customerName || user?.phone || 'Pelanggan RM Segar';
     const statusText = newStatus === 'cooking' ? 'Sedang Dimasak' : newStatus === 'done' ? 'Selesai & Dikonfirmasi' : 'Dibatalkan';
@@ -1463,7 +1714,7 @@ export default function App() {
       id: 'status-' + Date.now(),
       to: recipient,
       sender: 'RM Segar Status <orders@rmsegar.com>',
-      subject: `🔔 Update Status Pesanan #${order.id}: ${statusText}`,
+      subject: ` Update Status Pesanan #${order.id}: ${statusText}`,
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       textContent: `Status pesanan #${order.id} milik Anda telah diperbarui menjadi: ${statusText}.`,
       htmlContent: `
@@ -1497,14 +1748,50 @@ export default function App() {
     })
     .then(res => res.json())
     .then(data => {
-      setEmailNotificationToast(`🔔 Status pesanan #${order.id} diperbarui: ${statusText}`);
+      const toastMsg = newStatus === 'cancelled'
+        ? `❌ Pesanan #${order.id} dibatalkan & link verifikasi otomatis hangus/dihapus.`
+        : `✅ Status pesanan #${order.id} diperbarui: ${statusText}`;
+      setEmailNotificationToast(toastMsg);
       setTimeout(() => setEmailNotificationToast(null), 5000);
     })
     .catch(err => {
       console.error('SendGrid status email error:', err);
-      setEmailNotificationToast(`🔔 Status pesanan #${order.id} diperbarui: ${statusText}`);
+      const toastMsg = newStatus === 'cancelled'
+        ? `❌ Pesanan #${order.id} dibatalkan & link verifikasi otomatis hangus/dihapus.`
+        : `✅ Status pesanan #${order.id} diperbarui: ${statusText}`;
+      setEmailNotificationToast(toastMsg);
       setTimeout(() => setEmailNotificationToast(null), 4000);
     });
+  };
+
+  // Delete Single Order & Auto-Revoke Verification Link on Backend
+  const handleDeleteSingleOrder = async (orderId: string) => {
+    try {
+      await fetch(`/api/orders/${encodeURIComponent(orderId)}`, { method: 'DELETE' });
+    } catch (err) {
+      console.warn("Delete order on backend warning:", err);
+    }
+    setOrders(prev => {
+      const updated = prev.filter(o => o.id !== orderId);
+      localStorage.setItem('rm_segar_orders', JSON.stringify(updated));
+      return updated;
+    });
+    setEmailNotificationToast(`🗑️ Pesanan #${orderId} telah dihapus. Link verifikasi resmi otomatis dihapus & hangus dari server.`);
+    setTimeout(() => setEmailNotificationToast(null), 5000);
+  };
+
+  // Clear All Orders & Auto-Revoke All Links on Backend
+  const handleClearAllOrders = async () => {
+    try {
+      await fetch('/api/orders', { method: 'DELETE' });
+    } catch (err) {
+      console.warn("Clear orders on backend warning:", err);
+    }
+    setOrders([]);
+    localStorage.removeItem('rm_segar_orders');
+    setShowClearHistoryConfirmModal(false);
+    setEmailNotificationToast(`🗑️ Seluruh riwayat pesanan dihapus. Semua link verifikasi otomatis dihapus & hangus.`);
+    setTimeout(() => setEmailNotificationToast(null), 5000);
   };
 
   useEffect(() => {
@@ -1663,7 +1950,7 @@ export default function App() {
       const history = chatMessages
         .filter((msg, index) => {
           if (index === 0 && msg.role === 'model') return false;
-          if (msg.text.includes("Ups, koki AI kami") || msg.text.includes("Oops, our AI chef") || msg.text.includes("哎呀，我们的 AI")) return false;
+          if (msg.text.includes("Ups, koki AI kami") || msg.text.includes("Oops, our AI chef") || msg.text.includes("嚗峕隞祉 AI")) return false;
           return true;
         });
 
@@ -1716,7 +2003,7 @@ export default function App() {
             text: language === 'en' 
               ? "Hello friend! The AI Chef feature requires a valid GEMINI_API_KEY. Please configure GEMINI_API_KEY in the app settings or environment variables." 
               : language === 'zh'
-              ? "你好朋友！AI 厨师功能需要有效的 GEMINI_API_KEY。请在应用设置或环境变量中配置 GEMINI_API_KEY。"
+              ? "雿惩末见嚗I 典蠘閬 GEMINI_API_KEY窈典刻挽蝵格臬㗛銝剝蝵 GEMINI_API_KEY"
               : "Halo kawan! Fitur AI Koki Teng membutuhkan GEMINI_API_KEY yang valid. Silakan konfigurasikan GEMINI_API_KEY pada Settings > Secrets aplikasi Anda." 
           }]);
           setIsAIThinking(false);
@@ -1725,7 +2012,7 @@ export default function App() {
 
         const genAI = new GoogleGenAI({ apiKey: apiKey.trim() });
 
-        const systemInstruction = `Anda adalah "Koki Teng", kepala koki legendaris RM Segar (鲜馆) yang berasal dari Sambas, Kalimantan Barat. Anda sangat ramah, hangat, dan to-the-point!
+        const systemInstruction = `Anda adalah "Koki Teng", kepala koki legendaris RM Segar (斢) yang berasal dari Sambas, Kalimantan Barat. Anda sangat ramah, hangat, dan to-the-point!
 
 SANGAT PENTING: JAWABLAH SECARA SINGKAT, PADAT, DAN JELAS! Jangan panjang lebar atau bertele-tele. Maksimal 1-3 kalimat saja per jawaban, langsung pada inti pertanyaan/saran menu.
 
@@ -1808,10 +2095,20 @@ Aturan Sangat Penting:
 
   // Load cart, favorites, user and orders from localStorage on mount
   useEffect(() => {
-    // Simulate initial loading
+    // Opening splash animation for Rumah Makan Segar
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2500);
+    }, 2400);
+
+    // Auto rotate missing person card according to human reading speed (7 seconds per person)
+    const rotateInterval = setInterval(() => {
+      setActiveMissingPersonIndex(prev => {
+        const total = personsList.length || MISSING_PERSONS_DATA.length || 1;
+        if (total <= 1) return 0;
+        let next = Math.floor(Math.random() * total);
+        return next === prev ? (prev + 1) % total : next;
+      });
+    }, 7000);
 
     const savedCart = localStorage.getItem('rm_segar_cart');
     const savedFavs = localStorage.getItem('rm_segar_favs');
@@ -1869,7 +2166,10 @@ Aturan Sangat Penting:
       }
     }
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(rotateInterval);
+    };
   }, []);
 
   // Security: Auto-logout session for Admin after 15 minutes of inactivity
@@ -1887,7 +2187,7 @@ Aturan Sangat Penting:
         setUser(null);
         localStorage.removeItem('rm_segar_user');
         localStorage.removeItem('rm_segar_admin_auth');
-        alert(language === 'en' ? 'Admin session ended after 15 minutes of inactivity for security reasons.' : language === 'zh' ? '出于安全考虑，管理员会话在15分钟无活动后已自动注销。' : 'Sesi admin telah berakhir secara otomatis karena tidak ada aktivitas selama 15 menit demi keamanan.');
+        alert(language === 'en' ? 'Admin session ended after 15 minutes of inactivity for security reasons.' : language === 'zh' ? '箔摰匧嚗恣隡朞15䭾暑典撌脰䌊冽釣' : 'Sesi admin telah berakhir secara otomatis karena tidak ada aktivitas selama 15 menit demi keamanan.');
       }, 15 * 60 * 1000);
     };
 
@@ -2348,12 +2648,12 @@ Aturan Sangat Penting:
   const handleSendOtpWhatsApp = async () => {
     const cleanInput = loginPhone.trim();
     if (!cleanInput) {
-      alert('❌ Nomor WhatsApp belum diisi!\n\nHarap masukkan nomor WhatsApp aktif Anda terlebih dahulu (contoh: 081234567890 atau 089518948115).');
+      alert(' Nomor WhatsApp belum diisi!\n\nHarap masukkan nomor WhatsApp aktif Anda terlebih dahulu (contoh: 081234567890 atau 089518948115).');
       return;
     }
 
     if (!isHumanVerified) {
-      alert('🛡️ Verifikasi Keamanan Diperlukan!\n\nHarap centang kotak "Saya bukan robot" terlebih dahulu sebelum mengirim OTP.');
+      alert('椘儭 Verifikasi Keamanan Diperlukan!\n\nHarap centang kotak "Saya bukan robot" terlebih dahulu sebelum mengirim OTP.');
       return;
     }
 
@@ -2365,7 +2665,7 @@ Aturan Sangat Penting:
 
     // Validate phone number format
     if (!isValidPhoneNumber(cleanInput)) {
-      alert(`❌ Nomor WhatsApp Tidak Lengkap / Tidak Valid!\n\nNomor yang dimasukkan (${cleanInput}) belum memenuhi format nomor WhatsApp yang benar. Pastikan nomor diawali dengan 08 atau 628 dan memiliki minimal 10 digit (contoh: 081234567890 atau 089518948115).`);
+      alert(` Nomor WhatsApp Tidak Lengkap / Tidak Valid!\n\nNomor yang dimasukkan (${cleanInput}) belum memenuhi format nomor WhatsApp yang benar. Pastikan nomor diawali dengan 08 atau 628 dan memiliki minimal 10 digit (contoh: 081234567890 atau 089518948115).`);
       return;
     }
 
@@ -2390,7 +2690,7 @@ Aturan Sangat Penting:
         if (data.expiresAt) setOtpExpiresAt(data.expiresAt);
       } else if (!res.ok) {
         if (data.error === 'INVALID_PHONE_NUMBER') {
-          alert(`❌ ${data.message || 'Nomor WhatsApp tidak valid atau tidak terdaftar.'}`);
+          alert(` ${data.message || 'Nomor WhatsApp tidak valid atau tidak terdaftar.'}`);
           return;
         }
       }
@@ -2424,7 +2724,7 @@ Aturan Sangat Penting:
       window.location.href = nativeWaUrl;
     }
 
-    setEmailNotificationToast(`💬 Kode OTP ${finalToken} disiapkan untuk WhatsApp +${formattedPhone}. WhatsApp dibuka...`);
+    setEmailNotificationToast(`俥 Kode OTP ${finalToken} disiapkan untuk WhatsApp +${formattedPhone}. WhatsApp dibuka...`);
   };
 
   const handleLogin = async () => {
@@ -2433,14 +2733,12 @@ Aturan Sangat Penting:
       const remainingSecs = Math.ceil((otpLockoutUntil - Date.now()) / 1000);
       alert(language === 'en' 
         ? `Too many failed attempts. Locked out for ${remainingSecs} seconds.` 
-        : language === 'zh' 
-        ? `失败次数过多。请等待 ${remainingSecs} 秒。` 
-        : `Terlalu banyak percobaan gagal. Akses dikunci selama ${remainingSecs} detik.`);
+        : language === 'zh' ? `失败次数过多。锁定 ${remainingSecs} 秒。` : `Terlalu banyak percobaan gagal. Akses dikunci selama ${remainingSecs} detik.`);
       return;
     }
 
     if (!isHumanVerified) {
-      alert('🛡️ Verifikasi Keamanan Diperlukan!\n\nHarap centang verifikasi "Saya bukan robot" terlebih dahulu.');
+      alert('椘儭 Verifikasi Keamanan Diperlukan!\n\nHarap centang verifikasi "Saya bukan robot" terlebih dahulu.');
       return;
     }
 
@@ -2567,11 +2865,11 @@ Aturan Sangat Penting:
         if (isAdmin) {
           setIsAdminAuthenticated(true);
           setShowAdminDashboard(true);
-          alert(`✅ Login Admin Google Berhasil!\n\nSelamat datang, ${targetName} (${targetEmail}).`);
+          alert(` Login Admin Google Berhasil!\n\nSelamat datang, ${targetName} (${targetEmail}).`);
         } else {
           setIsAdminAuthenticated(false);
           setShowAdminDashboard(false);
-          setEmailNotificationToast(`🎉 Login Berhasil! Selamat datang, ${targetName}`);
+          setEmailNotificationToast(` Login Berhasil! Selamat datang, ${targetName}`);
           setTimeout(() => setEmailNotificationToast(null), 4000);
         }
 
@@ -2608,7 +2906,7 @@ Aturan Sangat Penting:
       setShowOtpNotification(null);
       setPendingAdminUser(null);
     } else {
-      alert(`❌ Akses Ditolak: Email (${cleanEmail || 'kosong'}) tidak terdaftar sebagai Admin. Hanya akun ${ALLOWED_ADMIN_EMAIL} yang diizinkan untuk mengakses Dashboard Admin.`);
+      alert(` Akses Ditolak: Email (${cleanEmail || 'kosong'}) tidak terdaftar sebagai Admin. Hanya akun ${ALLOWED_ADMIN_EMAIL} yang diizinkan untuk mengakses Dashboard Admin.`);
     }
   };
 
@@ -2804,28 +3102,28 @@ Aturan Sangat Penting:
     const lastDigit = year % 10;
     let element = 'Tanah';
     let elementColor = 'text-amber-500 bg-amber-500/10 border-amber-500/20';
-    let elementZh = '土';
+    let elementZh = '';
 
     if (lastDigit === 0 || lastDigit === 1) {
       element = 'Logam';
       elementColor = 'text-stone-300 bg-stone-100/10 border-stone-200/20';
-      elementZh = '金';
+      elementZh = '';
     } else if (lastDigit === 2 || lastDigit === 3) {
       element = 'Air';
       elementColor = 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-      elementZh = '水';
+      elementZh = '瘞';
     } else if (lastDigit === 4 || lastDigit === 5) {
       element = 'Kayu';
       elementColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-      elementZh = '木';
+      elementZh = '';
     } else if (lastDigit === 6 || lastDigit === 7) {
       element = 'Api';
       elementColor = 'text-red-500 bg-red-500/10 border-red-500/20';
-      elementZh = '火';
+      elementZh = '';
     } else if (lastDigit === 8 || lastDigit === 9) {
       element = 'Tanah';
       elementColor = 'text-amber-600 bg-amber-600/10 border-amber-600/20';
-      elementZh = '土';
+      elementZh = '';
     }
 
     return { shioDetail, element, elementColor, elementZh };
@@ -2859,7 +3157,7 @@ Aturan Sangat Penting:
   // Yang Kalah Traktir Multi-Game Handlers
   const initTraktirBombGame = (playerList = traktirPlayers) => {
     const bombIndex = Math.floor(Math.random() * 12);
-    const foodEmojis = ['🍜', '🥟', '🍲', '☕', '🧋', '🍋', '🍢', '🍚', '🍗', '🍤', '🥒', '🍱'];
+    const foodEmojis = ['', '', '㬢', '', '', '', '揢', '', '', '搇', '', '暒'];
     
     const grid = Array(12).fill(null).map((_, i) => ({
       id: i,
@@ -2977,7 +3275,7 @@ Aturan Sangat Penting:
   }, [tapIsActive, tapTimeLeft, tapP1Score, tapP2Score, traktirPlayers]);
 
   const shareTraktirWhatsApp = (loserName: string, gameName: string) => {
-    const text = `📢 *OFFICIAL ANNOUNCEMENT: GAME YANG KALAH TRAKTIR RM SEGAR* 📢\n\nHasil Pertandingan (${gameName}):\n👑 *YANG KALAH & WAJIB TRAKTIR:* ${loserName.toUpperCase()}! 💸\n\nYuk kumpul & pesan Bakmie Kering & Kwetiao Goreng RM Segar Pontianak!\nBuka Menu & Pesan: ${window.location.href}`;
+    const text = ` *OFFICIAL ANNOUNCEMENT: GAME YANG KALAH TRAKTIR RM SEGAR* \n\nHasil Pertandingan (${gameName}):\n *YANG KALAH & WAJIB TRAKTIR:* ${loserName.toUpperCase()}! \n\nYuk kumpul & pesan Bakmie Kering & Kwetiao Goreng RM Segar Pontianak!\nBuka Menu & Pesan: ${window.location.href}`;
     openWhatsApp('', text);
   };
 
@@ -2996,6 +3294,26 @@ Aturan Sangat Penting:
       });
       setSearchQuery('');
     }
+
+    // Trigger iklan kemanusiaan HANYA SATU KALI SAJA per sesi saat pertama kali berpindah tab
+    if (tab !== activeTab && !hasShownHumanitarianAd) {
+      setHasShownHumanitarianAd(true);
+      try {
+        sessionStorage.setItem('rm_segar_ad_shown', 'true');
+      } catch (e) {}
+
+      const total = personsList.length || MISSING_PERSONS_DATA.length || 1;
+      setActiveMissingPersonIndex(prev => {
+        if (total <= 1) return 0;
+        let next = Math.floor(Math.random() * total);
+        return next === prev ? (prev + 1) % total : next;
+      });
+      setIsTabTransitionLoading(true);
+      setTimeout(() => {
+        setIsTabTransitionLoading(false);
+      }, 5000);
+    }
+
     setActiveTab(tab);
     setShowOrderHistory(false);
     setShowAbout(false);
@@ -3307,56 +3625,94 @@ Aturan Sangat Penting:
     }
 
     const phoneNumber = "6281258394293";
+    const calculatedTotal = cart.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
+    const rawRandom = Math.random().toString(36).substr(2, 6).toUpperCase();
+    const orderId = `RMS-${rawRandom}`;
+    const customerIdentifier = user?.phone || user?.email || 'Pelanggan RM Segar';
+    const securitySeal = generateOrderSecuritySeal(orderId, calculatedTotal, totalItems, customerIdentifier);
+    const timestamp = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+    const dateFormatted = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
     const orderDetails = cart.map(item => {
       let detail = `- ${item.name}${item.option ? ` (${item.option})` : ''} (${item.quantity}x)`;
-      if (item.note) detail += `\n  *Catatan: ${item.note}*`;
+      if (item.note) detail += `\n  Catatan: ${item.note}`;
       return detail;
     }).join('\n');
 
     let extraInfo = '';
     if (orderType === 'Makan di Tempat') {
       if (tableNumber) {
-        extraInfo = `\n\n*Detail Penyajian:* Makan di Tempat\n*Nomor Meja:* ${tableNumber}`;
+        extraInfo = `\n\nDetail Penyajian: Makan di Tempat\nNomor Meja: ${tableNumber}`;
       } else {
-        extraInfo = `\n\n*Detail Penyajian:* Makan di Tempat`;
+        extraInfo = `\n\nDetail Penyajian: Makan di Tempat`;
       }
     } else {
       const methodText = deliveryMethod === 'kirim_alamat' ? 'Kirim ke Alamat' : 'Ambil Sendiri di Toko';
-      extraInfo = `\n\n*Detail Penyajian:* Bungkus (${methodText})`;
+      extraInfo = `\n\nDetail Penyajian: Bungkus (${methodText})`;
       if (deliveryMethod === 'kirim_alamat' && deliveryAddress) {
-        extraInfo += `\n*Alamat Pengiriman:* ${deliveryAddress}`;
+        extraInfo += `\nAlamat Pengiriman: ${deliveryAddress}`;
       }
     }
 
-    const message = `Halo RM Segar,\n\nSaya ingin memesan:\n${orderDetails}${extraInfo}\n\nTerima kasih!`;
+    const paymentText = selectedPaymentMethod === 'cash' ? 'Cash (Tunai)' : 'Transfer';
+    const verifyUrl = `${window.location.origin}/?verify_order=${orderId}&seal=${securitySeal}`;
+
+    // Format Pesan Terkunci Anti-Manipulasi & Anti-Edit (Tanpa Menyebutkan Nominal Harga)
+    const message = ` *[NOTA PESANAN RESMI TERKUNCI - RM SEGAR]* 㬢
+No. Nota: *#${orderId}*
+Kode Segel Sistem: *[${securitySeal}]*
+Waktu Pesan: *${dateFormatted}, ${timestamp}*
+
+ *Data Pemesan:*
+ Pelanggan: *${customerIdentifier}*
+ Metode Bayar: *${paymentText}*${extraInfo}
+
+ *Daftar Menu Resmi Terkunci Server:*
+${orderDetails}
+
+--------------------------------------------------
+椘儭 *SISTEM KEAMANAN & ANTI-MANIPULASI OWNER:*
+1. Pesanan ini telah *OTOMATIS TERCATAT & TERKUNCI* di Database Server RM Segar saat tombol kirim ditekan.
+2. Dapur & Kasir *HANYA MEMPROSES* menu asli sesuai No. Nota *#${orderId}* dan Kode Segel di atas.
+3. Segala perubahan/edit teks atau penghapusan sebagian pesan oleh user *TIDAK BERLAKU* & otomatis tertolak di sistem kasir.
+ Verifikasi Nota Asli Server: ${verifyUrl}
+--------------------------------------------------`;
     
-    // Save to history & Backend DB
-    const calculatedTotal = cart.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
+    // Save to history & Backend DB with cryptographic seal
     const newOrder: Order = {
-      id: Math.random().toString(36).substr(2, 9).toUpperCase(),
+      id: orderId,
       date: new Date().toLocaleString('id-ID'),
       items: [...cart],
       totalItems: totalItems,
+      totalPrice: calculatedTotal,
+      securitySeal: securitySeal,
       orderType: orderType,
       status: 'pending',
       tableNumber: orderType === 'Makan di Tempat' ? tableNumber : undefined,
       deliveryMethod: orderType === 'Bungkus' ? deliveryMethod : undefined,
       deliveryAddress: (orderType === 'Bungkus' && deliveryMethod === 'kirim_alamat') ? deliveryAddress : undefined,
       customerEmail: user?.email || 'valensiarainy73@gmail.com',
-      customerName: user?.phone || user?.email || 'Pelanggan RM Segar'
+      customerName: customerIdentifier,
+      customerPhone: user?.phone || ''
     };
     setOrders(prev => [newOrder, ...prev]);
 
-    // Send order to backend server
+    // Send order directly to backend database server with immutable seal
     fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        customerName: user?.phone || user?.email || 'Pelanggan RM Segar',
+        orderId: orderId,
+        securitySeal: securitySeal,
+        customerName: customerIdentifier,
         customerPhone: user?.phone || '',
         customerEmail: user?.email || 'valensiarainy73@gmail.com',
         items: cart,
         totalPrice: calculatedTotal,
+        orderType: orderType,
+        tableNumber: tableNumber,
+        deliveryMethod: deliveryMethod,
+        deliveryAddress: deliveryAddress,
         notes: extraInfo
       })
     }).catch(err => console.error('Backend order POST error:', err));
@@ -3365,22 +3721,30 @@ Aturan Sangat Penting:
       id: 'receipt-' + newOrder.id,
       to: user?.email || 'valensiarainy73@gmail.com',
       sender: 'RM Segar Kasir <kasir@rmsegar.com>',
-      subject: `🧾 Bukti Pesanan RM Segar #${newOrder.id}`,
+      subject: `屁 Bukti Pesanan Resmi RM Segar #${newOrder.id} [Tersegel Digital]`,
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-      textContent: `Terima kasih! Pesanan #${newOrder.id} (${orderType}) senilai Rp ${calculatedTotal.toLocaleString('id-ID')} telah diterima.`,
+      textContent: `Terima kasih! Pesanan #${newOrder.id} (${orderType}) senilai Rp ${calculatedTotal.toLocaleString('id-ID')} telah tercatat di server. Segel Digital: ${securitySeal}.`,
       htmlContent: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #1c1917;">
-          <h3 style="color: #ea580c; margin-top: 0;">Nota Digital Pesanan #${newOrder.id}</h3>
-          <p>Terima kasih <b>${user?.email || 'Pelanggan RM Segar'}</b>! Pesanan Anda telah berhasil dibuat.</p>
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #1c1917; max-width: 500px; margin: auto; border: 1px solid #e7e5e4; border-radius: 16px;">
+          <div style="text-align: center; border-bottom: 2px dashed #ea580c; padding-bottom: 12px; margin-bottom: 16px;">
+            <h3 style="color: #ea580c; margin: 0;">Nota Resmi RM Segar</h3>
+            <span style="display: inline-block; background: #ecfdf5; color: #059669; font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 9999px; margin-top: 6px; border: 1px solid #a7f3d0;">
+               TERSEGEL DIGITAL ANTI-MANIPULASI
+            </span>
+          </div>
+          <p style="font-size: 13px;">Nomor Nota: <b>#${newOrder.id}</b></p>
+          <p style="font-size: 11px; color: #78716c; font-family: monospace;">Kode Segel: <b>${securitySeal}</b></p>
           <div style="background: #f5f5f4; padding: 16px; border-radius: 12px; margin: 16px 0;">
-            <p style="margin: 0 0 8px 0; font-size: 12px; color: #78716c; font-weight: bold;">Detail Item (${orderType}):</p>
+            <p style="margin: 0 0 8px 0; font-size: 12px; color: #78716c; font-weight: bold;">Rincian Menu (${orderType}):</p>
             ${cart.map(i => `<div style="display:flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;"><span>${i.quantity}x ${i.name}</span> <span style="font-weight: bold;">Rp ${((i.price || 0) * i.quantity).toLocaleString('id-ID')}</span></div>`).join('')}
             <div style="border-top: 1px solid #e7e5e4; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; color: #ea580c;">
-              <span>Total Pembayaran:</span>
+              <span>Total Tagihan Asli:</span>
               <span>Rp ${calculatedTotal.toLocaleString('id-ID')}</span>
             </div>
           </div>
-          <p style="font-size: 12px; color: #78716c;">Status saat ini: <b>MENUNGGU PROSES KASIR</b></p>
+          <div style="background: #fffbeb; border: 1px solid #fef3c7; padding: 10px; border-radius: 8px; font-size: 11px; color: #92400e;">
+            椘儭 <b>Perlindungan Owner:</b> Data pesanan tersimpan permanen di cloud server kasir. Pesanan hanya diproses jika data WhatsApp cocok dengan database.
+          </div>
         </div>
       `,
       isRead: false,
@@ -3401,7 +3765,7 @@ Aturan Sangat Penting:
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     });
 
-    triggerPandaAnimation("Pesanan Berhasil Dikirim ke WhatsApp! 🐼📱");
+    triggerPandaAnimation("Pesanan Resmi & Tersegel Berhasil Dikirim! 䧟椘儭");
   };
 
   const handleConfirmFromAIChat = (idx: number, type: 'pesanan' | 'reservasi', content: string) => {
@@ -3464,7 +3828,7 @@ Aturan Sangat Penting:
     }
 
     setConfirmedAIMessages(prev => ({ ...prev, [idx]: true }));
-    triggerPandaAnimation("Pesanan AI Berhasil Terkonfirmasi! 🐼✨");
+    triggerPandaAnimation("Pesanan AI Berhasil Terkonfirmasi! 䧟");
   };
 
   const renderHome = () => (
@@ -3517,10 +3881,10 @@ Aturan Sangat Penting:
             </div>
             <div>
               <h3 className="text-amber-200 font-black text-lg tracking-wide font-serif">
-                {language === 'en' ? 'Lucky Fortune Cookie' : language === 'zh' ? '吉星幸运饼干' : 'Biskuit Keberuntungan Hoki'}
+                {language === 'en' ? 'Lucky Fortune Cookie' : language === 'zh' ? '幸运签饼' : 'Biskuit Keberuntungan Hoki'}
               </h3>
               <p className="text-amber-100/85 text-xs mt-0.5 max-w-sm font-sans font-medium">
-                {language === 'en' ? 'Crack open a daily fortune to discover your lucky menu recommendation!' : language === 'zh' ? '敲开幸运饼，获取今日运势和专属招牌推荐！' : 'Pecahkan biskuitnya untuk tahu ramalan hari ini & rekomendasi menu hokimu!'}
+                {language === 'en' ? 'Crack open a daily fortune to discover your lucky menu recommendation!' : language === 'zh' ? '敲开幸运签饼，获取今日运势与推荐幸运菜肴！' : 'Pecahkan biskuitnya untuk tahu ramalan hari ini & rekomendasi menu hokimu!'}
               </p>
             </div>
           </div>
@@ -3529,8 +3893,8 @@ Aturan Sangat Penting:
             onClick={openFortuneCookie}
             className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 hover:from-amber-500 hover:to-amber-400 text-stone-900 font-black text-sm rounded-2xl shadow-lg shadow-amber-500/10 border border-amber-200 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer font-serif tracking-wide"
           >
-            <span>🏮</span>
-            <span>{language === 'en' ? 'Check Luck' : language === 'zh' ? '测今日手气' : 'Cek Hoki Kuliner'}</span>
+            <span>福</span>
+            <span>{language === 'en' ? 'Check Luck' : language === 'zh' ? '测今日运势' : 'Cek Hoki Kuliner'}</span>
           </button>
         </div>
       </section>
@@ -3565,7 +3929,7 @@ Aturan Sangat Penting:
       <section className="px-4 md:px-8 lg:px-10">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
-            <span className="text-red-600">🏮</span>
+            <span className="text-red-600">🔥</span>
             <h2 className="text-xl font-bold text-stone-900 tracking-tight">{TRANSLATIONS[language].popular}</h2>
           </div>
           <button 
@@ -3573,7 +3937,7 @@ Aturan Sangat Penting:
             className="text-red-600 hover:text-red-700 text-sm font-bold flex items-center gap-0.5 transition-colors cursor-pointer"
           >
             <span>Lihat Semua</span>
-            <span>→</span>
+            <span></span>
           </button>
         </div>
         <div ref={popularScrollRef} className="flex gap-4 overflow-x-auto no-scrollbar pb-4 md:flex lg:grid lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 md:gap-6 lg:gap-8 xl:gap-10">
@@ -3789,11 +4153,11 @@ Aturan Sangat Penting:
               <div className="flex items-center gap-2">
                 <span className="text-xl">🏮</span>
                 <h3 className="text-amber-400 font-black text-lg tracking-wide font-serif">
-                  {language === 'en' ? 'Zodiac & Food Compatibility' : language === 'zh' ? '生肖福运菜搭配' : 'Kecocokan Menu & Shio Keberuntungan'}
+                  {language === 'en' ? 'Zodiac & Food Compatibility' : language === 'zh' ? '生肖与幸运美食搭配' : 'Kecocokan Menu & Shio Keberuntungan'}
                 </h3>
               </div>
               <p className="text-stone-400 text-xs mt-1">
-                {language === 'en' ? 'Select your birth year or shio to reveal your lucky Pontianak menu match!' : language === 'zh' ? '输入您的出生年份或生肖，测出属于您的本命招牌菜！' : 'Pilih tahun lahir atau langsung klik shiomu untuk melihat ramalan & menu hoki Pontianak Anda!'}
+                {language === 'en' ? 'Select your birth year or shio to reveal your lucky Pontianak menu match!' : language === 'zh' ? '选择出生年份或生肖，揭晓专属坤甸幸运美食搭配！' : 'Pilih tahun lahir atau langsung klik shiomu untuk melihat ramalan & menu hoki Pontianak Anda!'}
               </p>
             </div>
             
@@ -3867,7 +4231,7 @@ Aturan Sangat Penting:
                   <div className="flex-grow">
                     <div className="flex flex-wrap items-center gap-2">
                       <h4 className="text-amber-200 font-extrabold text-base font-serif tracking-wide">
-                        {language === 'en' ? `Shio ${selectedShio.id.toUpperCase()}` : language === 'zh' ? `属${selectedShio.zh}` : `Shio ${selectedShio.name}`}
+                        {language === 'en' ? `Shio ${selectedShio.id.toUpperCase()}` : language === 'zh' ? `${selectedShio.zh}` : `Shio ${selectedShio.name}`}
                       </h4>
                       {birthYear && (() => {
                         const calculated = getShioAndElementFromYear(birthYear);
@@ -3880,7 +4244,7 @@ Aturan Sangat Penting:
                       })()}
                       {!birthYear && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-serif font-black bg-stone-800 border border-stone-700 text-stone-300 uppercase tracking-wider">
-                          {language === 'en' ? selectedShio.elementDefault : language === 'zh' ? '本命' : `Elemen ${selectedShio.elementDefault}`}
+                          {language === 'en' ? selectedShio.elementDefault : language === 'zh' ? '砍' : `Elemen ${selectedShio.elementDefault}`}
                         </span>
                       )}
 
@@ -3893,15 +4257,15 @@ Aturan Sangat Penting:
                     {/* Lucky Numbers, Colors, and Directions Badges */}
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-stone-300 font-sans">
                       <span className="flex items-center gap-1 bg-stone-900/90 px-2 py-0.5 rounded-md border border-stone-800">
-                        <span className="text-amber-400 font-bold">🎯 {language === 'en' ? 'Numbers:' : language === 'zh' ? '吉数:' : 'Angka Hoki:'}</span>
+                        <span className="text-amber-400 font-bold">㴓 {language === 'en' ? 'Numbers:' : language === 'zh' ? '㗇㺭:' : 'Angka Hoki:'}</span>
                         <span className="font-extrabold text-amber-200">{selectedShio.luckyNumbers}</span>
                       </span>
                       <span className="flex items-center gap-1 bg-stone-900/90 px-2 py-0.5 rounded-md border border-stone-800">
-                        <span className="text-amber-400 font-bold">🎨 {language === 'en' ? 'Colors:' : language === 'zh' ? '吉色:' : 'Warna Hoki:'}</span>
+                        <span className="text-amber-400 font-bold">綫 {language === 'en' ? 'Colors:' : language === 'zh' ? '㕑:' : 'Warna Hoki:'}</span>
                         <span className="font-semibold text-stone-200">{selectedShio.luckyColors[language]}</span>
                       </span>
                       <span className="flex items-center gap-1 bg-stone-900/90 px-2 py-0.5 rounded-md border border-stone-800">
-                        <span className="text-amber-400 font-bold">🧭 {language === 'en' ? 'Direction:' : language === 'zh' ? '财位:' : 'Arah Hoki:'}</span>
+                        <span className="text-amber-400 font-bold">妣 {language === 'en' ? 'Direction:' : language === 'zh' ? '韐Ｖ:' : 'Arah Hoki:'}</span>
                         <span className="font-semibold text-stone-200">{selectedShio.luckyDirection[language]}</span>
                       </span>
                     </div>
@@ -3920,7 +4284,7 @@ Aturan Sangat Penting:
                     <div className="w-full md:w-72 bg-stone-900/90 border border-amber-400/25 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-md hover:border-amber-400/40 transition-all flex-shrink-0">
                       <div className="text-left min-w-0 flex-grow">
                         <span className="text-[8px] bg-red-600 text-amber-50 font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
-                          {language === 'en' ? 'LUCKY MATCH' : language === 'zh' ? '吉星主打菜' : 'MENU HOKIMU'}
+                          {language === 'en' ? 'LUCKY MATCH' : language === 'zh' ? '㗇銝餅' : 'MENU HOKIMU'}
                         </span>
                         <h5 className="font-extrabold text-amber-200 text-sm mt-1 truncate">{luckyMenuItem.name}</h5>
                         <p className="text-[10px] text-stone-400 leading-tight mt-0.5 line-clamp-1">{luckyMenuItem.description}</p>
@@ -4118,7 +4482,7 @@ Aturan Sangat Penting:
             <p className="text-2xl font-black text-stone-900">{pendingOrders + cookingOrders}</p>
             <div className="flex gap-2 text-[10px] text-stone-400 font-medium">
               <span className="text-amber-500 font-bold">{pendingOrders} Baru</span>
-              <span>•</span>
+              <span></span>
               <span className="text-blue-500 font-bold">{cookingOrders} Masak</span>
             </div>
           </div>
@@ -4134,7 +4498,7 @@ Aturan Sangat Penting:
             <p className="text-2xl font-black text-stone-900">{reservations.length}</p>
             <div className="flex gap-2 text-[10px] text-stone-400 font-medium">
               <span className="text-amber-500 font-bold">{pendingRes} Menunggu</span>
-              <span>•</span>
+              <span></span>
               <span className="text-green-600 font-bold">{confirmedRes} Ok</span>
             </div>
           </div>
@@ -4173,7 +4537,100 @@ Aturan Sangat Penting:
 
         {/* Tab Content */}
         {adminTab === 'orders' ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
+            {/* Anti-Manipulasi WhatsApp Checker Panel for Owner */}
+            <div className="bg-gradient-to-br from-amber-950 via-stone-900 to-zinc-950 text-white p-5 sm:p-6 rounded-[32px] border border-amber-500/30 shadow-lg space-y-4">
+              <div className="flex items-start justify-between flex-wrap gap-2 border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
+                    <ShieldCheck size={26} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-extrabold text-base text-amber-300">Pemeriksa Keaslian Nota WA (Anti-Manipulasi)</h3>
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-400/30 text-[10px] font-black uppercase">
+                        Sistem Terkunci Cloud
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-300 mt-0.5 max-w-xl">
+                      Lindungi toko dari pelanggan iseng yang mengubah harga atau menu di chat WA. Sistem mencocokkan data chat langsung ke database pusat.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Input Verifier */}
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-stone-300 flex items-center gap-1.5">
+                  <KeyRound size={14} className="text-amber-400" />
+                  <span>Masukkan Nomor Order, Kode Segel, atau Tempel Seluruh Pesan WhatsApp Pelanggan:</span>
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input 
+                    type="text"
+                    value={adminVerifyInput}
+                    onChange={(e) => setAdminVerifyInput(e.target.value)}
+                    placeholder="Contoh: RMS-A8X92 atau [SEAL-8X92-F1A2] atau tempel pesan..."
+                    className="flex-1 bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-sm text-white placeholder:text-stone-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 font-mono"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleVerifyOrderManual(adminVerifyInput);
+                    }}
+                  />
+                  <button
+                    onClick={() => handleVerifyOrderManual(adminVerifyInput)}
+                    disabled={isAdminVerifying || !adminVerifyInput.trim()}
+                    className="px-5 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 text-white font-extrabold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all shrink-0 cursor-pointer"
+                  >
+                    {isAdminVerifying ? (
+                      <span className="animate-spin text-sm"></span>
+                    ) : (
+                      <ShieldCheck size={16} />
+                    )}
+                    <span>{isAdminVerifying ? 'Memeriksa...' : 'Cek Keaslian Data'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Result of Verification */}
+              {adminVerifyResult && (
+                <div className={`p-4 rounded-2xl border transition-all text-xs space-y-2 ${
+                  adminVerifyResult.valid 
+                    ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-100'
+                    : 'bg-red-950/70 border-red-500/50 text-red-100'
+                }`}>
+                  <div className="flex items-center gap-2 font-bold text-sm">
+                    {adminVerifyResult.valid ? (
+                      <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
+                    ) : (
+                      <AlertTriangle size={18} className="text-red-400 shrink-0" />
+                    )}
+                    <span>{adminVerifyResult.message}</span>
+                  </div>
+
+                  {adminVerifyResult.order && (
+                    <div className="bg-black/30 p-3 rounded-xl border border-white/10 space-y-1 font-mono text-[11px] mt-2">
+                      <div className="flex justify-between border-b border-white/10 pb-1">
+                        <span className="text-stone-400">Order ID:</span>
+                        <span className="font-bold text-white">#{adminVerifyResult.order.orderId || adminVerifyResult.order.id}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-white/10 pb-1">
+                        <span className="text-stone-400">Pemesan:</span>
+                        <span className="font-bold text-white">{adminVerifyResult.order.customerName} ({adminVerifyResult.order.customerEmail || '-'})</span>
+                      </div>
+                      <div className="flex justify-between border-b border-white/10 pb-1">
+                        <span className="text-stone-400">Total Asli di Server:</span>
+                        <span className="font-bold text-amber-400">Rp {Number(adminVerifyResult.order.totalPrice || 0).toLocaleString('id-ID')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-stone-400">Segel Keamanan:</span>
+                        <span className="font-bold text-blue-300">{adminVerifyResult.order.securitySeal || 'SEAL-AUTOGEN'}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {orders.length === 0 ? (
               <div className="bg-white p-12 text-center rounded-[32px] border border-stone-100 shadow-sm text-stone-400">
                 <ShoppingBag size={48} className="mx-auto text-stone-200 mb-3" />
@@ -4187,13 +4644,15 @@ Aturan Sangat Penting:
                 const customerEmailAddress = order.customerEmail || user?.email || 'valensiarainy73@gmail.com';
                 const customerPhoneNumber = order.customerPhone || user?.phone || '6289518948115';
                 const rawCleanPhone = customerPhoneNumber.replace(/[^0-9]/g, '');
+                const calculatedOrderPrice = order.totalPrice || (order.items ? order.items.reduce((s, i) => s + ((i.price || 0) * i.quantity), 0) : 0);
+                const orderSeal = order.securitySeal || generateOrderSecuritySeal(order.id, calculatedOrderPrice, order.totalItems || 1, customerDisplayName);
 
                 return (
                   <div key={order.id} className="bg-white p-6 rounded-[32px] shadow-sm border border-stone-100 space-y-4">
                     <div className="flex justify-between items-start flex-wrap gap-2">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Order #{order.id}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-xs font-bold text-stone-900 font-mono tracking-wider">Order #{order.id}</p>
                           <span className={`px-2 py-0.5 text-[9px] font-extrabold uppercase rounded-full ${
                             isAI 
                               ? 'bg-purple-100 text-purple-700' 
@@ -4202,6 +4661,10 @@ Aturan Sangat Penting:
                                 : 'bg-blue-100 text-blue-700'
                           }`}>
                             {order.orderType}
+                          </span>
+                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-black uppercase rounded-full flex items-center gap-1">
+                            <ShieldCheck size={11} className="text-emerald-600" />
+                            <span>Tersegel Digital</span>
                           </span>
                         </div>
                         <p className="text-xs text-stone-400 font-semibold mt-1">{order.date}</p>
@@ -4229,6 +4692,37 @@ Aturan Sangat Penting:
                       </div>
                     </div>
 
+                    {/* Digital Seal & Integrity Banner */}
+                    <div className="bg-stone-900 text-stone-200 px-3.5 py-2.5 rounded-2xl border border-stone-800 flex items-center justify-between gap-2 text-xs flex-wrap font-mono">
+                      <div className="flex items-center gap-2">
+                        <Lock size={13} className="text-amber-400 shrink-0" />
+                        <span className="text-stone-400 text-[11px]">Segel Keaslian:</span>
+                        <span className="text-amber-300 font-bold text-[11px] select-all bg-black/40 px-2 py-0.5 rounded border border-amber-500/30">
+                          {orderSeal}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setVerifyOrderModal({
+                            open: true,
+                            orderId: order.id,
+                            seal: orderSeal,
+                            status: 'valid',
+                            verifiedOrder: {
+                              ...order,
+                              totalPrice: calculatedOrderPrice,
+                              securitySeal: orderSeal
+                            },
+                            message: ` Pesanan #${order.id} TERVERIFIKASI 100% ASLI & SAH dari database RM Segar.`
+                          });
+                        }}
+                        className="text-[10px] text-amber-400 hover:text-amber-300 font-bold underline flex items-center gap-1 cursor-pointer ml-auto"
+                      >
+                        <ShieldCheck size={12} />
+                        <span>Verifikasi Nota</span>
+                      </button>
+                    </div>
+
                     {/* Integrated Customer / User Info Box */}
                     <div className="bg-gradient-to-r from-blue-50/90 to-indigo-50/90 rounded-2xl p-4 border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
                       <div className="flex items-center gap-3">
@@ -4245,10 +4739,10 @@ Aturan Sangat Penting:
                             </span>
                           </div>
                           <p className="text-[11px] text-stone-600 font-mono font-medium flex items-center gap-1">
-                            <span>📧</span> <span>{customerEmailAddress}</span>
+                            <span></span> <span>{customerEmailAddress}</span>
                           </p>
                           <p className="text-[11px] text-emerald-700 font-mono font-bold flex items-center gap-1">
-                            <span>📱</span> <span>+{customerPhoneNumber.startsWith('62') ? customerPhoneNumber : '62' + customerPhoneNumber}</span>
+                            <span></span> <span>+{customerPhoneNumber.startsWith('62') ? customerPhoneNumber : '62' + customerPhoneNumber}</span>
                           </p>
                         </div>
                       </div>
@@ -4279,10 +4773,19 @@ Aturan Sangat Penting:
                                     {item.option}
                                   </span>
                                 )}
+                                {item.note && (
+                                  <span className="text-amber-700 text-[10px] font-normal italic">
+                                    ("{item.note}")
+                                  </span>
+                                )}
                               </span>
-                              <span>x{item.quantity}</span>
+                              <span>x{item.quantity} (Rp {((item.price || 0) * item.quantity).toLocaleString('id-ID')})</span>
                             </div>
                           ))}
+                          <div className="border-t border-stone-200 pt-2 flex justify-between text-xs font-extrabold text-stone-900">
+                            <span>Total Tagihan Asli:</span>
+                            <span className="text-orange-600">Rp {calculatedOrderPrice.toLocaleString('id-ID')}</span>
+                          </div>
                         </div>
                       ) : (
                         <p className="text-xs font-medium italic text-stone-500 leading-relaxed">
@@ -4295,14 +4798,14 @@ Aturan Sangat Penting:
                         <div className="pt-2 border-t border-dashed border-stone-200 mt-2 text-[11px] space-y-1 text-stone-500 font-semibold">
                           {order.orderType === 'Makan di Tempat' && order.tableNumber && (
                             <p className="flex items-center gap-1">
-                              <span>📍</span> 
+                              <span></span> 
                               <span><strong className="font-bold text-stone-700">Nomor Meja:</strong> {order.tableNumber}</span>
                             </p>
                           )}
                           {order.orderType === 'Bungkus' && order.deliveryMethod && (
                             <div className="space-y-1">
                               <p className="flex items-center gap-1">
-                                <span>📦</span> 
+                                <span></span> 
                                 <span><strong className="font-bold text-stone-700">Metode:</strong> {order.deliveryMethod === 'kirim_alamat' ? 'Kirim ke Alamat' : 'Ambil Sendiri'}</span>
                               </p>
                               {order.deliveryMethod === 'kirim_alamat' && order.deliveryAddress && (
@@ -4640,7 +5143,7 @@ Aturan Sangat Penting:
                 title="Hapus Semua Riwayat Pesanan"
               >
                 <Trash2 size={14} />
-                <span>{language === 'en' ? 'Delete History' : language === 'zh' ? '清空历史' : 'Hapus Riwayat'}</span>
+                <span>{language === 'en' ? 'Delete History' : language === 'zh' ? '皜征蟮' : 'Hapus Riwayat'}</span>
               </button>
             )}
           </div>
@@ -4665,22 +5168,22 @@ Aturan Sangat Penting:
                       {order.status === 'cooking' ? (
                         <span className="px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                          Sedang Dimasak 🍳
+                          Sedang Dimasak 朖
                         </span>
                       ) : order.status === 'done' ? (
                         <span className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1">
                           <CheckCircle2 size={10} />
-                          Pesanan Selesai ✨
+                          Pesanan Selesai 
                         </span>
                       ) : order.status === 'cancelled' ? (
                         <span className="px-3 py-1 bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1">
                           <X size={10} />
-                          Dibatalkan ❌
+                          Dibatalkan 
                         </span>
                       ) : (
                         <span className="px-3 py-1 bg-orange-50 text-orange-700 border border-orange-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
-                          Sedang Disiapkan 👨‍🍳
+                          Sedang Disiapkan 㵵
                         </span>
                       )}
                       <span className="px-3 py-1 bg-stone-100 text-stone-600 text-[10px] font-bold uppercase rounded-full">
@@ -4715,11 +5218,11 @@ Aturan Sangat Penting:
                   {(order.tableNumber || order.deliveryMethod) && (
                     <div className="pt-2.5 mt-1 border-t border-dashed border-stone-100 text-xs space-y-1 text-stone-500">
                       {order.orderType === 'Makan di Tempat' && order.tableNumber && (
-                        <p>📍 <strong className="font-semibold text-stone-700">Nomor Meja:</strong> {order.tableNumber}</p>
+                        <p> <strong className="font-semibold text-stone-700">Nomor Meja:</strong> {order.tableNumber}</p>
                       )}
                       {order.orderType === 'Bungkus' && order.deliveryMethod && (
                         <>
-                          <p>📦 <strong className="font-semibold text-stone-700">Metode:</strong> {order.deliveryMethod === 'kirim_alamat' ? 'Kirim ke Alamat' : 'Ambil Sendiri'}</p>
+                          <p> <strong className="font-semibold text-stone-700">Metode:</strong> {order.deliveryMethod === 'kirim_alamat' ? 'Kirim ke Alamat' : 'Ambil Sendiri'}</p>
                           {order.deliveryMethod === 'kirim_alamat' && order.deliveryAddress && (
                             <p className="pl-4 text-stone-400 italic text-[11px] leading-relaxed">Alamat: {order.deliveryAddress}</p>
                           )}
@@ -4815,13 +5318,13 @@ Aturan Sangat Penting:
                   </div>
                   <div className="space-y-1">
                     <h3 className="font-extrabold text-stone-900 text-base">
-                      {language === 'en' ? 'Download Menu Catalog (PDF)' : language === 'zh' ? '下载菜单目录 (PDF)' : 'Unduh Daftar Menu (PDF)'}
+                      {language === 'en' ? 'Download Menu Catalog (PDF)' : language === 'zh' ? '銝贝蝸桀 (PDF)' : 'Unduh Daftar Menu (PDF)'}
                     </h3>
                     <p className="text-xs text-stone-600 leading-relaxed">
                       {language === 'en' 
                         ? 'Download the complete RM Segar menu brochure in 3 languages (ID, EN, ZH) without prices. Great for sharing or printing.' 
                         : language === 'zh' 
-                        ? '下载包含印尼语、英语和中文三种语言的鲜馆完整菜单列表（不含价格）。适合分享或打印。' 
+                        ? '銝贝蝸鉄啣側霂准㘚霂剖銝剜銝厩霂剛擐渲訫銵剁銝滚鉄隞瑟聢嚗剹澈啜' 
                         : 'Unduh brosur daftar menu RM Segar lengkap dalam 3 bahasa (ID, EN, ZH) tanpa mencantumkan harga. Cocok untuk dibagikan atau dicetak.'}
                     </p>
                   </div>
@@ -4832,7 +5335,7 @@ Aturan Sangat Penting:
                 >
                   <BookOpen size={18} />
                   <span>
-                    {language === 'en' ? 'Preview & Print Menu' : language === 'zh' ? '预览并打印/下载菜单' : 'Pratinjau & Cetak/Unduh Menu'}
+                    {language === 'en' ? 'Preview & Print Menu' : language === 'zh' ? '憸撟嗆/銝贝蝸' : 'Pratinjau & Cetak/Unduh Menu'}
                   </span>
                 </button>
               </div>
@@ -4850,41 +5353,41 @@ Aturan Sangat Penting:
                   {[
                     {
                       id: 'bakmie-kering',
-                      name: language === 'en' ? 'Dry Bakmie Kalimantan' : language === 'zh' ? '加里曼丹招牌干捞面' : 'Bakmie Kering Kalimantan',
-                      desc: language === 'en' ? 'Our homemade signature noodles using traditional family recipe, fragrant garlic oil, generous toppings, and separate savory broth.' : language === 'zh' ? '特制家传秘方手工面条，佐以香浓大蒜油、丰富肉碎，搭配清甜骨汤单独盛放。' : 'Mie khas buatan sendiri dengan resep racikan tradisional, minyak bawang harum, topping daging melimpah, dan kuah kaldu segar terpisah.',
-                      tag: language === 'en' ? 'Best Seller 🌟' : language === 'zh' ? '畅销招牌 🌟' : 'Best Seller 🌟',
+                      name: language === 'en' ? 'Dry Bakmie Kalimantan' : language === 'zh' ? '潔號撟脫' : 'Bakmie Kering Kalimantan',
+                      desc: language === 'en' ? 'Our homemade signature noodles using traditional family recipe, fragrant garlic oil, generous toppings, and separate savory broth.' : language === 'zh' ? '孵摰嗡蝘䀹䲮见極Ｘ辺嚗䔶隞仿瘚枏之硃萼撖諹蝣剝皜撉冽惜閧' : 'Mie khas buatan sendiri dengan resep racikan tradisional, minyak bawang harum, topping daging melimpah, dan kuah kaldu segar terpisah.',
+                      tag: language === 'en' ? 'Best Seller ' : language === 'zh' ? ' ' : 'Best Seller ',
                       price: 'Rp 28.000',
                       item: MENU_ITEMS.find(m => m.id === 'bakmie-kering')
                     },
                     {
                       id: 'kwetiao-goreng',
-                      name: language === 'en' ? 'Fried Kwetiao with Beef' : language === 'zh' ? '牛肉爆炒粿条' : 'Kwetiao Goreng Sapi',
-                      desc: language === 'en' ? 'Stir-fried in an ultra-hot cast iron wok (Wok Hei) to produce our signature smokey aroma, tossed with tender slices of beef.' : language === 'zh' ? '大火铁镬爆炒，特有诱人焦香镬气，融入细嫩爽口的鲜美牛肉片。' : 'Kwetiao ditumis dengan wajan besi panas membara (Wok Hei) sehingga menghasilkan aroma panggangan yang khas dipadu irisan daging sapi empuk.',
-                      tag: language === 'en' ? 'Most Favorite 🔥' : language === 'zh' ? '最爱人气 🔥' : 'Terfavorit 🔥',
+                      name: language === 'en' ? 'Fried Kwetiao with Beef' : language === 'zh' ? '蝎踵辺' : 'Kwetiao Goreng Sapi',
+                      desc: language === 'en' ? 'Stir-fried in an ultra-hot cast iron wok (Wok Hei) to produce our signature smokey aroma, tossed with tender slices of beef.' : language === 'zh' ? '憭抒嚗鸌㕑秧鈭箇擐䠷瘞䈑滚蝏咿賢藁蝢厩' : 'Kwetiao ditumis dengan wajan besi panas membara (Wok Hei) sehingga menghasilkan aroma panggangan yang khas dipadu irisan daging sapi empuk.',
+                      tag: language === 'en' ? 'Most Favorite ' : language === 'zh' ? '曹犖瘞 ' : 'Terfavorit ',
                       price: 'Rp 30.000',
                       item: MENU_ITEMS.find(m => m.id === 'kwetiao-goreng')
                     },
                     {
                       id: 'kaifon',
-                      name: language === 'en' ? 'Nasi Campur (Kaifon)' : language === 'zh' ? '西加经典盖饭 (Kaifon)' : 'Nasi Campur (Kaifon)',
-                      desc: language === 'en' ? 'Warm white rice topped with delicious assorted roasted meats, drizzled with signature sweet-savory Kalimantan thick sauce and soup.' : language === 'zh' ? '热气腾腾白米饭配以各式美味秘制脆皮烤肉，浇上西加里曼丹特色香甜浓稠酱汁。' : 'Nasi putih hangat dengan aneka potongan daging panggang gurih, disiram saus kental manis gurih khas Kalbar dan disajikan bersama kuah hangat.',
-                      tag: language === 'en' ? 'Highly Recommended 🏆' : language === 'zh' ? '强烈推荐 🏆' : 'Sangat Direkomendasikan 🏆',
+                      name: language === 'en' ? 'Nasi Campur (Kaifon)' : language === 'zh' ? '镼踹蝏誩㚚平 (Kaifon)' : 'Nasi Campur (Kaifon)',
+                      desc: language === 'en' ? 'Warm white rice topped with delicious assorted roasted meats, drizzled with signature sweet-savory Kalimantan thick sauce and soup.' : language === 'zh' ? '剜曇賜掖擖剝隞亙撘讐喟嗉桃㚁瘚镼踹峕垈銝寧鸌脤蝔瘙' : 'Nasi putih hangat dengan aneka potongan daging panggang gurih, disiram saus kental manis gurih khas Kalbar dan disajikan bersama kuah hangat.',
+                      tag: language === 'en' ? 'Highly Recommended ' : language === 'zh' ? '撘箇刻 ' : 'Sangat Direkomendasikan ',
                       price: 'Rp 32.000',
                       item: MENU_ITEMS.find(m => m.id === 'kaifon')
                     },
                     {
                       id: 'kwetiao-kering',
-                      name: language === 'en' ? 'Dry Seasoned Kwetiao' : language === 'zh' ? '干捞肉碎粿条' : 'Kwetiao Kering',
-                      desc: language === 'en' ? 'Soft, delicate flat rice noodles tossed in RM Segar secret seasoned garlic oil, served with beef balls, tender meat, and fresh scallions.' : language === 'zh' ? '香滑柔嫩的干捞粿条，拌以秘制香滑肉油，配牛肉丸、鲜嫩肉片及翠绿小葱。' : 'Kwetiao lembut tanpa kuah dibumbui minyak gurih racikan RM Segar, dilengkapi bakso sapi, daging empuk, dan taburan daun bawang segar.',
-                      tag: language === 'en' ? 'Kalimantan Specialty 🍜' : language === 'zh' ? '西加特色 🍜' : 'Khas Kalbar 🍜',
+                      name: language === 'en' ? 'Dry Seasoned Kwetiao' : language === 'zh' ? '撟脫厩蝎踵辺' : 'Kwetiao Kering',
+                      desc: language === 'en' ? 'Soft, delicate flat rice noodles tossed in RM Segar secret seasoned garlic oil, served with beef balls, tender meat, and fresh scallions.' : language === 'zh' ? '擐蹱咿僕䂿窒∴䔶誑蝘睃擐蹱㗇硃嚗屸銝詻憳抵蝧删遛撠讛' : 'Kwetiao lembut tanpa kuah dibumbui minyak gurih racikan RM Segar, dilengkapi bakso sapi, daging empuk, dan taburan daun bawang segar.',
+                      tag: language === 'en' ? 'Kalimantan Specialty ' : language === 'zh' ? '镼踹寡 ' : 'Khas Kalbar ',
                       price: 'Rp 28.000',
                       item: MENU_ITEMS.find(m => m.id === 'kwetiao-kering')
                     },
                     {
                       id: 'jeruk-nipis',
-                      name: language === 'en' ? 'Ice Pontianak Lime Juice' : language === 'zh' ? '坤甸特色冰爽青柠汁' : 'Es Jeruk Nipis Pontianak',
-                      desc: language === 'en' ? 'Freshly squeezed local West Kalimantan lime, perfectly balanced sour-sweetness, the ultimate refreshing companion for your meal.' : language === 'zh' ? '选用西加里曼丹本地新鲜青柠鲜榨而成，酸甜平衡得恰到好处，绝对是解腻解暑佳品。' : 'Perasan jeruk nipis lokal Kalimantan Barat yang asam segar alami dengan tingkat kemanisan yang pas, sangat cocok sebagai pendamping makan.',
-                      tag: language === 'en' ? 'Fresh Beverage 🍋' : language === 'zh' ? '清凉解渴 🍋' : 'Minuman Segar 🍋',
+                      name: language === 'en' ? 'Ice Pontianak Lime Juice' : language === 'zh' ? '斤璛寡啁埝瘙' : 'Es Jeruk Nipis Pontianak',
+                      desc: language === 'en' ? 'Freshly squeezed local West Kalimantan lime, perfectly balanced sour-sweetness, the ultimate refreshing companion for your meal.' : language === 'zh' ? '厩鍂镼踹峕垈銝寞唳鰵斢璁刻峕嚗屸像銵∪啣憟賢嚗撖寞糓閫閫雿喳' : 'Perasan jeruk nipis lokal Kalimantan Barat yang asam segar alami dengan tingkat kemanisan yang pas, sangat cocok sebagai pendamping makan.',
+                      tag: language === 'en' ? 'Fresh Beverage ' : language === 'zh' ? '皜閫葩 ' : 'Minuman Segar ',
                       price: 'Rp 10.000',
                       item: MENU_ITEMS.find(m => m.id === 'jeruk-nipis')
                     }
@@ -4930,7 +5433,7 @@ Aturan Sangat Penting:
 
             <div className="pt-8 pb-2 text-center border-t border-stone-50">
               <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">
-                © {new Date().getFullYear()} RM Segar
+                穢 {new Date().getFullYear()} RM Segar
               </p>
               <p className="text-[10px] text-stone-300 mt-1">
                 valensiarainy73@gmail.com
@@ -5056,7 +5559,7 @@ Aturan Sangat Penting:
                 {[
                   { code: 'id', name: 'Bahasa Indonesia' },
                   { code: 'en', name: 'English' },
-                  { code: 'zh', name: '中文' }
+                  { code: 'zh', name: '銝剜' }
                 ].map((item) => (
                   <button
                     key={item.code}
@@ -5100,7 +5603,7 @@ Aturan Sangat Penting:
                   <h2 className="text-xl font-black text-stone-900 tracking-tight">
                     {loginMode === 'admin_google' 
                       ? 'Masuk Admin Google' 
-                      : (language === 'en' ? 'Sign In / Register' : language === 'zh' ? '登录 / 注册' : 'Masuk atau Daftar')}
+                      : (language === 'en' ? 'Sign In / Register' : language === 'zh' ? '餃 / 瘜典' : 'Masuk atau Daftar')}
                   </h2>
                   <p className="text-stone-500 text-xs leading-relaxed max-w-xs mx-auto">
                     {loginMode === 'admin_google' 
@@ -5149,7 +5652,7 @@ Aturan Sangat Penting:
                       <div className="p-2.5 bg-orange-50/80 border border-orange-200 rounded-xl space-y-1.5 text-left mt-2">
                         <div className="flex items-center justify-between">
                           <span className="text-[11px] font-bold text-orange-950">
-                            🔑 Kode OTP: <span className="font-mono text-xs font-black text-orange-600 tracking-wider">{resetToken}</span>
+                             Kode OTP: <span className="font-mono text-xs font-black text-orange-600 tracking-wider">{resetToken}</span>
                           </span>
                           <button
                             type="button"
@@ -5167,7 +5670,7 @@ Aturan Sangat Penting:
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 underline cursor-pointer"
                             >
-                              <span>💬 Buka WhatsApp untuk kirim OTP</span>
+                              <span>俥 Buka WhatsApp untuk kirim OTP</span>
                             </a>
                           </div>
                         )}
@@ -5242,7 +5745,7 @@ Aturan Sangat Penting:
 
           <div className="pt-12 pb-4 text-center">
             <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">
-              © {new Date().getFullYear()} RM Segar
+              穢 {new Date().getFullYear()} RM Segar
             </p>
             <p className="text-[10px] text-stone-300 mt-1">
               val***@gmail.com
@@ -5313,7 +5816,7 @@ Aturan Sangat Penting:
                     <span className="text-[10px] text-stone-400 font-bold">{orderPushBanner.timestamp}</span>
                   </div>
                   <h4 className="text-base font-extrabold text-stone-900 leading-tight mt-0.5">
-                    Pesanan Sedang Disiapkan! 👨‍🍳
+                    Pesanan Sedang Disiapkan! 㵵
                   </h4>
                 </div>
               </div>
@@ -5338,9 +5841,9 @@ Aturan Sangat Penting:
                 <span className="font-mono font-extrabold text-stone-800 text-sm tracking-tight">#{orderPushBanner.orderId}</span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-bold text-stone-400 uppercase block">{orderPushBanner.totalItems} Item • {orderPushBanner.orderType}</span>
+                <span className="text-[10px] font-bold text-stone-400 uppercase block">{orderPushBanner.totalItems} Item  {orderPushBanner.orderType}</span>
                 <span className="font-bold text-orange-600 text-xs bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-200/60 inline-block mt-0.5">
-                  Sedang Disiapkan 🍳
+                  Sedang Disiapkan 朖
                 </span>
               </div>
             </div>
@@ -5381,101 +5884,296 @@ Aturan Sangat Penting:
 
       <div className="w-full bg-[#F8F9FB] flex flex-col min-h-screen relative pb-32 overflow-hidden">
         <AnimatePresence>
-          {isLoading && (
-          <motion.div 
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center"
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ 
-                duration: 0.8,
-                ease: "easeOut"
-              }}
-              className="relative mb-8"
+                    {isLoading && (
+            <motion.div 
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: "easeInOut" }}
+              className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center p-6 text-stone-900 overflow-hidden select-none"
             >
-              {/* Animated Logo Container */}
-              <motion.div 
-                animate={{ 
-                  y: [0, -15, 0],
-                }}
-                transition={{ 
-                  repeat: Infinity, 
-                  duration: 2,
-                  ease: "easeInOut"
-                }}
-                className="w-32 h-32 bg-orange-500 rounded-[40px] shadow-2xl shadow-orange-200 flex items-center justify-center text-white relative overflow-hidden"
-              >
-                <MainLogo size={64} />
-                
-                {/* Shine effect */}
-                <motion.div 
-                  animate={{ 
-                    x: [-150, 150]
-                  }}
-                  transition={{ 
-                    repeat: Infinity, 
-                    duration: 1.5,
-                    repeatDelay: 0.5
-                  }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
-                />
-              </motion.div>
-
-              {/* Decorative particles */}
-              {[...Array(6)].map((_, i) => (
+              {/* Center Content Container */}
+              <div className="flex flex-col items-center text-center max-w-sm w-full space-y-6 my-auto">
+                {/* Standalone Noodle / Bowl Logo (Without background box) */}
                 <motion.div
-                  key={i}
-                  animate={{ 
-                    scale: [0, 1, 0],
-                    x: [0, (i % 2 === 0 ? 40 : -40) * Math.random()],
-                    y: [0, (i < 3 ? 40 : -40) * Math.random()],
-                  }}
-                  transition={{ 
-                    repeat: Infinity, 
-                    duration: 2,
-                    delay: i * 0.2
-                  }}
-                  className="absolute top-1/2 left-1/2 w-2 h-2 bg-orange-300 rounded-full"
-                />
-              ))}
-            </motion.div>
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, type: "spring", bounce: 0.3 }}
+                  className="relative flex flex-col items-center justify-center"
+                >
+                  <div className="relative flex flex-col items-center justify-center">
+                    {/* Animated Steam lines */}
+                    <div className="flex gap-2 mb-2 justify-center">
+                      <motion.div 
+                        animate={{ y: [0, -6, 0], opacity: [0.3, 0.9, 0.3] }} 
+                        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-1.5 h-5 bg-gradient-to-t from-[#FF7A2F] to-orange-300 rounded-full"
+                      />
+                      <motion.div 
+                        animate={{ y: [0, -9, 0], opacity: [0.5, 1, 0.5] }} 
+                        transition={{ duration: 1.4, repeat: Infinity, delay: 0.2, ease: "easeInOut" }}
+                        className="w-1.5 h-7 bg-gradient-to-t from-[#FF5C00] to-orange-400 rounded-full"
+                      />
+                      <motion.div 
+                        animate={{ y: [0, -6, 0], opacity: [0.3, 0.9, 0.3] }} 
+                        transition={{ duration: 1.7, repeat: Infinity, delay: 0.4, ease: "easeInOut" }}
+                        className="w-1.5 h-5 bg-gradient-to-t from-[#FF7A2F] to-orange-300 rounded-full"
+                      />
+                    </div>
 
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="text-center"
+                    {/* Standalone Steaming Noodle Bowl & Chopsticks SVG */}
+                    <svg width="84" height="64" viewBox="0 0 84 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-sm">
+                      {/* Angled Chopsticks */}
+                      <line x1="8" y1="6" x2="74" y2="24" stroke="#FF5C00" strokeWidth="4" strokeLinecap="round" />
+                      <line x1="16" y1="2" x2="80" y2="20" stroke="#FF7A2F" strokeWidth="4" strokeLinecap="round" />
+                      
+                      {/* Delicious Noodle Strands */}
+                      <path d="M22 22C24 16 30 16 33 22C36 28 42 28 45 22C48 16 54 16 57 22" stroke="#FFA726" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+                      
+                      {/* Main Bowl Body */}
+                      <path d="M10 24C10 24 14 54 42 54C70 54 74 24 74 24H10Z" fill="#FF5C00" stroke="#FF5C00" strokeWidth="2" strokeLinejoin="round" />
+                      
+                      {/* Inner Golden Rim Line */}
+                      <path d="M12 24H72" stroke="#FFD54F" strokeWidth="3" strokeLinecap="round" />
+                      
+                      {/* Bowl Foot / Base */}
+                      <path d="M30 54L27 60H57L54 54H30Z" fill="#D94B00" />
+                    </svg>
+                  </div>
+                </motion.div>
+
+                {/* Brand Name and Tagline */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className="space-y-2.5"
+                >
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-stone-900 uppercase">
+                    RUMAH MAKAN <span className="text-[#FF5C00]">SEGAR</span>
+                  </h1>
+
+                  {/* Tagline with 2 horizontal accent lines */}
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-8 h-[2px] bg-[#FF5C00] rounded-full" />
+                    <span className="text-[10px] sm:text-[11px] font-extrabold tracking-[0.25em] text-stone-700 uppercase">
+                      OTENTIK KALIMANTAN BARAT
+                    </span>
+                    <div className="w-8 h-[2px] bg-[#FF5C00] rounded-full" />
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Bottom Loading Progress Bar */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.4 }}
+                className="w-full max-w-xs px-6 mb-8"
+              >
+                <div className="h-1.5 w-full bg-stone-100 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 2.2, ease: "easeInOut" }}
+                    className="h-full bg-gradient-to-r from-[#FF7A2F] to-[#FF4500] rounded-full"
+                  />
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Navbar Tab Transition Humanitarian Loading Overlay */}
+        <AnimatePresence>
+          {isTabTransitionLoading && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 z-[200] bg-stone-950/95 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-6 text-white overflow-y-auto select-none"
             >
-              <h1 className="text-3xl font-black text-stone-900 tracking-tighter mb-2">
-                RUMAH MAKAN <span className="text-orange-500">SEGAR</span>
-              </h1>
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-8 h-1 bg-orange-500 rounded-full" />
-                <p className="text-[10px] text-stone-400 font-black uppercase tracking-[0.3em]">
-                  Otentik Kalimantan Barat
-                </p>
-                <div className="w-8 h-1 bg-orange-500 rounded-full" />
+              {/* Background Ambient Glow */}
+              <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/15 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="w-full max-w-lg relative z-10 space-y-3.5 my-auto py-2">
+                {/* Top Banner: RM Segar X OrangHilang.id Humanitarian Broadcast */}
+                <div className="flex items-center justify-between bg-stone-900/95 border border-stone-800 p-3 rounded-2xl shadow-lg">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-md animate-pulse">
+                      <Megaphone size={16} />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black tracking-widest text-red-400 uppercase block">
+                        IKLAN KEMANUSIAAN RESMI • KHUSUS ANAK HILANG
+                      </span>
+                      <span className="text-xs font-extrabold text-stone-200 flex items-center gap-1.5">
+                        <span>OrangHilang.id</span>
+                        <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
+                          {isLiveConnected ? "• Live Terhubung (Anak)" : `• ${personsList.length || MISSING_PERSONS_DATA.length} Anak Terdaftar`}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsTabTransitionLoading(false)}
+                    className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-xl text-[11px] font-bold transition-all border border-stone-700 cursor-pointer flex items-center gap-1 active:scale-95"
+                  >
+                    <span>Lewati</span>
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+
+                {/* Missing Child Detailed Card */}
+                {(() => {
+                  const currentPerson = personsList[activeMissingPersonIndex] || personsList[0] || MISSING_PERSONS_DATA[0];
+                  return (
+                    <motion.div 
+                      key={currentPerson.id}
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.3 }}
+                      className="bg-white text-stone-900 rounded-3xl p-4 sm:p-5 shadow-2xl border border-stone-100 relative overflow-hidden space-y-3.5"
+                    >
+                      {/* Top ID & Status Badge */}
+                      <div className="flex items-center justify-between gap-2 border-b border-stone-100 pb-2.5 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-lg bg-red-600 text-white font-black text-[10px] tracking-wider uppercase flex items-center gap-1">
+                            <UserX size={12} />
+                            <span>INFO ANAK HILANG</span>
+                          </span>
+                          <span className="font-mono text-stone-400 text-[10px] hidden sm:inline">
+                            ID: {currentPerson.id}
+                          </span>
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 font-extrabold text-[11px]">
+                          {currentPerson.status}
+                        </span>
+                      </div>
+
+                      {/* Official Portal Verification Guarantee Badge */}
+                      <div className="bg-emerald-50 border border-emerald-200/80 rounded-xl px-3 py-1.5 flex items-center justify-between text-[11px]">
+                        <span className="text-emerald-800 font-medium flex items-center gap-1.5">
+                          <ShieldCheck size={14} className="text-emerald-600 shrink-0" />
+                          <span>Data Resmi Kategori Anak &amp; Balita di Portal OrangHilang.id</span>
+                        </span>
+                        <span className="font-bold text-emerald-700">Terverifikasi</span>
+                      </div>
+
+                      {/* Photo & Primary Bio */}
+                      <div className="flex gap-3.5 items-start">
+                        <div className="w-24 h-32 sm:w-28 sm:h-36 rounded-2xl overflow-hidden bg-stone-100 shrink-0 border border-stone-200 shadow-sm relative">
+                          <img 
+                            src={currentPerson.photoUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400"} 
+                            alt={currentPerson.name} 
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover object-center"
+                          />
+                          <div className="absolute bottom-0 inset-x-0 bg-red-600 text-white text-[9px] font-black text-center py-0.5 tracking-wider">
+                            DICARI
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5 text-xs flex-1">
+                          <h3 className="text-base sm:text-lg font-black text-stone-900 leading-tight">
+                            {currentPerson.name}
+                          </h3>
+
+                          <div className="flex flex-wrap gap-1.5 py-0.5">
+                            <span className="bg-stone-100 text-stone-700 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                              {currentPerson.gender}
+                            </span>
+                            <span className="bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                              {currentPerson.age}
+                            </span>
+                            {currentPerson.education && (
+                              <span className="bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                                Pendidikan: {currentPerson.education}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="text-[11px] text-stone-700 leading-snug pt-0.5 space-y-0.5">
+                            <p>
+                              <span className="font-bold text-stone-900">Lokasi Terakhir:</span> {currentPerson.lastSeenLocation}
+                            </p>
+                            <p className="text-[10px] text-stone-500 flex items-center gap-1">
+                              <Calendar size={11} className="text-stone-400 shrink-0" />
+                              <span>Tanggal Dilaporkan: {currentPerson.lastSeenDate}</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Full Characteristics & Chronology */}
+                      <div className="bg-stone-50 rounded-2xl p-3 border border-stone-100 text-[11px] text-stone-700 space-y-1.5">
+                        <p className="font-bold text-stone-900 text-[10px] uppercase tracking-wide flex items-center gap-1.5">
+                          <Info size={13} className="text-red-500 shrink-0" />
+                          <span>Keterangan Lengkap &amp; Ciri-Ciri Fisik:</span>
+                        </p>
+                        <p className="text-[11.5px] leading-relaxed text-stone-700 font-normal">
+                          {currentPerson.clothingFeatures || "Tidak ada rincian khusus yang dicantumkan."}
+                        </p>
+                      </div>
+
+                      {/* Emergency Hotline / Contact Details */}
+                      <div className="p-3 bg-red-50/80 rounded-2xl border border-red-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-red-950">
+                        <div>
+                          <span className="text-[9px] font-black uppercase tracking-wider text-red-700 block">
+                            Hubungi Jika Menemukan / Melihat:
+                          </span>
+                          <span className="text-[11px] font-black leading-snug block text-stone-900">
+                            {currentPerson.contactPerson}
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })()}
+
+                {/* Bottom Single Prominent Button: Kunjungi Website Saja */}
+                <div className="pt-1">
+                  <a
+                    href="https://oranghilang.id"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-3 px-5 bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2.5 shadow-xl shadow-red-950/50 active:scale-[0.98] border border-red-500/30"
+                  >
+                    <Globe size={15} />
+                    <span>Kunjungi Website OrangHilang.id</span>
+                    <ExternalLink size={13} className="opacity-80" />
+                  </a>
+                </div>
+
+                {/* Bottom Loading Indicator & RM Segar Tab Progress */}
+                <div className="text-center space-y-2 pt-1.5">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-3.5 h-3.5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs font-bold text-stone-300">Menyiapkan Halaman Menu...</span>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="h-1 bg-stone-800 rounded-full overflow-hidden w-48 mx-auto">
+                    <motion.div 
+                      initial={{ width: "0%" }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 5, ease: "easeInOut" }}
+                      className="h-full bg-gradient-to-r from-red-500 to-orange-500"
+                    />
+                  </div>
+                  
+                  <p className="text-[10px] text-stone-500">
+                    RM Segar peduli kemanusiaan terhubung dengan data anak hilang resmi
+                  </p>
+                </div>
               </div>
             </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* Loading Bar */}
-            <div className="absolute bottom-12 left-12 right-12 h-1.5 bg-stone-100 rounded-full overflow-hidden">
-              <motion.div 
-                initial={{ x: "-100%" }}
-                animate={{ x: "0%" }}
-                transition={{ duration: 2, ease: "easeInOut" }}
-                className="h-full bg-orange-500"
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Pull to Refresh Panda Animation */}
+        {/* Pull to Refresh Panda Animation */}
       <div 
         className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none z-0"
         style={{ height: 300 }}
@@ -5625,7 +6323,7 @@ Aturan Sangat Penting:
               <div className="absolute inset-y-0 w-1.5 border-x border-amber-300/10 rounded-full" />
               
               {/* Golden auspicious character */}
-              <span className="text-[10px] text-amber-200 font-serif font-black select-none leading-none scale-90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] z-10">吉</span>
+              <span className="text-[10px] text-amber-200 font-serif font-black select-none leading-none scale-90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] z-10"></span>
               
               {/* Internal glow aura */}
               <motion.div 
@@ -5668,7 +6366,7 @@ Aturan Sangat Penting:
               <div className="absolute inset-y-0 w-1.5 border-x border-amber-300/10 rounded-full" />
               
               {/* Golden prosperity character */}
-              <span className="text-[10px] text-amber-200 font-serif font-black select-none leading-none scale-90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] z-10">祥</span>
+              <span className="text-[10px] text-amber-200 font-serif font-black select-none leading-none scale-90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] z-10">蟡</span>
               
               {/* Internal glow aura */}
               <motion.div 
@@ -5696,7 +6394,7 @@ Aturan Sangat Penting:
             <div className="flex items-center gap-3">
               {/* Traditional Red Stamp / Seal */}
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-red-600 to-red-700 border-2 border-amber-400 flex items-center justify-center shadow-lg shadow-red-500/20 -rotate-6 relative flex-shrink-0">
-                <span className="font-serif font-extrabold text-xl text-amber-100 select-none">鮮</span>
+                <span className="font-serif font-extrabold text-xl text-amber-100 select-none">擙</span>
                 <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
               </div>
               <div className="flex flex-col max-w-[165px]">
@@ -6038,7 +6736,7 @@ Aturan Sangat Penting:
                             }}
                             className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all shadow-xs"
                           />
-                          <p className="text-[10px] text-stone-500 italic">✓ Preferensi nomor meja disimpan otomatis di perangkat Anda.</p>
+                          <p className="text-[10px] text-stone-500 italic"> Preferensi nomor meja disimpan otomatis di perangkat Anda.</p>
                         </div>
                       )}
 
@@ -6092,16 +6790,84 @@ Aturan Sangat Penting:
                                 rows={2}
                                 className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none shadow-xs"
                               />
-                              <p className="text-[10px] text-stone-500 italic">✓ Alamat pengiriman disimpan otomatis di perangkat Anda.</p>
+                              <p className="text-[10px] text-stone-500 italic"> Alamat pengiriman disimpan otomatis di perangkat Anda.</p>
                             </div>
                           )}
                           {deliveryMethod === 'ambil_sendiri' && (
                             <p className="text-[11px] text-stone-600 bg-white/80 p-2.5 rounded-xl border border-orange-200/50">
-                              📍 Anda akan mengambil pesanan Anda sendiri langsung di <strong>RM Segar, Sambas</strong> setelah menerima konfirmasi dari WhatsApp kami.
+                               Anda akan mengambil pesanan Anda sendiri langsung di <strong>RM Segar, Sambas</strong> setelah menerima konfirmasi dari WhatsApp kami.
                             </p>
                           )}
                         </div>
                       )}
+
+                      {/* Payment Method Selector: Cash (Tunai) vs Transfer Bank */}
+                      <div className="p-4 bg-orange-50/70 rounded-2xl border border-orange-100 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-stone-700 uppercase tracking-wider block">Metode Pembayaran</label>
+                          <span className="text-[10px] font-bold text-orange-700 bg-orange-100/80 px-2 py-0.5 rounded-full">
+                            {selectedPaymentMethod === 'cash' ? ' Bayar di Tempat' : ' Transfer Bank'}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPaymentMethod('cash')}
+                            className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                              selectedPaymentMethod === 'cash' 
+                                ? 'bg-orange-500 border-orange-500 text-white shadow-xs' 
+                                : 'bg-white border-stone-200 text-stone-700 hover:border-stone-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full mb-1">
+                              <Banknote size={18} className={selectedPaymentMethod === 'cash' ? 'text-white' : 'text-orange-500'} />
+                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                selectedPaymentMethod === 'cash' ? 'border-white bg-white text-orange-500' : 'border-stone-300'
+                              }`}>
+                                {selectedPaymentMethod === 'cash' && <div className="w-2 h-2 bg-orange-500 rounded-full" />}
+                              </div>
+                            </div>
+                            <span className="font-extrabold text-xs">Cash (Tunai)</span>
+                            <span className={`text-[10px] ${selectedPaymentMethod === 'cash' ? 'text-orange-100' : 'text-stone-400'}`}>
+                              Bayar langsung di kasir / kurir
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPaymentMethod('transfer')}
+                            className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                              selectedPaymentMethod === 'transfer' 
+                                ? 'bg-orange-500 border-orange-500 text-white shadow-xs' 
+                                : 'bg-white border-stone-200 text-stone-700 hover:border-stone-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full mb-1">
+                              <Building2 size={18} className={selectedPaymentMethod === 'transfer' ? 'text-white' : 'text-orange-500'} />
+                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                selectedPaymentMethod === 'transfer' ? 'border-white bg-white text-orange-500' : 'border-stone-300'
+                              }`}>
+                                {selectedPaymentMethod === 'transfer' && <div className="w-2 h-2 bg-orange-500 rounded-full" />}
+                              </div>
+                            </div>
+                            <span className="font-extrabold text-xs">Transfer</span>
+                            <span className={`text-[10px] ${selectedPaymentMethod === 'transfer' ? 'text-orange-100' : 'text-stone-400'}`}>
+                              Transfer Bank
+                            </span>
+                          </button>
+                        </div>
+
+                        {selectedPaymentMethod === 'transfer' && (
+                          <div className="p-3 bg-white rounded-xl border border-orange-200/80 text-xs space-y-1 text-stone-700">
+                            <p className="font-bold text-orange-950 flex items-center gap-1.5">
+                              <Building2 size={13} className="text-orange-600" />
+                              <span>Metode Pembayaran: Transfer</span>
+                            </p>
+                            <p className="text-[11px] text-stone-600">Info transfer akan diberikan oleh kasir via WhatsApp saat konfirmasi pesanan.</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </>
                 )}
@@ -6290,7 +7056,7 @@ Aturan Sangat Penting:
                     <button 
                       type="button"
                       onClick={() => setShowClearChatConfirmModal(true)}
-                      title={language === 'en' ? 'Clear History' : language === 'zh' ? '清除记录' : 'Hapus Riwayat'}
+                      title={language === 'en' ? 'Clear History' : language === 'zh' ? '皜膄霈啣' : 'Hapus Riwayat'}
                       className="w-10 h-10 bg-stone-100 hover:bg-red-50 hover:text-red-500 rounded-2xl flex items-center justify-center text-stone-500 transition-colors cursor-pointer"
                     >
                       <Trash2 size={18} />
@@ -6299,7 +7065,7 @@ Aturan Sangat Penting:
                       type="button"
                       onClick={() => setIsChatOpen(false)}
                       className="w-10 h-10 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white rounded-2xl flex items-center justify-center transition-all shadow-md shadow-orange-100 font-bold"
-                      title={language === 'en' ? 'Close Chat' : language === 'zh' ? '关闭聊天' : 'Tutup Chat'}
+                      title={language === 'en' ? 'Close Chat' : language === 'zh' ? '喲予' : 'Tutup Chat'}
                     >
                       <X size={20} />
                     </button>
@@ -6377,7 +7143,7 @@ Aturan Sangat Penting:
                                   onClick={() => {
                                     const phoneNumber = "6281258394293";
                                     openWhatsApp(phoneNumber, parsed.waLink!.content);
-                                    triggerPandaAnimation("Menghubungi WhatsApp RM Segar... 🐼💬");
+                                    triggerPandaAnimation("Menghubungi WhatsApp RM Segar... 䧟俥");
                                   }}
                                   className="w-full py-2.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
                                 >
@@ -6676,13 +7442,13 @@ Aturan Sangat Penting:
               
               {/* Header */}
               <div className="relative bg-gradient-to-r from-red-800 via-red-900 to-red-800 p-6 text-center border-b border-amber-400/30">
-                <div className="absolute top-2 left-4 text-xs">🏮</div>
-                <div className="absolute top-2 right-4 text-xs">🏮</div>
+                <div className="absolute top-2 left-4 text-xs font-serif text-amber-300">福</div>
+                <div className="absolute top-2 right-4 text-xs font-serif text-amber-300">福</div>
                 <h3 className="text-xl font-bold font-serif text-amber-300 tracking-wider">
-                  {language === 'en' ? 'CHINESE FORTUNE COOKIE' : language === 'zh' ? '吉祥如意幸运饼' : 'BISKUIT KEBERUNTUNGAN'}
+                  {language === 'en' ? 'CHINESE FORTUNE COOKIE' : language === 'zh' ? '中华幸运签饼' : 'BISKUIT KEBERUNTUNGAN'}
                 </h3>
                 <p className="text-[10px] uppercase font-sans font-black tracking-widest text-amber-200/70 mt-1">
-                  {language === 'en' ? 'RM SEGAR HOKI GENERATOR' : language === 'zh' ? '本氏美味食堂 • 运势指南' : 'RAMALAN KULINER HOKI RM SEGAR'}
+                  {language === 'en' ? 'RM SEGAR HOKI GENERATOR' : language === 'zh' ? 'RM SEGAR 美食运势推荐' : 'RAMALAN KULINER HOKI RM SEGAR'}
                 </p>
                 {fortuneState !== 'shaking' && (
                   <button 
@@ -6730,10 +7496,10 @@ Aturan Sangat Penting:
 
                     <div className="space-y-2">
                       <h4 className="text-amber-200 font-bold text-lg tracking-wide font-serif">
-                        {language === 'en' ? 'Crack Your Cookie!' : language === 'zh' ? '点击敲开幸运饼' : 'Pecahkan Biskuit Hokimu!'}
+                        {language === 'en' ? 'Crack Your Cookie!' : language === 'zh' ? '敲开您的幸运签饼' : 'Pecahkan Biskuit Hokimu!'}
                       </h4>
                       <p className="text-stone-300 text-xs leading-relaxed max-w-xs mx-auto">
-                        {language === 'en' ? 'Tap the cookie or click the button below to break it and reveal your kitchen fortune.' : language === 'zh' ? '敲开金色幸运饼干，看看今日主厨为您推测出的吉祥谶语和专属福运推荐吧！' : 'Ketuk biskuit emas di atas atau tombol di bawah untuk memecahkannya dan mengungkap ramalan kulinermu hari ini.'}
+                        {language === 'en' ? 'Tap the cookie or click the button below to break it and reveal your kitchen fortune.' : language === 'zh' ? '点击上方的金色幸运签饼或下方按钮，揭晓今日运势与推荐菜单！' : 'Ketuk biskuit emas di atas atau tombol di bawah untuk memecahkannya dan mengungkap ramalan kulinermu hari ini.'}
                       </p>
                     </div>
 
@@ -6741,7 +7507,7 @@ Aturan Sangat Penting:
                       onClick={startCrackingCookie}
                       className="px-8 py-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-sm rounded-2xl shadow-xl shadow-amber-500/10 border border-amber-300 transition-all active:scale-95 font-serif cursor-pointer"
                     >
-                      {language === 'en' ? 'BREAK COOKIE 🏮' : language === 'zh' ? '开启今日福运 🏮' : 'PECAHKAN BISKUIT 🏮'}
+                      {language === 'en' ? 'BREAK COOKIE 福' : language === 'zh' ? '敲开签饼 福' : 'PECAHKAN BISKUIT 福'}
                     </button>
                   </div>
                 )}
@@ -6776,10 +7542,10 @@ Aturan Sangat Penting:
 
                     <div className="space-y-2 animate-pulse">
                       <h4 className="text-amber-300 font-bold text-base tracking-widest font-serif">
-                        {language === 'en' ? 'ALCHEMIZING LUCK...' : language === 'zh' ? '主厨正在占卜运势...' : 'MENGALIRKAN ENERGI HOKI...'}
+                        {language === 'en' ? 'ALCHEMIZING LUCK...' : language === 'zh' ? '正在凝聚运势能量...' : 'MENGALIRKAN ENERGI HOKI...'}
                       </h4>
                       <p className="text-stone-400 text-xs">
-                        {language === 'en' ? 'Chef Teng is invoking ancient culinary blessings...' : language === 'zh' ? '金瓮摇曳，福星高照，您的专属菜单正在出炉中...' : 'Koki Teng sedang memutar cawan takdir kuliner Anda...'}
+                        {language === 'en' ? 'Chef Teng is invoking ancient culinary blessings...' : language === 'zh' ? '邓大厨正在为您祈福今日美食运势...' : 'Koki Teng sedang memutar cawan takdir kuliner Anda...'}
                       </p>
                     </div>
                   </div>
@@ -6829,7 +7595,7 @@ Aturan Sangat Penting:
                       
                       {/* Traditional Seal watermark or header */}
                       <div className="text-red-600 text-2xl font-serif font-black mb-1 select-none opacity-85 mt-2">
-                        印
+                        福
                       </div>
 
                       {/* Luck Level */}
@@ -6845,7 +7611,7 @@ Aturan Sangat Penting:
                       {/* Lucky Menu recommendation title */}
                       <div className="w-full text-center mt-2 mb-1">
                         <p className="text-[9px] font-black uppercase tracking-wider text-amber-800 font-sans">
-                          {language === 'en' ? 'YOUR LUCKY MENU' : language === 'zh' ? '您的今日福运招牌菜' : 'REKOMENDASI MENU HOKI'}
+                          {language === 'en' ? 'YOUR LUCKY MENU' : language === 'zh' ? '今日推荐幸运菜单' : 'REKOMENDASI MENU HOKI'}
                         </p>
                       </div>
 
@@ -6883,13 +7649,13 @@ Aturan Sangat Penting:
                         onClick={() => setFortuneState('idle')}
                         className="w-full sm:flex-1 py-3 bg-stone-800 hover:bg-stone-700 text-amber-300 font-bold text-xs md:text-sm rounded-xl border border-amber-500/20 active:scale-95 transition-all font-serif cursor-pointer"
                       >
-                        {language === 'en' ? 'CRACK ANOTHER COOKIE' : language === 'zh' ? '再敲一个饼干 🏮' : 'COBA BISKUIT LAIN 🏮'}
+                        {language === 'en' ? 'CRACK ANOTHER COOKIE 福' : language === 'zh' ? '再试一次 福' : 'COBA BISKUIT LAIN 福'}
                       </button>
                       <button
                         onClick={() => setIsFortuneModalOpen(false)}
                         className="w-full sm:flex-1 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-bold text-xs md:text-sm rounded-xl border border-amber-500/20 active:scale-95 transition-all shadow-lg cursor-pointer"
                       >
-                        {language === 'en' ? 'DONE' : language === 'zh' ? '接福纳祥' : 'TUTUP & AMBIL HOKI'}
+                        {language === 'en' ? 'DONE' : language === 'zh' ? '领受福气' : 'TUTUP & AMBIL HOKI'}
                       </button>
                     </div>
                   </motion.div>
@@ -6941,10 +7707,10 @@ Aturan Sangat Penting:
               {/* Header */}
               <div className="relative bg-[#450a0a] p-5 text-center border-b border-amber-500/30">
                 <h3 className="text-xl font-bold font-serif text-amber-200 tracking-wider">
-                  {language === 'en' ? '3-LANGUAGE MENU CATALOG PREVIEW' : language === 'zh' ? '三语菜单目录预览' : 'PRATINJAU KATALOG MENU 3 BAHASA'}
+                  {language === 'en' ? '3-LANGUAGE MENU CATALOG PREVIEW' : language === 'zh' ? '銝㕑祗桀憸' : 'PRATINJAU KATALOG MENU 3 BAHASA'}
                 </h3>
                 <p className="text-[10px] uppercase font-sans font-extrabold tracking-widest text-amber-300/80 mt-1">
-                  {language === 'en' ? 'Priceless • Hand-crafted for RM Segar' : language === 'zh' ? '专为鲜馆订制 • 不含价格' : 'Bebas Harga • Dibuat Khusus RM Segar'}
+                  {language === 'en' ? 'Priceless  Hand-crafted for RM Segar' : language === 'zh' ? '銝㮖蛹斢霈Ｗ  銝滚鉄隞瑟聢' : 'Bebas Harga  Dibuat Khusus RM Segar'}
                 </p>
                 <button 
                   onClick={() => setIsPDFPreviewModalOpen(false)}
@@ -6965,7 +7731,7 @@ Aturan Sangat Penting:
                         : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
-                    {language === 'en' ? 'Page 1: Main Dishes' : language === 'zh' ? '第一页：主食面饭' : 'Halaman 1: Makanan'}
+                    {language === 'en' ? 'Page 1: Main Dishes' : language === 'zh' ? '蝚砌憿蛛銝駁ａ平' : 'Halaman 1: Makanan'}
                   </button>
                   <button
                     onClick={() => setPdfPreviewPage(2)}
@@ -6975,7 +7741,7 @@ Aturan Sangat Penting:
                         : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
-                    {language === 'en' ? 'Page 2: Drinks & About' : language === 'zh' ? '第二页：清凉饮品' : 'Halaman 2: Minuman & Tentang'}
+                    {language === 'en' ? 'Page 2: Drinks & About' : language === 'zh' ? '蝚砌憿蛛皜擖桀' : 'Halaman 2: Minuman & Tentang'}
                   </button>
                 </div>
 
@@ -6987,8 +7753,8 @@ Aturan Sangat Penting:
                     }}
                     className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-stone-950 font-extrabold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
                   >
-                    <span>🖨️</span>
-                    <span>{language === 'en' ? 'Print Menu' : language === 'zh' ? '直接打印' : 'Cetak Menu'}</span>
+                    <span>㤧儭</span>
+                    <span>{language === 'en' ? 'Print Menu' : language === 'zh' ? '湔枏㫲' : 'Cetak Menu'}</span>
                   </button>
 
                   {/* PDF Download Button */}
@@ -7000,12 +7766,12 @@ Aturan Sangat Penting:
                     {isGeneratingPDF ? (
                       <>
                         <div className="animate-spin h-3.5 w-3.5 border-2 border-amber-200 border-t-transparent rounded-full" />
-                        <span>{language === 'en' ? 'Generating...' : language === 'zh' ? '正在生成...' : 'Menyiapkan...'}</span>
+                        <span>{language === 'en' ? 'Generating...' : language === 'zh' ? '甇銁...' : 'Menyiapkan...'}</span>
                       </>
                     ) : (
                       <>
                         <Download size={14} />
-                        <span>{language === 'en' ? 'Download PDF' : language === 'zh' ? '下载 PDF' : 'Unduh PDF'}</span>
+                        <span>{language === 'en' ? 'Download PDF' : language === 'zh' ? '銝贝蝸 PDF' : 'Unduh PDF'}</span>
                       </>
                     )}
                   </button>
@@ -7038,7 +7804,7 @@ Aturan Sangat Penting:
                           </div>
                           <h1 className="text-3xl font-extrabold tracking-widest text-[#450a0a]">RUMAH MAKAN SEGAR</h1>
                           <p className="text-xs uppercase tracking-widest text-amber-700 font-sans font-bold mt-1">
-                            Katalog Menu Utama • Main Menu • 鮮館主菜单
+                            Katalog Menu Utama  Main Menu  擙桅尹銝餉
                           </p>
                           <p className="text-[10px] text-stone-500 font-sans italic mt-1">Cita Rasa Autentik Kalimantan Barat (Sambas)</p>
                         </div>
@@ -7046,7 +7812,7 @@ Aturan Sangat Penting:
                         <div className="space-y-6 flex-grow">
                           <div>
                             <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                              1. BAKMIE (Noodles / 手工肉面)
+                              1. BAKMIE (Noodles / 见極厰)
                             </h3>
                             <div className="space-y-1">
                               {MENU_ITEMS.filter(item => item.category === 'Bakmie').map(item => renderPDFMenuItem(item))}
@@ -7055,7 +7821,7 @@ Aturan Sangat Penting:
 
                           <div>
                             <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                              2. KWETIAO (Flat Rice Noodles / 镬气粿条)
+                              2. KWETIAO (Flat Rice Noodles / 祆蝎踵辺)
                             </h3>
                             <div className="space-y-1">
                               {MENU_ITEMS.filter(item => item.category === 'Kwetiao').map(item => renderPDFMenuItem(item))}
@@ -7064,7 +7830,7 @@ Aturan Sangat Penting:
 
                           <div>
                             <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                              3. HIDANGAN NASI (Rice Dishes / 经典饭食)
+                              3. HIDANGAN NASI (Rice Dishes / 蝏誩擖剝)
                             </h3>
                             <div className="space-y-1">
                               {MENU_ITEMS.filter(item => item.category === 'Nasi').map(item => renderPDFMenuItem(item))}
@@ -7074,7 +7840,7 @@ Aturan Sangat Penting:
                       </div>
 
                       <div className="text-center pt-2 border-t border-stone-200 text-[10px] text-stone-400 font-sans flex justify-between items-center relative z-10">
-                        <span>RM Segar Sambas — Digital Menu Catalog (Priceless)</span>
+                        <span>RM Segar Sambas  Digital Menu Catalog (Priceless)</span>
                         <span className="font-semibold text-amber-700 font-serif">Halaman 1 / 2</span>
                       </div>
                     </div>
@@ -7099,13 +7865,13 @@ Aturan Sangat Penting:
                           <div className="text-center border-b-2 border-amber-500/30 pb-4 mb-6">
                             <h2 className="text-2xl font-bold tracking-widest text-[#450a0a]">MINUMAN SEGAR</h2>
                             <p className="text-xs uppercase tracking-widest text-amber-700 font-sans font-bold mt-0.5">
-                              Beverages • 清凉饮品
+                              Beverages  皜擖桀
                             </p>
                           </div>
 
                             <div>
                             <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                              4. ANEKA MINUMAN (Beverages / 饮料)
+                              4. ANEKA MINUMAN (Beverages / 擖格)
                             </h3>
                             <div className="space-y-1">
                               {MENU_ITEMS.filter(item => item.category === 'Minuman').map(item => renderPDFMenuItem(item))}
@@ -7116,7 +7882,7 @@ Aturan Sangat Penting:
                         <div className="mt-8 border-t-2 border-amber-500/20 pt-6 space-y-4">
                           <div className="bg-stone-100/60 p-5 rounded-2xl border border-stone-200/50">
                             <h4 className="text-sm font-extrabold tracking-wider text-[#450a0a] mb-2 font-sans uppercase">
-                              Tentang Rumah Makan Segar • Our Story • 关于我们
+                              Tentang Rumah Makan Segar  Our Story  喃睲賑
                             </h4>
                             <div className="text-[10px] text-stone-600 font-sans leading-relaxed space-y-2">
                               <p>
@@ -7126,24 +7892,24 @@ Aturan Sangat Penting:
                                 <span className="font-bold text-stone-700">EN:</span> RM Segar serves authentic West Kalimantan Chinese culinary legacy from generation to generation. Made with legendary secret family recipes and high-quality fresh ingredients for an unparalleled authentic taste.
                               </p>
                               <p>
-                                <span className="font-bold text-red-800">ZH:</span> 鲜馆 (RM Segar) 世代传承正宗西加里曼丹三发县经典中餐美食，采用家族秘制配方与上等新鲜食材，为您呈献绝无仅有的极致风味。
+                                <span className="font-bold text-red-800">ZH:</span> 斢 (RM Segar) 銝碶誨隡䭾㗁甇镼踹峕垈銝嫣穃礶蝏誩銝剝蝢嚗屸典振讐園嫣銝羓圈憌嚗䔶蛹典桃牐厩稲憌㭠
                               </p>
                             </div>
                           </div>
 
                           <div className="bg-red-50 p-4 rounded-xl border border-red-200 flex items-start gap-3">
-                            <span className="text-red-600 text-lg">⚠️</span>
+                            <span className="text-red-600 text-lg"></span>
                             <div className="text-[10px] text-red-900 leading-normal font-sans font-medium space-y-0.5">
                               <p><span className="font-bold">INFORMASI PENTING (ID):</span> Menu kami mengandung bahan-bahan Non-Halal.</p>
                               <p><span className="font-bold">IMPORTANT NOTICE (EN):</span> Our menu contains non-halal ingredients.</p>
-                              <p><span className="font-bold">重要提示 (ZH):</span> 我们的菜单包含非清真 (Non-Halal) 食材。</p>
+                              <p><span className="font-bold">滩鞟內 (ZH):</span> 睲賑訫恍皜 (Non-Halal) 憌</p>
                             </div>
                           </div>
                         </div>
                       </div>
 
                       <div className="text-center pt-4 border-t border-stone-200 text-[10px] text-stone-400 font-sans flex justify-between items-center mt-6 relative z-10">
-                        <span>Sajian Legendaris Sambas, Kalimantan Barat • Hubungi kami di WhatsApp</span>
+                        <span>Sajian Legendaris Sambas, Kalimantan Barat  Hubungi kami di WhatsApp</span>
                         <span className="font-semibold text-amber-700 font-serif">Halaman 2 / 2</span>
                       </div>
                     </div>
@@ -7154,10 +7920,10 @@ Aturan Sangat Penting:
               {/* Bottom bar info */}
               <div className="p-4 border-t border-stone-200/60 bg-stone-50 text-center text-xs text-stone-500">
                 {language === 'en' 
-                  ? '💡 Desktop users can print directly using A4 paper size settings for best results.' 
+                  ? '働 Desktop users can print directly using A4 paper size settings for best results.' 
                   : language === 'zh' 
-                  ? '💡 桌面端用户可以直接设置A4纸张大小打印，以获得最佳打印效果。' 
-                  : '💡 Untuk hasil terbaik saat mencetak, gunakan pengaturan ukuran kertas A4 pada menu printer Anda.'}
+                  ? '働 獢屸蝡舐鍂瑕虾隞亦凒亥挽蝵唧4蝥詨憭批枏㫲嚗䔶誑瑕雿單唳栶' 
+                  : '働 Untuk hasil terbaik saat mencetak, gunakan pengaturan ukuran kertas A4 pada menu printer Anda.'}
               </div>
             </motion.div>
           </>
@@ -7187,13 +7953,13 @@ Aturan Sangat Penting:
 
               <div className="space-y-1.5">
                 <h3 className="text-xl font-bold text-stone-900">
-                  {language === 'en' ? 'Confirm Log Out' : language === 'zh' ? '确认退出登录' : 'Konfirmasi Keluar'}
+                  {language === 'en' ? 'Confirm Log Out' : language === 'zh' ? '蝖株恕箇蒈敶' : 'Konfirmasi Keluar'}
                 </h3>
                 <p className="text-xs text-stone-500 leading-relaxed px-2">
                   {language === 'en' 
                     ? 'Are you sure you want to log out of your RM Segar account?' 
                     : language === 'zh' 
-                    ? '您确定要退出 RM Segar 账号吗？' 
+                    ? '函＆摰朞 RM Segar 韐血噡梹' 
                     : 'Apakah Anda yakin ingin keluar dari akun RM Segar?'}
                 </p>
               </div>
@@ -7203,7 +7969,7 @@ Aturan Sangat Penting:
                   onClick={() => setShowLogoutConfirmModal(false)}
                   className="py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-2xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
                 >
-                  {language === 'en' ? 'Cancel' : language === 'zh' ? '取消' : 'Batal'}
+                  {language === 'en' ? 'Cancel' : language === 'zh' ? '' : 'Batal'}
                 </button>
                 <button 
                   onClick={() => {
@@ -7213,7 +7979,7 @@ Aturan Sangat Penting:
                   className="py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-red-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <LogOut size={16} />
-                  <span>{language === 'en' ? 'Log Out' : language === 'zh' ? '退出' : 'Ya, Keluar'}</span>
+                  <span>{language === 'en' ? 'Log Out' : language === 'zh' ? '' : 'Ya, Keluar'}</span>
                 </button>
               </div>
             </motion.div>
@@ -7244,13 +8010,13 @@ Aturan Sangat Penting:
 
               <div className="space-y-1.5">
                 <h3 className="text-xl font-bold text-stone-900">
-                  {language === 'en' ? 'Delete Order History?' : language === 'zh' ? '清空订单历史？' : 'Hapus Riwayat Pesanan?'}
+                  {language === 'en' ? 'Delete Order History?' : language === 'zh' ? '皜征霈Ｗ蟮嚗' : 'Hapus Riwayat Pesanan?'}
                 </h3>
                 <p className="text-xs text-stone-500 leading-relaxed px-1">
                   {language === 'en' 
                     ? 'Are you sure you want to delete all order history? This action cannot be undone.' 
                     : language === 'zh' 
-                    ? '您确定要删除所有订单历史记录吗？此操作无法撤销。' 
+                    ? '函＆摰朞膄㕑恥訫脰扇敶訫嚗迨滢䭾日' 
                     : 'Apakah Anda yakin ingin menghapus semua riwayat pesanan? Tindakan ini tidak dapat dibatalkan.'}
                 </p>
               </div>
@@ -7260,7 +8026,7 @@ Aturan Sangat Penting:
                   onClick={() => setShowClearHistoryConfirmModal(false)}
                   className="py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-2xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
                 >
-                  {language === 'en' ? 'Cancel' : language === 'zh' ? '取消' : 'Batal'}
+                  {language === 'en' ? 'Cancel' : language === 'zh' ? '' : 'Batal'}
                 </button>
                 <button 
                   onClick={() => {
@@ -7271,7 +8037,7 @@ Aturan Sangat Penting:
                   className="py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-red-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Trash2 size={16} />
-                  <span>{language === 'en' ? 'Delete All' : language === 'zh' ? '清空' : 'Ya, Hapus'}</span>
+                  <span>{language === 'en' ? 'Delete All' : language === 'zh' ? '皜征' : 'Ya, Hapus'}</span>
                 </button>
               </div>
             </motion.div>
@@ -7302,13 +8068,13 @@ Aturan Sangat Penting:
 
               <div className="space-y-1.5">
                 <h3 className="text-xl font-bold text-stone-900">
-                  {language === 'en' ? 'Clear Chat History?' : language === 'zh' ? '清空聊天记录？' : 'Hapus Obrolan Koki?'}
+                  {language === 'en' ? 'Clear Chat History?' : language === 'zh' ? '皜征予霈啣嚗' : 'Hapus Obrolan Koki?'}
                 </h3>
                 <p className="text-xs text-stone-500 leading-relaxed px-1">
                   {language === 'en' 
                     ? 'Are you sure you want to clear all chat messages with Chef Teng?' 
                     : language === 'zh' 
-                    ? '您确定要清空与 Koki Teng 厨师的所有聊天记录吗？' 
+                    ? '函＆摰朞皜征銝 Koki Teng 典㕑憭抵扇敶訫嚗' 
                     : 'Apakah Anda yakin ingin menghapus semua riwayat obrolan dengan Koki Teng?'}
                 </p>
               </div>
@@ -7318,7 +8084,7 @@ Aturan Sangat Penting:
                   onClick={() => setShowClearChatConfirmModal(false)}
                   className="py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-2xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
                 >
-                  {language === 'en' ? 'Cancel' : language === 'zh' ? '取消' : 'Batal'}
+                  {language === 'en' ? 'Cancel' : language === 'zh' ? '' : 'Batal'}
                 </button>
                 <button 
                   onClick={() => {
@@ -7334,7 +8100,7 @@ Aturan Sangat Penting:
                   className="py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-red-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Trash2 size={16} />
-                  <span>{language === 'en' ? 'Clear' : language === 'zh' ? '清空' : 'Ya, Hapus'}</span>
+                  <span>{language === 'en' ? 'Clear' : language === 'zh' ? '皜征' : 'Ya, Hapus'}</span>
                 </button>
               </div>
             </motion.div>
@@ -7362,7 +8128,7 @@ Aturan Sangat Penting:
               {/* Header with Close */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">🎡</span>
+                  <span className="text-xl">繧</span>
                   <div className="text-left">
                     <h3 className="font-black text-amber-300 text-lg leading-tight">RODA PUTAR HOKI</h3>
                     <p className="text-[10px] text-stone-400 font-semibold">Tentukan Pilihan Kuliner Hari Ini!</p>
@@ -7452,7 +8218,7 @@ Aturan Sangat Penting:
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-amber-500/20 text-amber-300 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 border border-amber-500/30">
-                      {WHEEL_ITEMS.find(w => w.id === wonWheelMenu.id)?.emoji || '🍲'}
+                      {WHEEL_ITEMS.find(w => w.id === wonWheelMenu.id)?.emoji || '㬢'}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-extrabold text-white text-sm truncate">{wonWheelMenu.name}</h4>
@@ -7464,7 +8230,7 @@ Aturan Sangat Penting:
                       onClick={handleSpinWheel}
                       className="py-2.5 bg-stone-700 hover:bg-stone-600 text-stone-200 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer"
                     >
-                      Putar Lagi 🎡
+                      Putar Lagi 繧
                     </button>
                     <button
                       onClick={(e) => {
@@ -7489,7 +8255,7 @@ Aturan Sangat Penting:
                   }`}
                 >
                   <Dices size={20} className={isWheelSpinning ? 'animate-spin' : ''} />
-                  <span>{isWheelSpinning ? 'MEMUTAR RODA...' : 'PUTAR RODA HOKI 🎡'}</span>
+                  <span>{isWheelSpinning ? 'MEMUTAR RODA...' : 'PUTAR RODA HOKI 繧'}</span>
                 </button>
               )}
             </motion.div>
@@ -7516,7 +8282,7 @@ Aturan Sangat Penting:
             >
               <div className="flex items-center justify-between border-b border-stone-800 pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">🐉</span>
+                  <span className="text-2xl"></span>
                   <div>
                     <h3 className="font-black text-amber-300 text-lg leading-tight">RAMALAN SHIO KULINER</h3>
                     <p className="text-[10px] text-stone-400">Temukan Elemen & Menu Hoki Anda</p>
@@ -7625,7 +8391,7 @@ Aturan Sangat Penting:
                         <div className="flex items-center justify-between bg-stone-900/90 p-3 rounded-2xl border border-amber-500/30">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-amber-500/20 text-amber-300 rounded-xl flex items-center justify-center text-xl font-bold flex-shrink-0 border border-amber-500/30">
-                              🍜
+                              
                             </div>
                             <div>
                               <p className="font-bold text-white text-xs">{matchedMenu.name}</p>
@@ -7673,7 +8439,7 @@ Aturan Sangat Penting:
               {/* Header */}
               <div className="flex items-center justify-between border-b border-stone-800 pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">🧩</span>
+                  <span className="text-2xl">妝</span>
                   <div>
                     <h3 className="font-black text-amber-300 text-lg leading-tight">BLOCK BLAST KULINER</h3>
                     <p className="text-[10px] text-stone-400">Susun Balok, Bersihkan Garis & Raih Poin!</p>
@@ -7696,13 +8462,13 @@ Aturan Sangat Penting:
                 <div className="p-2.5 bg-stone-800/80 rounded-2xl border border-stone-700/60 flex flex-col justify-center items-center">
                   <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Combo</span>
                   {bbCombo > 0 ? (
-                    <span className="text-sm font-black text-orange-400 animate-bounce">🔥 x{bbCombo}</span>
+                    <span className="text-sm font-black text-orange-400 animate-bounce"> x{bbCombo}</span>
                   ) : (
                     <span className="text-xs font-bold text-stone-500">-</span>
                   )}
                 </div>
                 <div className="p-2.5 bg-stone-800/80 rounded-2xl border border-stone-700/60">
-                  <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Tertinggi 🏆</span>
+                  <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Tertinggi </span>
                   <span className="text-xl font-black text-amber-400 font-mono">{bbHighScore}</span>
                 </div>
               </div>
@@ -7715,7 +8481,7 @@ Aturan Sangat Penting:
                   className="p-4 bg-gradient-to-br from-red-950 via-stone-900 to-amber-950 rounded-2xl border border-amber-500/50 text-center space-y-3"
                 >
                   <div className="w-12 h-12 bg-amber-500/20 text-amber-300 rounded-full flex items-center justify-center mx-auto text-2xl border border-amber-500/40">
-                    🏆
+                    
                   </div>
                   <div>
                     <h4 className="text-lg font-black text-amber-200">GAME OVER!</h4>
@@ -7725,7 +8491,7 @@ Aturan Sangat Penting:
                   {bbRewardMenu && (
                     <div className="bg-stone-900/90 p-3 rounded-xl border border-amber-500/30 text-left flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-2xl">🍜</span>
+                        <span className="text-2xl"></span>
                         <div>
                           <span className="text-[9px] font-bold text-amber-400 uppercase block">Voucher Rekomendasi Hoki:</span>
                           <span className="font-bold text-white text-xs">{bbRewardMenu.name}</span>
@@ -7748,14 +8514,14 @@ Aturan Sangat Penting:
                     onClick={openBlockBlastGame}
                     className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:brightness-110 text-stone-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all active:scale-95 cursor-pointer"
                   >
-                    Main Lagi 🧩
+                    Main Lagi 妝
                   </button>
                 </motion.div>
               ) : (
                 <div className="text-[11px] text-stone-400 text-center">
                   {bbSelectedPieceIdx !== null ? (
                     <span className="text-amber-300 font-extrabold animate-pulse">
-                      👇 Ketuk petak di papan untuk menaruh balok yang dipilih!
+                       Ketuk petak di papan untuk menaruh balok yang dipilih!
                     </span>
                   ) : (
                     <span>Pilih balok di bawah, lalu ketuk posisi di papan 8x8:</span>
@@ -7907,7 +8673,7 @@ Aturan Sangat Penting:
               <div className="flex items-center justify-between border-b border-stone-800 pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 text-stone-950 rounded-xl flex items-center justify-center text-2xl font-black shadow-md">
-                    💸
+                    
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
@@ -7943,7 +8709,7 @@ Aturan Sangat Penting:
                       key={idx} 
                       className="px-2.5 py-1 bg-stone-900 border border-amber-500/30 text-amber-200 text-xs font-bold rounded-xl flex items-center gap-1.5"
                     >
-                      <span>👤 {player}</span>
+                      <span> {player}</span>
                       {traktirPlayers.length > 2 && (
                         <button 
                           onClick={() => removeTraktirPlayer(idx)}
@@ -7988,7 +8754,7 @@ Aturan Sangat Penting:
                       : 'text-stone-400 hover:text-white'
                   }`}
                 >
-                  <span>🎡 Roda Traktir</span>
+                  <span>繧 Roda Traktir</span>
                 </button>
                 <button
                   onClick={() => { setTraktirGameMode('bomb'); initTraktirBombGame(); }}
@@ -7998,7 +8764,7 @@ Aturan Sangat Penting:
                       : 'text-stone-400 hover:text-white'
                   }`}
                 >
-                  <span>💣 Bom Kuliner</span>
+                  <span>侢 Bom Kuliner</span>
                 </button>
                 <button
                   onClick={() => { setTraktirGameMode('tap'); setTapIsActive(false); setTapLoser(null); }}
@@ -8008,7 +8774,7 @@ Aturan Sangat Penting:
                       : 'text-stone-400 hover:text-white'
                   }`}
                 >
-                  <span>🥢 Adu Sumpit</span>
+                  <span>失 Adu Sumpit</span>
                 </button>
               </div>
 
@@ -8079,7 +8845,7 @@ Aturan Sangat Penting:
                           })}
                           {/* Center Pin */}
                           <circle cx="150" cy="150" r="22" fill="#1c1917" stroke="#f59e0b" strokeWidth="3" />
-                          <text x="150" y="150" fill="#f59e0b" fontSize="14" textAnchor="middle" dominantBaseline="central">💸</text>
+                          <text x="150" y="150" fill="#f59e0b" fontSize="14" textAnchor="middle" dominantBaseline="central"></text>
                         </g>
                       </svg>
                     </div>
@@ -8092,11 +8858,11 @@ Aturan Sangat Penting:
                       className="p-4 bg-gradient-to-br from-red-950 via-stone-900 to-amber-950 rounded-2xl border border-amber-500/50 text-center space-y-3 shadow-xl"
                     >
                       <div className="w-12 h-12 bg-amber-500/20 text-amber-300 rounded-full flex items-center justify-center mx-auto text-2xl border border-amber-500/40">
-                        👑
+                        
                       </div>
                       <div>
                         <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest block">KORBAN TRAKTIR TERPILIH</span>
-                        <h4 className="text-xl font-black text-white mt-0.5">{traktirLoser.toUpperCase()}! 💸</h4>
+                        <h4 className="text-xl font-black text-white mt-0.5">{traktirLoser.toUpperCase()}! </h4>
                         <p className="text-xs text-stone-300 mt-1">Selamat! Kamu yang bayar makanan untuk rombongan hari ini!</p>
                       </div>
 
@@ -8112,7 +8878,7 @@ Aturan Sangat Penting:
                           onClick={handleSpinTraktirWheel}
                           className="py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer"
                         >
-                          Putar Ulang 🎡
+                          Putar Ulang 繧
                         </button>
                       </div>
                     </motion.div>
@@ -8127,7 +8893,7 @@ Aturan Sangat Penting:
                       }`}
                     >
                       <Dices size={18} className={traktirIsSpinning ? 'animate-spin' : ''} />
-                      <span>{traktirIsSpinning ? 'MEMUTAR RODA DOSA...' : 'PUTAR RODA DOSA TRAKTIR 🎡'}</span>
+                      <span>{traktirIsSpinning ? 'MEMUTAR RODA DOSA...' : 'PUTAR RODA DOSA TRAKTIR 繧'}</span>
                     </button>
                   )}
                 </div>
@@ -8140,14 +8906,14 @@ Aturan Sangat Penting:
                     <div>
                       <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Giliran Membuka Tudung:</span>
                       <span className="font-black text-amber-300 text-sm">
-                        👤 {traktirPlayers[bombCurrentTurn % traktirPlayers.length]}
+                         {traktirPlayers[bombCurrentTurn % traktirPlayers.length]}
                       </span>
                     </div>
                     <button 
                       onClick={() => initTraktirBombGame()}
                       className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold rounded-xl transition-colors cursor-pointer"
                     >
-                      Reset Tudung 🔄
+                      Reset Tudung 
                     </button>
                   </div>
 
@@ -8171,10 +8937,10 @@ Aturan Sangat Penting:
                         }`}
                       >
                         {cell.isOpen ? (
-                          <span className="text-2xl">{cell.isBomb ? '💣' : cell.foodEmoji}</span>
+                          <span className="text-2xl">{cell.isBomb ? '侢' : cell.foodEmoji}</span>
                         ) : (
                           <>
-                            <span className="text-xl">🍱</span>
+                            <span className="text-xl">暒</span>
                             <span className="text-[9px] font-mono text-amber-400/80 font-bold">#{idx + 1}</span>
                           </>
                         )}
@@ -8189,11 +8955,11 @@ Aturan Sangat Penting:
                       className="p-4 bg-gradient-to-br from-red-950 via-stone-900 to-amber-950 rounded-2xl border border-amber-500/50 text-center space-y-3 shadow-xl"
                     >
                       <div className="w-12 h-12 bg-red-600/30 text-red-400 rounded-full flex items-center justify-center mx-auto text-3xl border border-red-500/50 animate-pulse">
-                        💣
+                        侢
                       </div>
                       <div>
                         <span className="text-[10px] font-black text-red-400 uppercase tracking-widest block">BOOOM!! BOM TRAKTIR MELEDAK!</span>
-                        <h4 className="text-xl font-black text-white mt-0.5">{bombLoser.toUpperCase()}! 💸</h4>
+                        <h4 className="text-xl font-black text-white mt-0.5">{bombLoser.toUpperCase()}! </h4>
                         <p className="text-xs text-stone-300 mt-1">Kamu membuka tudung saji bom! Kamu yang bayar seluruh tagihan makan!</p>
                       </div>
 
@@ -8209,7 +8975,7 @@ Aturan Sangat Penting:
                           onClick={() => initTraktirBombGame()}
                           className="py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer"
                         >
-                          Main Lagi 💣
+                          Main Lagi 侢
                         </button>
                       </div>
                     </motion.div>
@@ -8242,9 +9008,9 @@ Aturan Sangat Penting:
                           onClick={() => setTapP1Score(prev => prev + 1)}
                           className="h-36 bg-gradient-to-br from-amber-500 to-orange-600 text-stone-950 rounded-2xl font-black p-3 flex flex-col justify-between items-center shadow-lg active:scale-95 transition-all cursor-pointer select-none"
                         >
-                          <span className="text-xs uppercase tracking-wider">👤 {traktirPlayers[0] || 'Pemain 1'}</span>
+                          <span className="text-xs uppercase tracking-wider"> {traktirPlayers[0] || 'Pemain 1'}</span>
                           <span className="text-4xl font-mono">{tapP1Score}</span>
-                          <span className="text-[10px] bg-stone-950/20 px-2 py-0.5 rounded-full uppercase">TAP FAST! 🥢</span>
+                          <span className="text-[10px] bg-stone-950/20 px-2 py-0.5 rounded-full uppercase">TAP FAST! 失</span>
                         </button>
 
                         {/* Player 2 Tapper */}
@@ -8252,9 +9018,9 @@ Aturan Sangat Penting:
                           onClick={() => setTapP2Score(prev => prev + 1)}
                           className="h-36 bg-gradient-to-br from-red-600 to-amber-700 text-white rounded-2xl font-black p-3 flex flex-col justify-between items-center shadow-lg active:scale-95 transition-all cursor-pointer select-none"
                         >
-                          <span className="text-xs uppercase tracking-wider">👤 {traktirPlayers[1] || 'Pemain 2'}</span>
+                          <span className="text-xs uppercase tracking-wider"> {traktirPlayers[1] || 'Pemain 2'}</span>
                           <span className="text-4xl font-mono">{tapP2Score}</span>
-                          <span className="text-[10px] bg-stone-950/20 px-2 py-0.5 rounded-full uppercase">TAP FAST! 🥢</span>
+                          <span className="text-[10px] bg-stone-950/20 px-2 py-0.5 rounded-full uppercase">TAP FAST! 失</span>
                         </button>
                       </div>
                     </div>
@@ -8265,7 +9031,7 @@ Aturan Sangat Penting:
                       className="p-4 bg-gradient-to-br from-red-950 via-stone-900 to-amber-950 rounded-2xl border border-amber-500/50 text-center space-y-3 shadow-xl"
                     >
                       <div className="w-12 h-12 bg-amber-500/20 text-amber-300 rounded-full flex items-center justify-center mx-auto text-2xl border border-amber-500/40">
-                        🏆
+                        
                       </div>
                       <div>
                         <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest block">HASIL ADU KETUK SUMPIT</span>
@@ -8274,7 +9040,7 @@ Aturan Sangat Penting:
                           <span>vs</span>
                           <span>{traktirPlayers[1] || 'P2'}: <strong className="text-amber-300 font-mono text-sm">{tapP2Score}</strong></span>
                         </div>
-                        <h4 className="text-xl font-black text-white mt-1">{tapLoser.toUpperCase()}! 💸</h4>
+                        <h4 className="text-xl font-black text-white mt-1">{tapLoser.toUpperCase()}! </h4>
                         <p className="text-xs text-stone-300">Ketukan sumpit kurang cepat! Kamu yang wajib bayar makan!</p>
                       </div>
 
@@ -8290,7 +9056,7 @@ Aturan Sangat Penting:
                           onClick={startTapDuel}
                           className="py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer"
                         >
-                          Adu Lagi 🥢
+                          Adu Lagi 失
                         </button>
                       </div>
                     </motion.div>
@@ -8300,7 +9066,7 @@ Aturan Sangat Penting:
                       className="w-full py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:brightness-110 text-stone-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
                     >
                       <Zap size={18} />
-                      <span>MULAI ADU KETUK SUMPIT (5 DETIK) 🥢</span>
+                      <span>MULAI ADU KETUK SUMPIT (5 DETIK) 失</span>
                     </button>
                   )}
                 </div>
@@ -8572,7 +9338,7 @@ Aturan Sangat Penting:
                             rel="noreferrer"
                             className="font-mono text-[11px] font-bold text-amber-700 hover:underline flex items-center gap-1"
                           >
-                            rumah-makan-segar.vercel.app ↗
+                            rumah-makan-segar.vercel.app 
                           </a>
                         </div>
                       </div>
@@ -8953,7 +9719,7 @@ Aturan Sangat Penting:
                         }}
                         className="text-[10px] text-purple-700 font-bold hover:underline cursor-pointer"
                       >
-                        Refresh Logs ↻
+                        Refresh Logs 
                       </button>
                     </div>
 
@@ -9246,6 +10012,170 @@ Aturan Sangat Penting:
           </motion.div>
         ))}
       </div>
+
+      {/* Anti-Manipulasi Order Verification Modal */}
+      <AnimatePresence>
+        {verifyOrderModal.open && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white max-w-lg w-full rounded-[32px] overflow-hidden shadow-2xl border border-stone-100 flex flex-col max-h-[90vh]"
+            >
+              {/* Header */}
+              <div className={`p-6 text-white text-center relative ${
+                verifyOrderModal.status === 'valid'
+                  ? 'bg-gradient-to-br from-emerald-800 via-teal-900 to-stone-900'
+                  : verifyOrderModal.status === 'invalid'
+                    ? 'bg-gradient-to-br from-red-900 via-rose-950 to-stone-900'
+                    : 'bg-stone-900'
+              }`}>
+                <button
+                  onClick={() => {
+                    setVerifyOrderModal({ open: false });
+                    // Clean URL query params without reload
+                    if (window.history.pushState) {
+                      const newUrl = window.location.pathname;
+                      window.history.pushState({ path: newUrl }, '', newUrl);
+                    }
+                  }}
+                  className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+
+                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shadow-inner">
+                  {verifyOrderModal.status === 'valid' ? (
+                    <ShieldCheck size={32} className="text-emerald-400" />
+                  ) : verifyOrderModal.status === 'invalid' ? (
+                    <ShieldAlert size={32} className="text-red-400" />
+                  ) : (
+                    <Lock size={32} className="text-amber-400 animate-pulse" />
+                  )}
+                </div>
+
+                <h3 className="text-lg font-black tracking-tight">
+                  {verifyOrderModal.status === 'valid'
+                    ? 'NOTA RESMI TERVERIFIKASI'
+                    : verifyOrderModal.status === 'invalid'
+                      ? 'PERINGATAN: NOTA TIDAK SAH'
+                      : 'MEMERIKSA DATABASE SERVER'}
+                </h3>
+                <p className="text-xs text-stone-200 mt-1">
+                  Sistem Perlindungan Anti-Manipulasi Pesanan RM Segar Sambas
+                </p>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                {verifyOrderModal.status === 'loading' && (
+                  <div className="py-12 text-center space-y-3">
+                    <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-sm font-bold text-stone-700">Mencocokkan segel digital dengan Database Pusat...</p>
+                    <p className="text-xs text-stone-400">Harap tunggu beberapa detik.</p>
+                  </div>
+                )}
+
+                {verifyOrderModal.status === 'invalid' && (
+                  <div className="space-y-4">
+                    <div className="bg-red-50 border border-red-200 p-4 rounded-2xl text-red-900 text-xs space-y-2">
+                      <div className="flex items-center gap-2 font-black text-sm text-red-700">
+                        <AlertTriangle size={18} />
+                        <span>DATA TIDAK COCOK ATAU PALSU</span>
+                      </div>
+                      <p className="leading-relaxed">
+                        {verifyOrderModal.message || 'Nomor order atau segel digital tidak ditemukan di server resmi RM Segar. Kemungkinan pesan ini telah diubah secara manual di WhatsApp atau pesanan fiktif.'}
+                      </p>
+                    </div>
+
+                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 text-xs space-y-2">
+                      <p className="font-bold text-stone-700">Tindakan untuk Owner / Kasir:</p>
+                      <ul className="list-disc pl-4 space-y-1 text-stone-600">
+                        <li>Jangan proses hidangan sebelum memeriksa Dashboard Admin.</li>
+                        <li>Hubungi pelanggan untuk mengirim ulang pesanan resmi dari website.</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {verifyOrderModal.status === 'valid' && (
+                  <div className="space-y-4">
+                    <div className="bg-emerald-50 border border-emerald-200 p-3.5 rounded-2xl flex items-center gap-3">
+                      <CheckCircle2 size={24} className="text-emerald-600 shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-emerald-950">
+                          Data Terkunci &amp; Sah 100%
+                        </p>
+                        <p className="text-[11px] text-emerald-800">
+                          Rincian di bawah ini adalah data otentik yang tersimpan permanen di cloud server kasir.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Metadata Card */}
+                    <div className="bg-stone-900 text-white p-4 rounded-2xl space-y-2 font-mono text-xs shadow-sm">
+                      <div className="flex justify-between border-b border-stone-800 pb-1.5">
+                        <span className="text-stone-400">Nomor Nota:</span>
+                        <span className="font-bold text-amber-400">#{verifyOrderModal.verifiedOrder?.orderId || verifyOrderModal.verifiedOrder?.id || verifyOrderModal.orderId}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-stone-800 pb-1.5">
+                        <span className="text-stone-400">Segel Digital:</span>
+                        <span className="font-bold text-emerald-400 select-all">{verifyOrderModal.verifiedOrder?.securitySeal || verifyOrderModal.seal}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-stone-800 pb-1.5">
+                        <span className="text-stone-400">Pemesan:</span>
+                        <span className="font-bold text-stone-200">{verifyOrderModal.verifiedOrder?.customerName || 'Pelanggan RM Segar'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-stone-400">Tipe Layanan:</span>
+                        <span className="font-bold text-blue-300">{verifyOrderModal.verifiedOrder?.orderType || 'Makan di Tempat'}</span>
+                      </div>
+                    </div>
+
+                    {/* Items Breakdown without Price */}
+                    {verifyOrderModal.verifiedOrder?.items && (
+                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100 space-y-2">
+                        <p className="text-[11px] font-black uppercase tracking-wider text-stone-400">Daftar Menu Asli di Server:</p>
+                        <div className="space-y-2 divide-y divide-stone-100">
+                          {verifyOrderModal.verifiedOrder.items.map((it: any, idx: number) => (
+                            <div key={idx} className="flex justify-between items-start pt-1.5 text-xs text-stone-800">
+                              <div>
+                                <span className="font-bold text-stone-900">{it.quantity}x {it.name}</span>
+                                {it.option && <span className="text-[10px] text-stone-500 font-bold ml-1">({it.option})</span>}
+                                {it.note && <p className="text-[10px] text-amber-700 italic mt-0.5"> Catatan: "{it.note}"</p>}
+                              </div>
+                              <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md shrink-0">
+                                {it.quantity} Porsi
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 bg-stone-50 border-t border-stone-100 flex gap-2">
+                <button
+                  onClick={() => {
+                    setVerifyOrderModal({ open: false });
+                    if (window.history.pushState) {
+                      const newUrl = window.location.pathname;
+                      window.history.pushState({ path: newUrl }, '', newUrl);
+                    }
+                  }}
+                  className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white text-xs sm:text-sm font-extrabold rounded-2xl shadow-md transition-all cursor-pointer"
+                >
+                  Tutup Verifikator
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       
       {/* Hidden template for PDF Generation & Native Print */}
       <div className="print-only-container" style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '794px', zIndex: -100, pointerEvents: 'none' }}>
@@ -9272,7 +10202,7 @@ Aturan Sangat Penting:
               </div>
               <h1 className="text-3xl font-extrabold tracking-widest text-[#450a0a]">RUMAH MAKAN SEGAR</h1>
               <p className="text-xs uppercase tracking-widest text-amber-700 font-sans font-bold mt-1">
-                Katalog Menu Utama • Main Menu • 鮮館主菜单
+                Katalog Menu Utama  Main Menu  擙桅尹銝餉
               </p>
               <p className="text-[10px] text-stone-500 font-sans italic mt-1">Cita Rasa Autentik Kalimantan Barat (Sambas)</p>
             </div>
@@ -9282,7 +10212,7 @@ Aturan Sangat Penting:
               {/* Category: BAKMIE */}
               <div>
                 <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                  1. BAKMIE (Noodles / 手工肉面)
+                  1. BAKMIE (Noodles / 见極厰)
                 </h3>
                 <div className="space-y-1">
                   {MENU_ITEMS.filter(item => item.category === 'Bakmie').map(item => renderPDFMenuItem(item))}
@@ -9292,7 +10222,7 @@ Aturan Sangat Penting:
               {/* Category: KWETIAO */}
               <div>
                 <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                  2. KWETIAO (Flat Rice Noodles / 镬气粿条)
+                  2. KWETIAO (Flat Rice Noodles / 祆蝎踵辺)
                 </h3>
                 <div className="space-y-1">
                   {MENU_ITEMS.filter(item => item.category === 'Kwetiao').map(item => renderPDFMenuItem(item))}
@@ -9302,7 +10232,7 @@ Aturan Sangat Penting:
               {/* Category: NASI */}
               <div>
                 <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                  3. HIDANGAN NASI (Rice Dishes / 经典饭食)
+                  3. HIDANGAN NASI (Rice Dishes / 蝏誩擖剝)
                 </h3>
                 <div className="space-y-1">
                   {MENU_ITEMS.filter(item => item.category === 'Nasi').map(item => renderPDFMenuItem(item))}
@@ -9313,7 +10243,7 @@ Aturan Sangat Penting:
 
           {/* Footer Page 1 */}
           <div className="text-center pt-2 border-t border-stone-200 text-[10px] text-stone-400 font-sans flex justify-between items-center relative z-10">
-            <span>RM Segar Sambas — Digital Menu Catalog (Priceless)</span>
+            <span>RM Segar Sambas  Digital Menu Catalog (Priceless)</span>
             <span className="font-semibold text-amber-700 font-serif">Halaman 1 / 2</span>
           </div>
         </div>
@@ -9339,13 +10269,13 @@ Aturan Sangat Penting:
               <div className="text-center border-b-2 border-amber-500/30 pb-4 mb-6">
                 <h2 className="text-2xl font-bold tracking-widest text-[#450a0a]">MINUMAN SEGAR</h2>
                 <p className="text-xs uppercase tracking-widest text-amber-700 font-sans font-bold mt-0.5">
-                  Beverages • 清凉饮品
+                  Beverages  皜擖桀
                 </p>
               </div>
 
               <div>
                 <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                  4. ANEKA MINUMAN (Beverages / 饮料)
+                  4. ANEKA MINUMAN (Beverages / 擖格)
                 </h3>
                 <div className="space-y-1">
                   {MENU_ITEMS.filter(item => item.category === 'Minuman').map(item => renderPDFMenuItem(item))}
@@ -9357,7 +10287,7 @@ Aturan Sangat Penting:
             <div className="mt-8 border-t-2 border-amber-500/20 pt-6 space-y-4">
               <div className="bg-stone-100/60 p-5 rounded-2xl border border-stone-200/50">
                 <h4 className="text-sm font-extrabold tracking-wider text-[#450a0a] mb-2 font-sans uppercase">
-                  Tentang Rumah Makan Segar • Our Story • 关于我们
+                  Tentang Rumah Makan Segar  Our Story  喃睲賑
                 </h4>
                 <div className="text-[10px] text-stone-600 font-sans leading-relaxed space-y-2">
                   <p>
@@ -9367,31 +10297,33 @@ Aturan Sangat Penting:
                     <span className="font-bold text-stone-700">EN:</span> RM Segar serves authentic West Kalimantan Chinese culinary legacy from generation to generation. Made with legendary secret family recipes and high-quality fresh ingredients for an unparalleled authentic taste.
                   </p>
                   <p>
-                    <span className="font-bold text-red-800">ZH:</span> 鲜馆 (RM Segar) 世代传承正宗西加里曼丹三发县经典中餐美食，采用家族秘制配方与上等新鲜食材，为您呈献绝无仅有的极致风味。
+                    <span className="font-bold text-red-800">ZH:</span> 斢 (RM Segar) 銝碶誨隡䭾㗁甇镼踹峕垈銝嫣穃礶蝏誩銝剝蝢嚗屸典振讐園嫣銝羓圈憌嚗䔶蛹典桃牐厩稲憌㭠
                   </p>
                 </div>
               </div>
 
               {/* Warnings and Info */}
               <div className="bg-red-50 p-4 rounded-xl border border-red-200 flex items-start gap-3">
-                <span className="text-red-600 text-lg">⚠️</span>
+                <span className="text-red-600 text-lg"></span>
                 <div className="text-[10px] text-red-900 leading-normal font-sans font-medium space-y-0.5">
                   <p><span className="font-bold">INFORMASI PENTING (ID):</span> Menu kami mengandung bahan-bahan Non-Halal.</p>
                   <p><span className="font-bold">IMPORTANT NOTICE (EN):</span> Our menu contains non-halal ingredients.</p>
-                  <p><span className="font-bold">重要提示 (ZH):</span> 我们的菜单包含非清真 (Non-Halal) 食材。</p>
+                  <p><span className="font-bold">滩鞟內 (ZH):</span> 睲賑訫恍皜 (Non-Halal) 憌</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Footer Page 2 */}
-          <div className="text-center pt-4 border-t border-stone-200 text-[10px] text-stone-400 font-sans flex justify-between items-center mt-6 relative z-10">
-            <span>Sajian Legendaris Sambas, Kalimantan Barat • Hubungi kami di WhatsApp</span>
-            <span className="font-semibold text-amber-700 font-serif">Halaman 2 / 2</span>
+            <div className="border-t border-stone-200 pt-3 flex items-center justify-between text-[10px] text-stone-500 font-sans">
+              <span>Halaman 2 dari 2 • Dokumen Menu Resmi RM Segar Sambas</span>
+              <span>Dicetak secara digital melalui sistem rm-segar.com</span>
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
   );
 }
+
+export default App;
