@@ -141,6 +141,7 @@ try {
 }
 var memoryOrders = [];
 var memoryReservations = [];
+var revokedOrderVerificationMap = /* @__PURE__ */ new Map();
 var memoryProfiles = /* @__PURE__ */ new Map();
 var otpStore = /* @__PURE__ */ new Map();
 var rateLimitMap = /* @__PURE__ */ new Map();
@@ -353,14 +354,21 @@ async function startServer() {
   });
   app.post("/api/orders", async (req, res) => {
     try {
-      const { customerName, customerPhone, customerEmail, items, totalPrice, notes } = req.body || {};
+      const { orderId, securitySeal, customerName, customerPhone, customerEmail, items, totalPrice, notes, orderType, tableNumber, deliveryMethod, deliveryAddress } = req.body || {};
       if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ error: "Keranjang pesanan tidak boleh kosong." });
       }
+      const generatedId = orderId ? sanitizeText(String(orderId), 50) : "RMS-" + Math.random().toString(36).substr(2, 8).toUpperCase();
       const orderData = cleanUndefined({
+        orderId: generatedId,
+        securitySeal: securitySeal ? sanitizeText(String(securitySeal), 100) : void 0,
         customerName: sanitizeText(customerName || "Pelanggan RM Segar", 100),
         customerPhone: sanitizeText(customerPhone || "", 50),
         customerEmail: sanitizeText(customerEmail || "valensiarainy73@gmail.com", 100),
+        orderType: orderType ? sanitizeText(String(orderType), 50) : "Makan di Tempat",
+        tableNumber: tableNumber ? sanitizeText(String(tableNumber), 20) : void 0,
+        deliveryMethod: deliveryMethod ? sanitizeText(String(deliveryMethod), 50) : void 0,
+        deliveryAddress: deliveryAddress ? sanitizeText(String(deliveryAddress), 300) : void 0,
         items: items.map((item) => {
           const itemObj = {
             id: sanitizeText(String(item.id || ""), 50),
@@ -373,22 +381,226 @@ async function startServer() {
           return itemObj;
         }),
         totalPrice: Number(totalPrice || 0),
+        notes: notes ? sanitizeText(String(notes), 300) : void 0,
         status: "Diproses",
         createdAt: (/* @__PURE__ */ new Date()).toISOString()
       });
       if (db) {
         const docRef = await (0, import_firestore.addDoc)((0, import_firestore.collection)(db, "orders"), orderData);
-        const savedOrder = { id: docRef.id, ...orderData };
+        const savedOrder = { id: generatedId, docId: docRef.id, ...orderData };
         memoryOrders.unshift(savedOrder);
         return res.status(201).json({ success: true, order: savedOrder });
       } else {
-        const savedOrder = { id: "ord_" + Date.now(), ...orderData };
+        const savedOrder = { id: generatedId, ...orderData };
         memoryOrders.unshift(savedOrder);
         return res.status(201).json({ success: true, order: savedOrder });
       }
     } catch (err) {
       console.error("Backend POST /api/orders error:", err);
       return res.status(500).json({ error: "Gagal menyimpan pesanan di backend server." });
+    }
+  });
+  app.get("/api/orders/verify", async (req, res) => {
+    try {
+      const { orderId, seal } = req.query;
+      if (!orderId) {
+        return res.status(400).json({ success: false, message: "Nomor pesanan wajib disertakan." });
+      }
+      const cleanId = String(orderId).trim().toUpperCase();
+      const cleanSeal = seal ? String(seal).trim().toUpperCase() : null;
+      if (revokedOrderVerificationMap.has(cleanId)) {
+        const revokedInfo = revokedOrderVerificationMap.get(cleanId);
+        if (revokedInfo.reason === "deleted" || revokedInfo.reason === "cancelled") {
+          return res.status(200).json({
+            success: false,
+            isAuthentic: false,
+            isDeleted: true,
+            status: "deleted",
+            message: `\u{1F6AB} LINK VERIFIKASI TELAH OTOMATIS DIHAPUS
+
+Pesanan #${cleanId} telah dihapus atau dibatalkan dari sistem RM Segar. Tautan verifikasi ini otomatis hangus dan tidak dapat digunakan lagi.`
+          });
+        } else if (revokedInfo.reason === "modified") {
+          return res.status(200).json({
+            success: false,
+            isAuthentic: false,
+            isModified: true,
+            status: "modified",
+            message: `\u26A0\uFE0F LINK VERIFIKASI TELAH OTOMATIS HANGUS (PESAN DIUBAH)
+
+Pesan atau rincian pesanan #${cleanId} telah diubah/diedit dari data aslinya. Demi keamanan transaksi, link verifikasi otomatis dihapus dan dinonaktifkan.`
+          });
+        }
+      }
+      let matchedOrder = memoryOrders.find(
+        (o) => o.orderId && o.orderId.toUpperCase() === cleanId || o.id && o.id.toUpperCase() === cleanId
+      );
+      if (!matchedOrder && db) {
+        try {
+          const snapshot = await (0, import_firestore.getDocs)((0, import_firestore.collection)(db, "orders"));
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data.orderId && data.orderId.toUpperCase() === cleanId || docSnap.id.toUpperCase() === cleanId) {
+              matchedOrder = { id: data.orderId || docSnap.id, docId: docSnap.id, ...data };
+            }
+          });
+        } catch (e) {
+          console.warn("Firestore query in verify order:", e);
+        }
+      }
+      if (!matchedOrder) {
+        return res.status(404).json({
+          success: false,
+          isAuthentic: false,
+          isDeleted: true,
+          status: "deleted",
+          message: `\u{1F6AB} LINK VERIFIKASI TIDAK DITEMUKAN ATAU TELAH DIHAPUS
+
+Nomor pesanan #${cleanId} tidak terdaftar di database resmi RM Segar. Link verifikasi otomatis tidak berlaku lagi.`
+        });
+      }
+      if (matchedOrder.isDeleted || matchedOrder.status === "cancelled" || matchedOrder.status === "dihapus" || matchedOrder.status === "Dibatalkan") {
+        return res.status(200).json({
+          success: false,
+          isAuthentic: false,
+          isDeleted: true,
+          status: "deleted",
+          message: `\u{1F6AB} LINK VERIFIKASI TELAH OTOMATIS DIHAPUS
+
+Pesanan #${cleanId} telah dihapus atau dibatalkan dari database RM Segar. Tautan verifikasi ini otomatis hangus.`
+        });
+      }
+      const sealMatched = cleanSeal ? matchedOrder.securitySeal && matchedOrder.securitySeal.toUpperCase() === cleanSeal : true;
+      if (matchedOrder.isModified || !sealMatched) {
+        return res.status(200).json({
+          success: false,
+          isAuthentic: false,
+          isModified: true,
+          status: "modified",
+          order: matchedOrder,
+          message: `\u26A0\uFE0F LINK VERIFIKASI TELAH OTOMATIS HANGUS (PESAN DIUBAH)
+
+Data atau segel pesanan #${cleanId} tidak cocok dengan data asli di server. Link verifikasi otomatis dinonaktifkan demi mencegah manipulasi nota.`
+        });
+      }
+      return res.json({
+        success: true,
+        isAuthentic: true,
+        status: "valid",
+        order: matchedOrder,
+        message: `\u2705 Pesanan #${cleanId} TERVERIFIKASI 100% ASLI & SAH dari database RM Segar.`
+      });
+    } catch (err) {
+      console.error("GET /api/orders/verify error:", err);
+      return res.status(500).json({ success: false, message: "Terjadi kesalahan saat memverifikasi pesanan." });
+    }
+  });
+  app.patch("/api/orders/:id", async (req, res) => {
+    try {
+      const orderIdParam = String(req.params.id || "").trim().toUpperCase();
+      const { status, items, notes, totalPrice, customerName, isModified } = req.body || {};
+      if (!orderIdParam) {
+        return res.status(400).json({ error: "Order ID diperlukan." });
+      }
+      const isCancelled = status === "cancelled" || status === "dihapus" || status === "Batal";
+      const hasContentChanges = isModified || items && Array.isArray(items) || notes !== void 0 || totalPrice !== void 0;
+      let orderIndex = memoryOrders.findIndex(
+        (o) => o.orderId && o.orderId.toUpperCase() === orderIdParam || o.id && o.id.toUpperCase() === orderIdParam
+      );
+      if (orderIndex !== -1) {
+        const existing = memoryOrders[orderIndex];
+        const updated = {
+          ...existing,
+          ...status ? { status } : {},
+          ...items ? { items } : {},
+          ...notes !== void 0 ? { notes } : {},
+          ...totalPrice !== void 0 ? { totalPrice: Number(totalPrice) } : {},
+          ...customerName ? { customerName } : {},
+          isModified: existing.isModified || hasContentChanges,
+          modifiedAt: (/* @__PURE__ */ new Date()).toISOString(),
+          isDeleted: existing.isDeleted || isCancelled
+        };
+        memoryOrders[orderIndex] = updated;
+      }
+      if (db) {
+        try {
+          const snapshot = await (0, import_firestore.getDocs)((0, import_firestore.collection)(db, "orders"));
+          for (const docSnap of snapshot.docs) {
+            const data = docSnap.data();
+            if (data.orderId && data.orderId.toUpperCase() === orderIdParam || docSnap.id.toUpperCase() === orderIdParam) {
+              await (0, import_firestore.updateDoc)((0, import_firestore.doc)(db, "orders", docSnap.id), {
+                ...status ? { status } : {},
+                ...items ? { items } : {},
+                ...notes !== void 0 ? { notes } : {},
+                ...totalPrice !== void 0 ? { totalPrice: Number(totalPrice) } : {},
+                ...customerName ? { customerName } : {},
+                isModified: data.isModified || hasContentChanges,
+                modifiedAt: (/* @__PURE__ */ new Date()).toISOString(),
+                isDeleted: data.isDeleted || isCancelled
+              });
+            }
+          }
+        } catch (e) {
+          console.warn("Firestore updateDoc error:", e);
+        }
+      }
+      if (isCancelled) {
+        revokedOrderVerificationMap.set(orderIdParam, {
+          reason: "cancelled",
+          timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+          details: "Pesanan dibatalkan"
+        });
+      } else if (hasContentChanges) {
+        revokedOrderVerificationMap.set(orderIdParam, {
+          reason: "modified",
+          timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+          details: "Rincian pesan / pesanan telah diubah"
+        });
+      }
+      return res.json({
+        success: true,
+        message: isCancelled ? `Pesanan #${orderIdParam} dibatalkan dan link verifikasi otomatis dihapus/hangus.` : hasContentChanges ? `Pesanan #${orderIdParam} diperbarui dan link verifikasi lama otomatis hangus.` : `Status pesanan #${orderIdParam} berhasil diperbarui.`
+      });
+    } catch (err) {
+      console.error("Backend PATCH /api/orders/:id error:", err);
+      return res.status(500).json({ error: "Gagal memperbarui pesanan di server." });
+    }
+  });
+  app.delete("/api/orders/:id", async (req, res) => {
+    try {
+      const orderIdParam = String(req.params.id || "").trim().toUpperCase();
+      if (!orderIdParam) {
+        return res.status(400).json({ error: "Order ID diperlukan." });
+      }
+      memoryOrders = memoryOrders.filter(
+        (o) => o.orderId && o.orderId.toUpperCase() !== orderIdParam && (o.id && o.id.toUpperCase() !== orderIdParam)
+      );
+      revokedOrderVerificationMap.set(orderIdParam, {
+        reason: "deleted",
+        timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+        details: "Pesanan dihapus dari sistem kasir/admin"
+      });
+      if (db) {
+        try {
+          const snapshot = await (0, import_firestore.getDocs)((0, import_firestore.collection)(db, "orders"));
+          for (const docSnap of snapshot.docs) {
+            const data = docSnap.data();
+            if (data.orderId && data.orderId.toUpperCase() === orderIdParam || docSnap.id.toUpperCase() === orderIdParam) {
+              await (0, import_firestore.deleteDoc)((0, import_firestore.doc)(db, "orders", docSnap.id));
+            }
+          }
+        } catch (e) {
+          console.warn("Firestore deleteDoc error:", e);
+        }
+      }
+      return res.json({
+        success: true,
+        isDeleted: true,
+        message: `Pesanan #${orderIdParam} berhasil dihapus. Link verifikasi otomatis dihapus & hangus dari server.`
+      });
+    } catch (err) {
+      console.error("Backend DELETE /api/orders/:id error:", err);
+      return res.status(500).json({ error: "Gagal menghapus pesanan di server." });
     }
   });
   app.post("/api/orders/send-status-email", async (req, res) => {
@@ -497,13 +709,34 @@ async function startServer() {
   });
   app.delete("/api/orders", async (_req, res) => {
     try {
+      memoryOrders.forEach((o) => {
+        const id = (o.orderId || o.id || "").toUpperCase();
+        if (id) {
+          revokedOrderVerificationMap.set(id, {
+            reason: "deleted",
+            timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+            details: "Semua riwayat pesanan dibersihkan"
+          });
+        }
+      });
       memoryOrders = [];
       if (db) {
         const snapshot = await (0, import_firestore.getDocs)((0, import_firestore.collection)(db, "orders"));
+        snapshot.docs.forEach((d) => {
+          const data = d.data();
+          const id = (data.orderId || d.id).toUpperCase();
+          if (id) {
+            revokedOrderVerificationMap.set(id, {
+              reason: "deleted",
+              timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+              details: "Semua riwayat pesanan dibersihkan"
+            });
+          }
+        });
         const deletePromises = snapshot.docs.map((d) => (0, import_firestore.deleteDoc)((0, import_firestore.doc)(db, "orders", d.id)));
         await Promise.all(deletePromises);
       }
-      return res.json({ success: true, message: "Semua riwayat pesanan di backend berhasil dibersihkan." });
+      return res.json({ success: true, message: "Semua riwayat pesanan dibersihkan dan seluruh tautan verifikasi otomatis hangus/dihapus." });
     } catch (err) {
       console.error("Backend DELETE /api/orders error:", err);
       memoryOrders = [];
