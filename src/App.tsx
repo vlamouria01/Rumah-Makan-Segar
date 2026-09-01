@@ -68,7 +68,8 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { MENU_ITEMS, MenuItem } from './constants';
 import { MISSING_PERSONS_DATA, MissingPerson, searchOrangHilangLive } from './missingPersonsData';
-import { loginAdminWithGoogleFirebase, loginWithGoogleFirebase, ALLOWED_ADMIN_EMAIL, normalizePhoneNumber, isValidPhoneNumber } from './lib/firebase';
+import { loginAdminWithGoogleFirebase, loginWithGoogleFirebase, ALLOWED_ADMIN_EMAIL, normalizePhoneNumber, isValidPhoneNumber, db, VERCEL_DOMAIN } from './lib/firebase';
+import { doc, setDoc, getDoc, getDocs, collection, updateDoc, deleteDoc } from 'firebase/firestore';
 import { NonRobotVerification } from './components/NonRobotVerification';
 
 export interface VirtualEmail {
@@ -1224,6 +1225,106 @@ function App() {
     return `SEAL-${cleanId.slice(-4)}-${hexPart.slice(0, 4)}-${hexPart.slice(4, 8)}`;
   };
 
+  // Universal order verification helper: checks Backend API, Firestore, and LocalStorage
+  const performUniversalVerification = async (verifyOrderId: string, verifySeal?: string) => {
+    const cleanId = (verifyOrderId || '').trim().toUpperCase();
+    const cleanSeal = verifySeal ? verifySeal.trim().toUpperCase() : undefined;
+
+    // 1. Try backend API first
+    try {
+      const res = await fetch(`/api/orders/verify?orderId=${encodeURIComponent(cleanId)}${cleanSeal ? `&seal=${encodeURIComponent(cleanSeal)}` : ''}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && (data.status || data.success !== undefined)) {
+          return {
+            status: (data.status || (data.isAuthentic ? 'valid' : 'invalid')) as 'valid' | 'invalid' | 'deleted' | 'modified',
+            order: data.order,
+            message: data.message || '',
+            isAuthentic: !!data.isAuthentic
+          };
+        }
+      }
+    } catch (apiErr) {
+      console.warn("Backend API not reachable (e.g. on Vercel), falling back to Firestore/Local:", apiErr);
+    }
+
+    // 2. Direct Firestore DB check
+    let foundOrder: any = null;
+    if (db) {
+      try {
+        const docRef = doc(db, "orders", cleanId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          foundOrder = { id: docSnap.id, ...docSnap.data() };
+        } else {
+          const querySnap = await getDocs(collection(db, "orders"));
+          querySnap.forEach(d => {
+            const dt = d.data();
+            if ((dt.orderId && dt.orderId.toUpperCase() === cleanId) || d.id.toUpperCase() === cleanId) {
+              foundOrder = { id: dt.orderId || d.id, ...dt };
+            }
+          });
+        }
+      } catch (fsErr) {
+        console.warn("Direct Firestore fetch error:", fsErr);
+      }
+    }
+
+    // 3. Check LocalStorage fallback
+    if (!foundOrder) {
+      try {
+        const savedOrdersStr = localStorage.getItem('rm_segar_orders');
+        if (savedOrdersStr) {
+          const localList: any[] = JSON.parse(savedOrdersStr);
+          foundOrder = localList.find(o => 
+            (o.id && o.id.toUpperCase() === cleanId) || 
+            (o.orderId && o.orderId.toUpperCase() === cleanId)
+          );
+        }
+      } catch (lsErr) {
+        console.warn("LocalStorage check error:", lsErr);
+      }
+    }
+
+    // Check if order exists
+    if (!foundOrder) {
+      return {
+        status: 'deleted' as const,
+        order: null,
+        isAuthentic: false,
+        message: `🚫 LINK VERIFIKASI TIDAK DITEMUKAN ATAU TELAH DIHAPUS\n\nNomor pesanan #${cleanId} tidak terdaftar di server database RM Segar (https://rumah-makan-segar.vercel.app). Tautan otomatis tidak berlaku.`
+      };
+    }
+
+    // Check if cancelled or deleted
+    if (foundOrder.isDeleted || foundOrder.status === 'cancelled' || foundOrder.status === 'dihapus' || foundOrder.status === 'Batal') {
+      return {
+        status: 'deleted' as const,
+        order: foundOrder,
+        isAuthentic: false,
+        message: `🚫 LINK VERIFIKASI TELAH OTOMATIS DIHAPUS\n\nPesanan #${cleanId} telah dihapus atau dibatalkan dari sistem database resmi RM Segar. Tautan verifikasi ini otomatis hangus.`
+      };
+    }
+
+    // Check seal
+    const sealMatched = cleanSeal ? (foundOrder.securitySeal && foundOrder.securitySeal.toUpperCase() === cleanSeal) : true;
+    if (foundOrder.isModified || !sealMatched) {
+      return {
+        status: 'modified' as const,
+        order: foundOrder,
+        isAuthentic: false,
+        message: `⚠️ LINK VERIFIKASI TELAH OTOMATIS HANGUS (PESAN DIUBAH)\n\nRincian atau segel pesanan #${cleanId} tidak cocok dengan data asli di server RM Segar. Link verifikasi otomatis dinonaktifkan demi mencegah manipulasi nota.`
+      };
+    }
+
+    return {
+      status: 'valid' as const,
+      order: foundOrder,
+      isAuthentic: true,
+      message: `✅ Pesanan #${cleanId} TERVERIFIKASI 100% ASLI & SAH dari database resmi RM Segar (rumah-makan-segar.vercel.app).`
+    };
+  };
+
   // URL Parameter Listener for Instant Order Verification (e.g. from WhatsApp Link)
   useEffect(() => {
     try {
@@ -1238,45 +1339,26 @@ function App() {
           status: 'loading'
         });
 
-        fetch(`/api/orders/verify?orderId=${encodeURIComponent(verifyOrderId)}${verifySeal ? `&seal=${encodeURIComponent(verifySeal)}` : ''}`)
-          .then(r => r.json())
-          .then(data => {
-            if (data.status === 'deleted' || data.isDeleted) {
-              setVerifyOrderModal(prev => ({
-                ...prev,
-                status: 'deleted',
-                orderId: verifyOrderId,
-                message: data.message || `🚫 Link verifikasi pesanan #${verifyOrderId} telah otomatis dihapus/hangus dari server.`
-              }));
-            } else if (data.status === 'modified' || data.isModified) {
-              setVerifyOrderModal(prev => ({
-                ...prev,
-                status: 'modified',
-                orderId: verifyOrderId,
-                verifiedOrder: data.order,
-                message: data.message || `⚠️ Link verifikasi pesanan #${verifyOrderId} telah otomatis hangus karena data/pesan telah diubah.`
-              }));
-            } else if (data && data.success && data.order && data.isAuthentic) {
-              setVerifyOrderModal(prev => ({
-                ...prev,
-                status: 'valid',
-                verifiedOrder: data.order,
-                message: data.message
-              }));
-            } else {
-              setVerifyOrderModal(prev => ({
-                ...prev,
-                status: 'invalid',
-                message: data.message || 'Pesanan tidak ditemukan di database resmi RM Segar atau segel digital tidak valid.'
-              }));
-            }
+        performUniversalVerification(verifyOrderId, verifySeal || undefined)
+          .then(res => {
+            setVerifyOrderModal({
+              open: true,
+              orderId: verifyOrderId,
+              seal: verifySeal || undefined,
+              status: res.status,
+              verifiedOrder: res.order,
+              message: res.message
+            });
           })
-          .catch(() => {
-            setVerifyOrderModal(prev => ({
-              ...prev,
+          .catch(err => {
+            console.error("Verification error:", err);
+            setVerifyOrderModal({
+              open: true,
+              orderId: verifyOrderId,
+              seal: verifySeal || undefined,
               status: 'invalid',
-              message: 'Gagal menghubungi server verifikasi.'
-            }));
+              message: 'Terjadi kendala saat memeriksa segel pesanan.'
+            });
           });
       }
     } catch (e) {
@@ -1285,7 +1367,7 @@ function App() {
   }, []);
 
   // Admin Manual Order Verification Function (Anti-Manipulasi Checker)
-  const handleVerifyOrderManual = (inputString: string) => {
+  const handleVerifyOrderManual = async (inputString: string) => {
     if (!inputString.trim()) return;
     setIsAdminVerifying(true);
     setAdminVerifyResult(null);
@@ -1299,61 +1381,60 @@ function App() {
     const sealMatch = inputString.match(/\[(SEAL-[A-Z0-9-]+)\]/i) || inputString.match(/seal=(SEAL-[A-Z0-9-]+)/i);
     const extractedSeal = sealMatch ? sealMatch[1] : undefined;
 
-    fetch(`/api/orders/verify?orderId=${encodeURIComponent(extractedId)}${extractedSeal ? `&seal=${encodeURIComponent(extractedSeal)}` : ''}`)
-      .then(r => r.json())
-      .then(data => {
-        setIsAdminVerifying(false);
-        if (data.status === 'deleted' || data.isDeleted) {
-          setAdminVerifyResult({
-            valid: false,
-            status: 'deleted',
-            message: data.message || `🚫 LINK VERIFIKASI TELAH OTOMATIS DIHAPUS\n\nPesanan #${extractedId} telah dihapus/dibatalkan dari sistem server.`
-          });
-        } else if (data.status === 'modified' || data.isModified) {
-          setAdminVerifyResult({
-            valid: false,
-            status: 'modified',
-            order: data.order,
-            message: data.message || `⚠️ LINK VERIFIKASI TELAH OTOMATIS HANGUS (PESAN DIUBAH)\n\nRincian pesan #${extractedId} telah diubah/diedit dari data aslinya di server.`
-          });
-        } else if (data && data.success && data.order) {
-          let priceMismatch = false;
-          let detectedPrice = '';
-          const priceMatch = inputString.match(/TOTAL TAGIHAN ASLI:\*?\s*\*?Rp\s*([\d\.,]+)/i) || inputString.match(/TOTAL:\*?\s*\*?Rp\s*([\d\.,]+)/i);
-          if (priceMatch) {
-            detectedPrice = priceMatch[1];
-            const rawPriceNum = parseInt(priceMatch[1].replace(/[\.,]/g, ''), 10);
-            if (!isNaN(rawPriceNum) && data.order.totalPrice && Math.abs(rawPriceNum - data.order.totalPrice) > 100) {
-              priceMismatch = true;
-            }
-          }
+    try {
+      const result = await performUniversalVerification(extractedId, extractedSeal);
+      setIsAdminVerifying(false);
 
-          setAdminVerifyResult({
-            valid: data.isAuthentic && !priceMismatch,
-            status: 'valid',
-            order: data.order,
-            message: priceMismatch 
-              ? `⚠️ PERINGATAN KERAS: Terdeteksi manipulasi total harga! Di teks WA: Rp ${detectedPrice}, sedangkan Asli di Database Server: Rp ${Number(data.order.totalPrice).toLocaleString('id-ID')}. Pesanan ini JANGAN diproses sebelum konfirmasi harga asli!`
-              : data.message,
-            priceMismatch,
-            sealMatched: data.isAuthentic
-          });
-        } else {
-          setAdminVerifyResult({
-            valid: false,
-            status: 'deleted_or_invalid',
-            message: data.message || `Pesanan '${extractedId}' TIDAK DITEMUKAN di database server. Waspada pesanan fiktif atau telah dihapus!`
-          });
-        }
-      })
-      .catch(() => {
-        setIsAdminVerifying(false);
+      if (result.status === 'deleted') {
         setAdminVerifyResult({
           valid: false,
-          status: 'error',
-          message: 'Koneksi ke database server gagal.'
+          status: 'deleted',
+          message: result.message || `🚫 LINK VERIFIKASI TELAH OTOMATIS DIHAPUS\n\nPesanan #${extractedId} telah dihapus/dibatalkan dari sistem server.`
         });
+      } else if (result.status === 'modified') {
+        setAdminVerifyResult({
+          valid: false,
+          status: 'modified',
+          order: result.order,
+          message: result.message || `⚠️ LINK VERIFIKASI TELAH OTOMATIS HANGUS (PESAN DIUBAH)\n\nRincian pesan #${extractedId} telah diubah/diedit dari data aslinya di server.`
+        });
+      } else if (result.status === 'valid' && result.order) {
+        let priceMismatch = false;
+        let detectedPrice = '';
+        const priceMatch = inputString.match(/TOTAL TAGIHAN ASLI:\*?\s*\*?Rp\s*([\d\.,]+)/i) || inputString.match(/TOTAL:\*?\s*\*?Rp\s*([\d\.,]+)/i);
+        if (priceMatch) {
+          detectedPrice = priceMatch[1];
+          const rawPriceNum = parseInt(priceMatch[1].replace(/[\.,]/g, ''), 10);
+          if (!isNaN(rawPriceNum) && result.order.totalPrice && Math.abs(rawPriceNum - result.order.totalPrice) > 100) {
+            priceMismatch = true;
+          }
+        }
+
+        setAdminVerifyResult({
+          valid: result.isAuthentic && !priceMismatch,
+          status: 'valid',
+          order: result.order,
+          message: priceMismatch 
+            ? `⚠️ PERINGATAN KERAS: Terdeteksi manipulasi total harga! Di teks WA: Rp ${detectedPrice}, sedangkan Asli di Database Server: Rp ${Number(result.order.totalPrice).toLocaleString('id-ID')}. Pesanan ini JANGAN diproses sebelum konfirmasi harga asli!`
+            : result.message,
+          priceMismatch,
+          sealMatched: result.isAuthentic
+        });
+      } else {
+        setAdminVerifyResult({
+          valid: false,
+          status: 'deleted_or_invalid',
+          message: result.message || `Pesanan '${extractedId}' TIDAK DITEMUKAN di database server. Waspada pesanan fiktif atau telah dihapus!`
+        });
+      }
+    } catch (e) {
+      setIsAdminVerifying(false);
+      setAdminVerifyResult({
+        valid: false,
+        status: 'error',
+        message: 'Koneksi ke database server gagal.'
       });
+    }
   };
 
   const maskPhoneNumber = (phone?: string | null) => {
@@ -1764,28 +1845,45 @@ function App() {
     });
   };
 
-  // Delete Single Order & Auto-Revoke Verification Link on Backend
+  // Delete Single Order & Auto-Revoke Verification Link on Backend & Firestore
   const handleDeleteSingleOrder = async (orderId: string) => {
     try {
       await fetch(`/api/orders/${encodeURIComponent(orderId)}`, { method: 'DELETE' });
     } catch (err) {
       console.warn("Delete order on backend warning:", err);
     }
+    if (db) {
+      try {
+        await deleteDoc(doc(db, "orders", orderId));
+      } catch (fsErr) {
+        console.warn("Firestore delete order doc error:", fsErr);
+      }
+    }
     setOrders(prev => {
       const updated = prev.filter(o => o.id !== orderId);
       localStorage.setItem('rm_segar_orders', JSON.stringify(updated));
       return updated;
     });
-    setEmailNotificationToast(`🗑️ Pesanan #${orderId} telah dihapus. Link verifikasi resmi otomatis dihapus & hangus dari server.`);
+    setEmailNotificationToast(`🗑️ Pesanan #${orderId} telah dihapus. Link verifikasi resmi otomatis dihapus & hangus.`);
     setTimeout(() => setEmailNotificationToast(null), 5000);
   };
 
-  // Clear All Orders & Auto-Revoke All Links on Backend
+  // Clear All Orders & Auto-Revoke All Links on Backend & Firestore
   const handleClearAllOrders = async () => {
     try {
       await fetch('/api/orders', { method: 'DELETE' });
     } catch (err) {
       console.warn("Clear orders on backend warning:", err);
+    }
+    if (db) {
+      try {
+        const snap = await getDocs(collection(db, "orders"));
+        snap.forEach(d => {
+          deleteDoc(d.ref).catch(() => {});
+        });
+      } catch (fsErr) {
+        console.warn("Firestore clear orders error:", fsErr);
+      }
     }
     setOrders([]);
     localStorage.removeItem('rm_segar_orders');
@@ -3655,7 +3753,8 @@ Aturan Sangat Penting:
     }
 
     const paymentText = selectedPaymentMethod === 'cash' ? 'Cash (Tunai)' : 'Transfer';
-    const verifyUrl = `${window.location.origin}/?verify_order=${orderId}&seal=${securitySeal}`;
+    const verifyBaseUrl = VERCEL_DOMAIN || 'https://rumah-makan-segar.vercel.app';
+    const verifyUrl = `${verifyBaseUrl}/?verify_order=${orderId}&seal=${securitySeal}`;
 
     // Format Pesan Terkunci Anti-Manipulasi & Anti-Edit (Tanpa Menyebutkan Nominal Harga)
     const message = ` *[NOTA PESANAN RESMI TERKUNCI - RM SEGAR]* 㬢
@@ -3696,6 +3795,34 @@ ${orderDetails}
       customerPhone: user?.phone || ''
     };
     setOrders(prev => [newOrder, ...prev]);
+
+    // Save directly to Firestore for 100% verifiability on Vercel domain
+    if (db) {
+      try {
+        setDoc(doc(db, "orders", orderId), {
+          orderId: orderId,
+          id: orderId,
+          securitySeal: securitySeal,
+          customerName: customerIdentifier,
+          customerPhone: user?.phone || '',
+          customerEmail: user?.email || 'valensiarainy73@gmail.com',
+          items: cart,
+          totalPrice: calculatedTotal,
+          totalItems: totalItems,
+          orderType: orderType,
+          tableNumber: tableNumber || '',
+          deliveryMethod: deliveryMethod || '',
+          deliveryAddress: deliveryAddress || '',
+          notes: extraInfo || '',
+          status: 'pending',
+          isDeleted: false,
+          isModified: false,
+          createdAt: new Date().toISOString()
+        }).catch(err => console.warn('Direct Firestore order save error:', err));
+      } catch (e) {
+        console.warn('Firestore setDoc exception:', e);
+      }
+    }
 
     // Send order directly to backend database server with immutable seal
     fetch('/api/orders', {
@@ -4848,10 +4975,10 @@ ${orderDetails}
 
                       <button
                         onClick={() => {
-                          setOrders(prev => prev.filter(o => o.id !== order.id));
+                          handleDeleteSingleOrder(order.id);
                         }}
                         className="p-2 text-stone-300 hover:text-red-500 transition-colors cursor-pointer"
-                        title="Hapus Pesanan"
+                        title="Hapus Pesanan & Hanguskan Verifikasi"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -8030,9 +8157,7 @@ ${orderDetails}
                 </button>
                 <button 
                   onClick={() => {
-                    setOrders([]);
-                    localStorage.removeItem('rm_segar_orders');
-                    setShowClearHistoryConfirmModal(false);
+                    handleClearAllOrders();
                   }}
                   className="py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-red-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
                 >
@@ -10027,9 +10152,13 @@ ${orderDetails}
               <div className={`p-6 text-white text-center relative ${
                 verifyOrderModal.status === 'valid'
                   ? 'bg-gradient-to-br from-emerald-800 via-teal-900 to-stone-900'
-                  : verifyOrderModal.status === 'invalid'
-                    ? 'bg-gradient-to-br from-red-900 via-rose-950 to-stone-900'
-                    : 'bg-stone-900'
+                  : verifyOrderModal.status === 'deleted'
+                    ? 'bg-gradient-to-br from-rose-900 via-red-950 to-stone-900'
+                    : verifyOrderModal.status === 'modified'
+                      ? 'bg-gradient-to-br from-amber-800 via-orange-950 to-stone-900'
+                      : verifyOrderModal.status === 'invalid'
+                        ? 'bg-gradient-to-br from-red-900 via-rose-950 to-stone-900'
+                        : 'bg-stone-900'
               }`}>
                 <button
                   onClick={() => {
@@ -10048,6 +10177,10 @@ ${orderDetails}
                 <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shadow-inner">
                   {verifyOrderModal.status === 'valid' ? (
                     <ShieldCheck size={32} className="text-emerald-400" />
+                  ) : verifyOrderModal.status === 'deleted' ? (
+                    <Trash2 size={32} className="text-rose-400" />
+                  ) : verifyOrderModal.status === 'modified' ? (
+                    <AlertTriangle size={32} className="text-amber-400" />
                   ) : verifyOrderModal.status === 'invalid' ? (
                     <ShieldAlert size={32} className="text-red-400" />
                   ) : (
@@ -10058,13 +10191,20 @@ ${orderDetails}
                 <h3 className="text-lg font-black tracking-tight">
                   {verifyOrderModal.status === 'valid'
                     ? 'NOTA RESMI TERVERIFIKASI'
-                    : verifyOrderModal.status === 'invalid'
-                      ? 'PERINGATAN: NOTA TIDAK SAH'
-                      : 'MEMERIKSA DATABASE SERVER'}
+                    : verifyOrderModal.status === 'deleted'
+                      ? 'LINK VERIFIKASI TELAH OTOMATIS HANGUS'
+                      : verifyOrderModal.status === 'modified'
+                        ? 'LINK HANGUS: DATA TELAH DIUBAH'
+                        : verifyOrderModal.status === 'invalid'
+                          ? 'PERINGATAN: NOTA TIDAK SAH'
+                          : 'MEMERIKSA DATABASE SERVER'}
                 </h3>
                 <p className="text-xs text-stone-200 mt-1">
                   Sistem Perlindungan Anti-Manipulasi Pesanan RM Segar Sambas
                 </p>
+                <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-[10px] text-stone-200 font-mono">
+                  <span>Domain: rumah-makan-segar.vercel.app</span>
+                </div>
               </div>
 
               {/* Body */}
@@ -10074,6 +10214,56 @@ ${orderDetails}
                     <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
                     <p className="text-sm font-bold text-stone-700">Mencocokkan segel digital dengan Database Pusat...</p>
                     <p className="text-xs text-stone-400">Harap tunggu beberapa detik.</p>
+                  </div>
+                )}
+
+                {verifyOrderModal.status === 'deleted' && (
+                  <div className="space-y-4">
+                    <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl text-rose-950 text-xs space-y-2">
+                      <div className="flex items-center gap-2 font-black text-sm text-rose-700">
+                        <Trash2 size={18} />
+                        <span>PESANAN TELAH DIHAPUS / DIBATALKAN</span>
+                      </div>
+                      <p className="leading-relaxed">
+                        {verifyOrderModal.message || `Pesanan #${verifyOrderModal.orderId} telah dihapus atau dibatalkan dari sistem database resmi RM Segar (rumah-makan-segar.vercel.app).`}
+                      </p>
+                      <p className="text-[11px] font-semibold text-rose-800 pt-1">
+                        🔒 Demi keamanan transaksi dan pencegahan manipulasi nota, seluruh tautan verifikasi otomatis dinonaktifkan permanen saat pesanan dihapus.
+                      </p>
+                    </div>
+
+                    <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 text-xs space-y-2">
+                      <p className="font-bold text-stone-700">Informasi Penting:</p>
+                      <ul className="list-disc pl-4 space-y-1 text-stone-600">
+                        <li>Dapur &amp; Kasir tidak akan memproses pesanan yang link verifikasinya telah hangus.</li>
+                        <li>Silakan buat pesanan baru melalui situs resmi RM Segar.</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {verifyOrderModal.status === 'modified' && (
+                  <div className="space-y-4">
+                    <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-amber-950 text-xs space-y-2">
+                      <div className="flex items-center gap-2 font-black text-sm text-amber-700">
+                        <AlertTriangle size={18} />
+                        <span>PERINGATAN: ISI PESAN TELAH DIUBAH</span>
+                      </div>
+                      <p className="leading-relaxed">
+                        {verifyOrderModal.message || `Rincian pesan atau segel kriptografis pesanan #${verifyOrderModal.orderId} tidak sesuai dengan data asli di server RM Segar.`}
+                      </p>
+                      <p className="text-[11px] font-semibold text-amber-800 pt-1">
+                        ⚠️ Terdeteksi perubahan teks WhatsApp. Link verifikasi otomatis hangus untuk melindungi pemilik usaha dari pesanan yang diedit.
+                      </p>
+                    </div>
+
+                    {verifyOrderModal.verifiedOrder && (
+                      <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 text-xs space-y-2">
+                        <p className="font-bold text-stone-700">Data Asli yang Tercatat di Server:</p>
+                        <p className="text-[11px] text-stone-500 font-mono">No Nota: #{verifyOrderModal.verifiedOrder.id || verifyOrderModal.verifiedOrder.orderId}</p>
+                        <p className="text-[11px] text-stone-500 font-mono">Pemesan: {verifyOrderModal.verifiedOrder.customerName}</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -10108,7 +10298,7 @@ ${orderDetails}
                           Data Terkunci &amp; Sah 100%
                         </p>
                         <p className="text-[11px] text-emerald-800">
-                          Rincian di bawah ini adalah data otentik yang tersimpan permanen di cloud server kasir.
+                          Rincian di bawah ini adalah data otentik yang tersimpan permanen di cloud server kasir (https://rumah-makan-segar.vercel.app).
                         </p>
                       </div>
                     </div>
