@@ -144,7 +144,7 @@ export const TRANSLATIONS = {
     verifyToken: "Verifikasi Token",
     kokiAsk: "Bingung mau makan apa?",
     kokiStart: "Mulai Chat Rekomendasi",
-    kokiGreeting: "Halo! Saya Koki Teng. Bingung mau makan apa hari ini? Beritahu saya apa yang Anda suka, dan saya akan carikan menu yang paling pas buat Anda! 䧟",
+    kokiGreeting: "Halo! Saya Koki Teng. Bingung mau makan apa hari ini? Beritahu saya apa yang Anda suka, dan saya akan carikan menu yang paling pas buat Anda! 👨‍🍳",
     kokiError: "Ups, Koki Teng sedang sibuk menyiapkan pesanan. Coba lagi nanti ya!",
     searchTitle: "Pencarian",
     searchResultsFor: "Hasil pencarian untuk",
@@ -208,76 +208,13 @@ export const TRANSLATIONS = {
     verifyToken: "Verify Token",
     kokiAsk: "Not sure what to eat?",
     kokiStart: "Start Recommendation Chat",
-    kokiGreeting: "Hello! I am Chef Teng. Not sure what to eat today? Tell me what you like, and I'll find the perfect dish for you! 䧟",
+    kokiGreeting: "Hello! I am Chef Teng. Not sure what to eat today? Tell me what you like, and I'll find the perfect dish for you! 👨‍🍳",
     kokiError: "Oops, Chef Teng is busy preparing orders. Please try again later!",
     searchTitle: "Search",
     searchResultsFor: "Search results for",
     searchNoResults: "No menu items found"
   },
-  zh: {
-    title: "RM Segar 坤甸餐厅",
-    tagline: "西加里曼丹正宗地道风味",
-    searchPlaceholder: "搜索肉碎面、炒粿条、特色饮品...",
-    all: "全部",
-    popular: "最受欢迎",
-    about: "关于我们",
-    profile: "个人中心",
-    home: "首页",
-    cart: "购物车",
-    emptyCart: "您的购物车还是空的",
-    checkout: "立即结算并通过 WhatsApp 确认",
-    history: "订单历史",
-    aboutButton: "关于 RM Segar 餐厅",
-    guideButton: "使用指南",
-    securityCenter: "安全与隐私保护中心",
-    logout: "退出登录",
-    login: "登录账户",
-    guest: "访客",
-    notLoggedIn: "未登录",
-    adminDashboard: "管理后台",
-    languageSetting: "语言设置",
-    phoneLanguage: "系统语言 (自动)",
-    add: "加入",
-    added: "已加入",
-    totalPrice: "总价",
-    tableNumber: "桌号",
-    deliveryMethod: "取餐方式",
-    dineIn: "堂食",
-    takeaway: "自取 (外带)",
-    delivery: "外送上门",
-    address: "送餐地址",
-    whatsappConfirm: " 订单将通过 WhatsApp 自动确认",
-    notes: "备注要求 (可选)",
-    optionHot: "热",
-    optionIce: "冰",
-    back: "返回",
-    search: "搜索",
-    favorite: "收藏",
-    chatChef: "与邓大厨 AI 智能助手聊天！",
-    recommendation: "推荐菜单",
-    aboutText: "RM Segar 是一家源自西加里曼丹的特色中餐馆，提供地道正宗且优质的高品质坤甸风味佳肴。",
-    nonHalalWarning: "本店部分菜品包含非清真（Non-Halal）食材。",
-    importantInfo: "重要提示",
-    katalogUnggulan: "招牌特色菜单",
-    katalogDesc: "深受 RM Segar 忠实顾客喜爱的经典传奇招牌美味。",
-    bumbuAutentik: "坤甸正宗秘制配方",
-    lihatMenu: "查看菜单",
-    recomMie: "特色面食推荐",
-    recomNasi: "经典招牌饭类",
-    recomMinuman: "清凉特色饮品",
-    recomPedas: "香辣过瘾系列",
-    kokiTitle: "邓大厨 RM Segar",
-    kokiDesc: "您的私人美食顾问，为您推荐最地道的美味佳肴。",
-    forgotPassword: "忘记密码",
-    verifyToken: "验证令牌",
-    kokiAsk: "不知道今天吃什么？",
-    kokiStart: "开始美食推荐咨询",
-    kokiGreeting: "您好！我是邓大厨。今天想品尝什么美味呢？告诉我您的口味喜好，我来为您挑选最合适的美食！🍲",
-    kokiError: "抱歉，邓大厨正在忙着烹饪，请稍后再试！",
-    searchTitle: "搜索",
-    searchResultsFor: "搜索结果：",
-    searchNoResults: "未找到相关菜单"
-  }
+  
 };
 
 export const maskSensitiveIdentifier = (str: string | undefined | null): string => {
@@ -301,768 +238,512 @@ export const maskSensitiveIdentifier = (str: string | undefined | null): string 
   return clean;
 };
 
-export const translateMenuItem = (item: MenuItem, lang: 'id' | 'en' | 'zh'): MenuItem => {
-  const translations: Record<string, Record<'id' | 'en' | 'zh', { name: string; category: string; description: string }>> = {
-    'bakmie-kering': {
-      id: {
-        name: 'Bakmie Kering',
-        category: 'Bakmie',
-        description: 'Bakmie khas Kalimantan dengan bumbu gurih dan topping lengkap.'
-      },
-      en: {
-        name: 'Dry Bakmie (Noodles)',
-        category: 'Bakmie',
-        description: 'Kalimantan style dry noodles with savory seasoning and complete toppings.'
-      },
-      zh: {
-        name: '潔號撟脫',
-        category: '厰',
-        description: '憌㭠祉鸌峕垈銝孵僕ｇ滢誑斢望硃䔶萼撖雿鞉'
-      }
+export const translateMenuItem = (item: MenuItem, lang: "id" | "en"): MenuItem => {
+  const translations: Record<string, Record<"id" | "en", { name: string; category: string; description: string }>> = {
+    "bakmie-kering": {
+      id: { name: "Bakmie Kering", category: "Bakmie", description: "Bakmie khas Kalimantan dengan bumbu gurih dan topping lengkap." },
+      en: { name: "Dry Bakmie (Noodles)", category: "Bakmie", description: "Kalimantan style dry noodles with savory seasoning and complete toppings." }
     },
-    'bakmie-kuah': {
-      id: {
-        name: 'Bakmie Kuah',
-        category: 'Bakmie',
-        description: 'Bakmie dengan kuah kaldu hangat yang segar dan nikmat.'
-      },
-      en: {
-        name: 'Bakmie Soup (Noodles)',
-        category: 'Bakmie',
-        description: 'Noodles in a warm, fresh, and savory broth.'
-      },
-      zh: {
-        name: '斢惜厰',
-        category: '厰',
-        description: '剝剜曇喲瘙斤厰'
-      }
+    "bakmie-kuah": {
+      id: { name: "Bakmie Kuah", category: "Bakmie", description: "Bakmie dengan kuah kaldu hangat yang segar dan nikmat." },
+      en: { name: "Bakmie Soup (Noodles)", category: "Bakmie", description: "Noodles in a warm, fresh, and savory broth." }
     },
-    'bakmie-goreng': {
-      id: {
-        name: 'Bakmie Goreng',
-        category: 'Bakmie',
-        description: 'Bakmie goreng dengan bumbu khas yang meresap sempurna.'
-      },
-      en: {
-        name: 'Fried Bakmie (Noodles)',
-        category: 'Bakmie',
-        description: 'Stir-fried noodles with perfectly infused signature seasonings.'
-      },
-      zh: {
-        name: '啣側憌㭠㘾',
-        category: '厰',
-        description: '祆雲鸌園瘙亙㭠喟Ｕ'
-      }
+    "bakmie-goreng": {
+      id: { name: "Bakmie Goreng", category: "Bakmie", description: "Bakmie goreng dengan bumbu khas yang meresap sempurna." },
+      en: { name: "Fried Bakmie (Noodles)", category: "Bakmie", description: "Stir-fried noodles with perfectly infused signature seasonings." }
     },
-    'kwetiao-goreng': {
-      id: {
-        name: 'Kwetiao Goreng',
-        category: 'Kwetiao',
-        description: 'Kwetiao goreng dengan aroma smokey yang menggugah selera.'
-      },
-      en: {
-        name: 'Fried Kwetiao',
-        category: 'Kwetiao',
-        description: 'Stir-fried flat rice noodles with an appetizing smokey aroma (Wok Hei).'
-      },
-      zh: {
-        name: '垍窒',
-        category: '蝎踵辺',
-        description: '孵望硃瘞頞喟蝢㭠垍窒～'
-      }
+    "kwetiao-goreng": {
+      id: { name: "Kwetiao Goreng", category: "Kwetiao", description: "Kwetiao goreng dengan aroma smokey yang menggugah selera." },
+      en: { name: "Fried Kwetiao", category: "Kwetiao", description: "Stir-fried flat rice noodles with an appetizing smokey aroma (Wok Hei)." }
     },
-    'kwetiao-kering': {
-      id: {
-        name: 'Kwetiao Kering',
-        category: 'Kwetiao',
-        description: 'Kwetiao tanpa kuah dengan bumbu spesial.'
-      },
-      en: {
-        name: 'Dry Kwetiao',
-        category: 'Kwetiao',
-        description: 'Dry seasoned flat rice noodles with our special secret sauce.'
-      },
-      zh: {
-        name: '撟脫蝎踵辺',
-        category: '蝎踵辺',
-        description: '䔶誑擐蹱㗇硃 and 孵靚喳僕窒～'
-      }
+    "kwetiao-kering": {
+      id: { name: "Kwetiao Kering", category: "Kwetiao", description: "Kwetiao tanpa kuah dengan bumbu spesial." },
+      en: { name: "Dry Kwetiao", category: "Kwetiao", description: "Dry seasoned flat rice noodles with our special secret sauce." }
     },
-    'kwetiao-kuah': {
-      id: {
-        name: 'Kwetiao Kuah',
-        category: 'Kwetiao',
-        description: 'Kwetiao lembut dengan kuah kaldu bening yang gurih.'
-      },
-      en: {
-        name: 'Kwetiao Soup',
-        category: 'Kwetiao',
-        description: 'Soft flat rice noodles in a clear and savory bone broth.'
-      },
-      zh: {
-        name: '銝惜蝎踵辺',
-        category: '蝎踵辺',
-        description: '頧舀嚗屸隞交瘙斤蝎踵辺瘙扎'
-      }
+    "kwetiao-kuah": {
+      id: { name: "Kwetiao Kuah", category: "Kwetiao", description: "Kwetiao lembut dengan kuah kaldu bening yang gurih." },
+      en: { name: "Kwetiao Soup", category: "Kwetiao", description: "Soft flat rice noodles in a clear and savory bone broth." }
     },
-    'capcai-kering': {
-      id: {
-        name: 'Nasi Capcai Kering',
-        category: 'Nasi',
-        description: 'Nasi dengan tumis aneka sayuran segar khas Kalbar.'
-      },
-      en: {
-        name: 'Dry Capcai Rice',
-        category: 'Rice',
-        description: 'Steamed rice with stir-fried fresh assorted vegetables in premium savory garlic seasoning.'
-      },
-      zh: {
-        name: '撟脩擖 (Nasi Capcai)',
-        category: '擖剝',
-        description: '剝憭抒圈嗡誘祈蝐喲平嚗屸'
-      }
+    "capcai-kering": {
+      id: { name: "Nasi Capcai Kering", category: "Nasi", description: "Nasi dengan tumis aneka sayuran segar khas Kalbar." },
+      en: { name: "Dry Capcai Rice", category: "Rice", description: "Steamed rice with stir-fried fresh assorted vegetables in premium savory garlic seasoning." }
     },
-    'capcai-kuah': {
-      id: {
-        name: 'Nasi Capcai Kuah',
-        category: 'Nasi',
-        description: 'Nasi dengan sayuran segar dalam kuah kental hangat khas Kalbar.'
-      },
-      en: {
-        name: 'Capcai Soup Rice',
-        category: 'Rice',
-        description: 'Steamed rice with assorted fresh vegetables in a warm, thick, and savory gravy.'
-      },
-      zh: {
-        name: '瘙日平 (Nasi Capcai Kuah)',
-        category: '擖剝',
-        description: '剝皜拍斢瘚惜蝐喲平'
-      }
+    "capcai-kuah": {
+      id: { name: "Nasi Capcai Kuah", category: "Nasi", description: "Nasi dengan sayuran segar dalam kuah kental hangat khas Kalbar." },
+      en: { name: "Capcai Soup Rice", category: "Rice", description: "Steamed rice with assorted fresh vegetables in a warm, thick, and savory gravy." }
     },
-    'kaifon': {
-      id: {
-        name: 'Nasi Campur (Kaifon)',
-        category: 'Nasi',
-        description: 'Nasi campur khas Kalimantan Barat dengan aneka topping daging.'
-      },
-      en: {
-        name: 'Kaifon (Mixed Rice)',
-        category: 'Nasi',
-        description: 'West Kalimantan styled mixed rice with various savory roasted meat toppings.'
-      },
-      zh: {
-        name: '潔號擖 (Kaifon)',
-        category: '擖剝',
-        description: '齿憭蝘睃方屸瘚瘙镼踹蝏誩㚚平'
-      }
+    "kaifon": {
+      id: { name: "Nasi Campur (Kaifon)", category: "Nasi", description: "Nasi campur khas Kalimantan Barat dengan aneka topping daging." },
+      en: { name: "Kaifon (Mixed Rice)", category: "Nasi", description: "West Kalimantan styled mixed rice with various savory roasted meat toppings." }
     },
-    'jeruk-nipis': {
-      id: {
-        name: 'Jeruk Nipis',
-        category: 'Minuman',
-        description: 'Segar dan asam manis alami.'
-      },
-      en: {
-        name: 'Lime Juice',
-        category: 'Minuman',
-        description: 'Fresh and naturally sweet-sour lime juice.'
-      },
-      zh: {
-        name: '斢成埝瘙',
-        category: '擖格',
-        description: '圈埝瑼穿貊閫'
-      }
+    "ice-jeruk-pontianak": {
+      id: { name: "Es Jeruk Nipis Pontianak", category: "Minuman", description: "Jeruk peras segar khas Pontianak, asam manis pas." },
+      en: { name: "Pontianak Ice Lime", category: "Drinks", description: "Freshly squeezed Pontianak limes with perfect sweet and sour balance." }
     },
-    'teh': {
-      id: {
-        name: 'Teh',
-        category: 'Minuman',
-        description: 'Teh manis klasik.'
-      },
-      en: {
-        name: 'Tea',
-        category: 'Minuman',
-        description: 'Classic sweetened jasmine tea.'
-      },
-      zh: {
-        name: '蝏誩啣側蝥Ｚ薗',
-        category: '擖格',
-        description: '隡删擐嗵蝥Ｚ薗嚗剔摰栶'
-      }
+    "teh-es-manis": {
+      id: { name: "Es Teh Manis", category: "Minuman", description: "Teh melati seduh segar, manis menyegarkan." },
+      en: { name: "Sweet Iced Jasmine Tea", category: "Drinks", description: "Freshly brewed fragrant jasmine tea served over crystal clear ice." }
     },
-    'susu-kedelai': {
-      id: {
-        name: 'Susu Kedelai',
-        category: 'Minuman',
-        description: 'Susu kedelai murni yang menyehatkan.'
-      },
-      en: {
-        name: 'Soy Milk',
-        category: 'Minuman',
-        description: 'Healthy and premium pure soy milk.'
-      },
-      zh: {
-        name: '芸蝥舀迤鞊',
-        category: '擖格',
-        description: '见極瘥蝤典嚗屸瘚栞餃摨瑯'
-      }
+    "liang-teh": {
+      id: { name: "Liang Teh Medan Asli", category: "Minuman", description: "Minuman herbal tradisional pereda panas dalam." },
+      en: { name: "Traditional Herbal Cooling Tea", category: "Drinks", description: "Authentic brewed cooling herbal tea infused with natural dried herbs." }
     },
-    'kopi': {
-      id: {
-        name: 'Kopi',
-        category: 'Minuman',
-        description: 'Kopi hitam mantap.'
-      },
-      en: {
-        name: 'Coffee',
-        category: 'Minuman',
-        description: 'Rich and bold classic black coffee.'
-      },
-      zh: {
-        name: '隡删暺穃',
-        category: '擖格',
-        description: '蝎暸㗇啣∟条峕嚗峕蟡'
-      }
+    "kopi-o": {
+      id: { name: "Kopi O Hitam Pontianak", category: "Minuman", description: "Kopi hitam pekat aroma khas Kalbar." },
+      en: { name: "Pontianak Robusta Kopi O", category: "Drinks", description: "Traditional strong black aromatic roasted robusta coffee." }
     },
-    'extra-joss': {
-      id: {
-        name: 'Extra Joss',
-        category: 'Minuman',
-        description: 'Minuman energi untuk stamina.'
-      },
-      en: {
-        name: 'Extra Joss',
-        category: 'Minuman',
-        description: 'Classic Indonesian energy drink for ultimate stamina.'
-      },
-      zh: {
-        name: 'Extra Joss 瘣餃擖格',
-        category: '擖格',
-        description: '啣側蝏誩賡擖桀嚗諹蠘‘䜘'
-      }
+    "extra-joss-susu": {
+      id: { name: "Extra Joss Susu", category: "Minuman", description: "Minuman energi segar dingin dengan susu kental manis." },
+      en: { name: "Extra Joss Energy with Milk", category: "Drinks", description: "Energizing ice blend with sweet condensed milk." }
     }
   };
 
-  const found = translations[item.id];
-  if (found && found[lang]) {
-    return {
-      ...item,
-      name: found[lang].name,
-      category: found[lang].category,
-      description: found[lang].description
-    };
-  }
-  return item;
-};
+  const itemTrans = translations[item.id];
+  if (!itemTrans) return item;
 
-export const getCategoryTranslation = (catName: string, lang: 'id' | 'en' | 'zh'): string => {
-  const cats: Record<string, Record<'id' | 'en' | 'zh', string>> = {
-    'Semua': { id: 'Semua', en: 'All', zh: '券' },
-    'Bakmie': { id: 'Bakmie', en: 'Bakmie', zh: '厰' },
-    'Kwetiao': { id: 'Kwetiao', en: 'Kwetiao', zh: '蝎踵辺' },
-    'Capcai': { id: 'Capcai', en: 'Capcai', zh: '' },
-    'Nasi': { id: 'Nasi', en: 'Rice', zh: '擖剝' },
-    'Minuman': { id: 'Minuman', en: 'Drinks', zh: '擖格' }
+  const currentLang = lang || "id";
+  const target = itemTrans[currentLang] || itemTrans["id"];
+
+  return {
+    ...item,
+    name: target?.name || item.name,
+    category: target?.category || item.category,
+    description: target?.description || item.description
   };
-  return cats[catName]?.[lang] || catName;
 };
 
-export const getInitialLanguage = (): 'id' | 'en' | 'zh' => {
-  const savedLang = localStorage.getItem('rm_segar_language');
-  if (savedLang === 'id' || savedLang === 'en' || savedLang === 'zh') {
+export const getCategoryName = (catName: string, lang: "id" | "en"): string => {
+  const cats: Record<string, Record<"id" | "en", string>> = {
+    "Semua": { id: "Semua", en: "All" },
+    "Bakmie": { id: "Bakmie", en: "Bakmie" },
+    "Kwetiao": { id: "Kwetiao", en: "Kwetiao" },
+    "Nasi": { id: "Nasi", en: "Rice" },
+    "Minuman": { id: "Minuman", en: "Drinks" }
+  };
+  const c = cats[catName];
+  if (!c) return catName;
+  return lang === "en" ? c.en : c.id;
+};
+
+export const getInitialLanguage = (): "id" | "en" => {
+  const savedLang = localStorage.getItem("rm_segar_language");
+  if (savedLang === "id" || savedLang === "en") {
     return savedLang;
   }
-  const browserLang = navigator.language || (navigator.languages && navigator.languages[0]) || '';
-  const langLower = browserLang.toLowerCase();
-  if (langLower.startsWith('zh')) {
-    return 'zh';
+  const browserLang = navigator.language || (navigator.languages && navigator.languages[0]) || "";
+  if (browserLang.toLowerCase().startsWith("en")) {
+    return "en";
   }
-  if (langLower.startsWith('en')) {
-    return 'en';
-  }
-  return 'id';
+  return "id";
 };
 
-interface CartItem extends MenuItem {
-  price?: number;
-  quantity: number;
-  option?: 'Es' | 'Panas';
-  note?: string;
-}
 
-interface Order {
-  id: string;
-  date: string;
-  items?: CartItem[];
-  customText?: string;
-  totalItems: number;
-  totalPrice?: number;
-  securitySeal?: string;
-  orderType: 'Makan di Tempat' | 'Bungkus' | 'AI Chat';
-  status?: 'pending' | 'cooking' | 'done' | 'cancelled';
-  tableNumber?: string;
-  deliveryMethod?: 'ambil_sendiri' | 'kirim_alamat';
-  deliveryAddress?: string;
-  customerEmail?: string;
-  customerName?: string;
-  customerPhone?: string;
-}
+export const getCategoryTranslation = (cat: string, lang: 'id' | 'en' = 'id') => getCategoryName(cat, lang);
 
-interface Reservation {
+export interface Reservation {
   id: string;
   date: string;
   bookingName: string;
   bookingDate: string;
   bookingTime: string;
   partySize: number;
-  details: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  details?: string;
+  status: string;
 }
 
-const MenuIcon = ({ item, size = 32, className = "" }: { item: MenuItem, size?: number, className?: string }) => {
-  const getIcon = () => {
-    if (item.category === 'Minuman') {
-      if (item.id === 'kopi' || item.id === 'teh') return <Coffee size={size} className={className} />;
-      if (item.id === 'extra-joss') return <Zap size={size} className={className} />;
-      return <GlassWater size={size} className={className} />;
-    }
-    if (item.name.toLowerCase().includes('kuah') || item.category === 'Capcai') {
-      return <Soup size={size} className={className} />;
-    }
-    return <Utensils size={size} className={className} />;
+export interface CartItem extends MenuItem {
+  price?: number;
+  quantity: number;
+  option?: 'Es' | 'Panas';
+  note?: string;
+}
+
+export interface Order {
+  id: string;
+  orderId?: string;
+  date: string;
+  items?: CartItem[];
+  customText?: string;
+  totalItems: number;
+  totalPrice?: number;
+  securitySeal?: string;
+  isModified?: boolean;
+  isDeleted?: boolean;
+  status?: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  orderType?: string;
+  deliveryMethod?: string;
+  deliveryAddress?: string;
+  tableNumber?: string;
+  address?: string;
+  notes?: string;
+}
+
+export interface FortuneCookie {
+  id: string;
+  foodId: string;
+  fortuneText: {
+    id: string;
+    en: string;
   };
+  luckLevel: string;
+  luckyNumber: string;
+  proverb: string;
+}
 
-  const getBgColor = () => {
-    if (item.category === 'Minuman') return 'bg-blue-50 text-blue-500';
-    if (item.category === 'Bakmie') return 'bg-orange-50 text-orange-500';
-    if (item.category === 'Kwetiao') return 'bg-red-50 text-red-500';
-    if (item.category === 'Capcai') return 'bg-green-50 text-green-600';
-    if (item.category === 'Nasi') return 'bg-yellow-50 text-yellow-600';
-    return 'bg-stone-50 text-stone-500';
-  };
+export type ChineseFortune = FortuneCookie;
 
-  return (
-    <div className={`w-full h-full flex items-center justify-center ${getBgColor()}`}>
-      {getIcon()}
-    </div>
-  );
-};
+export type ShioDetail = ShioInfo;
 
-const MainLogo = ({ size = 64, className = "" }: { size?: number, className?: string }) => {
-  return (
-    <div className={`relative flex items-center justify-center ${className}`}>
-      {/* Stylized Bowl Logo matching user image */}
-      <div className="relative">
-        <Soup size={size} strokeWidth={2.5} />
-        {/* Decorative "+" symbols from the image */}
-        <div className="absolute -top-2 -right-2 text-red-500 font-bold text-xs">+</div>
-        <div className="absolute -bottom-2 -left-2 text-red-500 font-bold text-xs">+</div>
-        <div className="absolute top-1/2 -left-4 text-red-500 font-bold text-xs">+</div>
-      </div>
-    </div>
-  );
-};
-
-const parseChatMessage = (text: string) => {
-  const cleanedTextFromAsterisks = text.replace(/\*\*/g, '');
-  const match = cleanedTextFromAsterisks.match(/\[KIRIM_WA:\s*(pesanan|reservasi)\s*\|\s*([^\]]+)\]/);
-  if (match) {
-    const type = match[1];
-    const content = match[2].trim();
-    const cleanText = cleanedTextFromAsterisks.replace(/\[KIRIM_WA:\s*(pesanan|reservasi)\s*\|\s*([^\]]+)\]/, '').trim();
-    return { cleanText, waLink: { type, content } };
+export const parseChatMessage = (text: string) => {
+  const waMatch = text.match(/\[KIRIM_WA:\s*(pesanan|reservasi)\s*\|\s*(.*?)\]/i);
+  if (waMatch) {
+    const rawMsg = waMatch[2].trim();
+    return {
+      cleanText: text.replace(/\[KIRIM_WA:\s*(pesanan|reservasi)\s*\|\s*(.*?)\]/i, '').trim(),
+      actionType: waMatch[1].toLowerCase() as 'pesanan' | 'reservasi',
+      waMessage: rawMsg,
+      waLink: `https://wa.me/6281234567890?text=${encodeURIComponent(rawMsg)}`
+    };
   }
-  return { cleanText: cleanedTextFromAsterisks, waLink: null };
-};
-
-const parseReservationText = (text: string): Omit<Reservation, 'id' | 'date' | 'status'> => {
-  let bookingName = "Pelanggan AI";
-  let bookingDate = "Hari Ini";
-  let bookingTime = "12:00";
-  let partySize = 2;
-
-  const nameMatch = text.match(/atas nama\s+([A-Za-z0-9\s]+?)(?=\s+untuk|\s+tanggal|\s+jam|\s+sebanyak|$)/i);
-  if (nameMatch) bookingName = nameMatch[1].trim();
-
-  const dateMatch = text.match(/tanggal\s+([A-Za-z0-9\s/.-]+?)(?=\s+jam|\s+sebanyak|$)/i);
-  if (dateMatch) bookingDate = dateMatch[1].trim();
-
-  const timeMatch = text.match(/jam\s+([A-Za-z0-9\s:.]+?)(?=\s+sebanyak|\s+orang|$)/i);
-  if (timeMatch) bookingTime = timeMatch[1].trim();
-
-  const sizeMatch = text.match(/(?:sebanyak\s+)?(\d+)\s+orang/i);
-  if (sizeMatch) partySize = parseInt(sizeMatch[1], 10);
-
   return {
-    bookingName,
-    bookingDate,
-    bookingTime,
-    partySize,
-    details: text
+    cleanText: text,
+    actionType: null,
+    waMessage: null,
+    waLink: ''
   };
 };
 
-const parseAIOrderText = (text: string) => {
+export const parseAIOrderText = (text: string) => {
   const items: CartItem[] = [];
-  const listMatch = text.match(/(?:memesan:\s*)(.+?)(?=\s*\.|\s*Terima kasih|$)/i);
-  let customText = text;
-  let totalItems = 0;
-
-  if (listMatch) {
-    const itemsRaw = listMatch[1].split(',');
-    itemsRaw.forEach(raw => {
-      const trimmed = raw.trim();
-      const qtyMatch = trimmed.match(/(.+?)\s*\((\d+)x\)/);
-      if (qtyMatch) {
-        const name = qtyMatch[1].trim();
-        const qty = parseInt(qtyMatch[2], 10);
-        totalItems += qty;
-        const menuItem = MENU_ITEMS.find(m => m.name.toLowerCase() === name.toLowerCase());
-        if (menuItem) {
-          items.push({
-            ...menuItem,
-            quantity: qty
-          });
-        } else {
-          items.push({
-            id: Math.random().toString(),
-            name,
-            category: 'Semua',
-            description: '',
-            hasOptions: false,
-            quantity: qty
-          });
-        }
-      }
-    });
-  }
-
-  if (items.length === 0) {
-    const qtyMatches = [...text.matchAll(/\((\d+)x\)/g)];
-    totalItems = qtyMatches.reduce((sum, match) => sum + parseInt(match[1], 10), 0) || 1;
-  }
-
+  MENU_ITEMS.forEach(m => {
+    if (text.toLowerCase().includes(m.name.toLowerCase())) {
+      items.push({ ...m, quantity: 1 });
+    }
+  });
+  const totalItems = items.reduce((sum, it) => sum + it.quantity, 0) || 1;
   return {
-    items,
-    customText,
+    items: items.length > 0 ? items : [{ ...MENU_ITEMS[0], quantity: 1 }],
+    customText: text,
     totalItems
   };
 };
 
-export interface ChineseFortune {
-  id: string;
-  menuId: string;
-  advice: {
-    id: string;
-    en: string;
-    zh: string;
+export const parseReservationText = (text: string) => {
+  const dateMatch = text.match(/tanggal\s+([^\s,]+)/i);
+  const timeMatch = text.match(/jam\s+([^\s,]+)/i);
+  const paxMatch = text.match(/(\d+)\s*orang/i);
+  const nameMatch = text.match(/nama\s+([^\s,]+)/i);
+  return {
+    bookingName: nameMatch ? nameMatch[1] : 'Pelanggan RM Segar',
+    bookingDate: dateMatch ? dateMatch[1] : new Date().toISOString().split('T')[0],
+    bookingTime: timeMatch ? timeMatch[1] : '19:00',
+    partySize: paxMatch ? parseInt(paxMatch[1], 10) : 2,
+    details: text
   };
-  luckLevel: string;
-  chineseProverb: string;
-}
+};
 
-export const CHINESE_FORTUNES: ChineseFortune[] = [
+export const MenuIcon: React.FC<{ item?: Partial<MenuItem>; size?: number; className?: string }> = ({ item, size = 32, className = '' }) => {
+  const getIcon = () => {
+    if (!item) return '🍲';
+    if (item.category === 'Minuman' || item.id?.includes('es-') || item.id?.includes('teh') || item.id?.includes('kopi')) return '🍹';
+    if (item.category === 'Bakmie' || item.category === 'Kwetiao') return '🍜';
+    if (item.category === 'Nasi') return '🍛';
+    return '🍲';
+  };
+  return (
+    <div className={`w-full h-full flex items-center justify-center select-none ${className}`}>
+      <span style={{ fontSize: `${size}px` }}>{item?.image ? (typeof item.image === 'string' && item.image.startsWith('http') ? <img src={item.image} alt={item?.name || 'menu'} className="w-full h-full object-cover" /> : item.image) : getIcon()}</span>
+    </div>
+  );
+};
+
+export const MainLogo: React.FC<{ size?: number; className?: string }> = ({ size = 32, className = '' }) => {
+  return (
+    <div className={`flex items-center justify-center rounded-2xl bg-gradient-to-br from-red-600 to-amber-600 text-white font-black shadow-md ${className}`} style={{ width: size, height: size, fontSize: size * 0.45 }}>
+      <span>RM</span>
+    </div>
+  );
+};
+
+const FORTUNE_ITEMS: FortuneCookie[] = [
   {
-    id: 'f1',
-    menuId: 'bakmie-kering',
-    advice: {
-      id: 'Makan Mie Kering khas Kalbar hari ini mendatangkan umur panjang dan rezeki yang lancar tanpa hambatan!',
-      en: 'Eating authentic Dry Bakmie today brings long life and a smooth, unhindered flow of wealth!',
-      zh: '隞甇撟脤嚗銝箸撣行䔉撱嗅僑紊銋见嚗諹揣皞鞉皛銝憿粹嚗'
+    id: "fortune-1",
+    foodId: "bakmie-kering",
+    fortuneText: {
+      id: "Rezeki Anda hari ini selancar helai Bakmie Kering RM Segar. Tetaplah fokus dan bersyukur!",
+      en: "Your fortune flows smoothly today like our signature Dry Bakmie. Stay focused and grateful!"
     },
-    luckLevel: '潃鐥潃鐥潃 憭批 (Sangat Hoki)',
-    chineseProverb: '踹紊摰匧熒  韐Ｘ撟輯'
+    luckLevel: "⭐⭐⭐⭐⭐ Sangat Hoki",
+    luckyNumber: "8, 18, 88",
+    proverb: "Langkah mantap membawa keberkahan melimpah."
   },
   {
-    id: 'f2',
-    menuId: 'kaifon',
-    advice: {
-      id: 'Nasi Campur membawa berkah keragaman. Akan ada kejutan menyenangkan yang berpadu indah dalam hidupmu!',
-      en: 'Nasi Campur represents the blessing of diversity. Joyful surprises will blend beautifully in your life today!',
-      zh: '隞阡平鞊∪捆銝蝳譌憭拙厩憒嗵滚函暑嚗移敶拐'
+    id: "fortune-2",
+    foodId: "kaifon",
+    fortuneText: {
+      id: "Kombinasi aneka keberkahan akan hadir bersamaan seperti ragam rasa nikmat Nasi Campur Kaifon!",
+      en: "Multiple blessings will arrive together just like the diverse toppings of our Nasi Campur!"
     },
-    luckLevel: '潃鐥潃鐥潃 㗇擃条 (Hoki Sempurna)',
-    chineseProverb: '鈭銝湧秄  秄'
+    luckLevel: "⭐⭐⭐⭐⭐ Hoki Sempurna",
+    luckyNumber: "6, 16, 99",
+    proverb: "Harmoni rasa menghasilkan kemakmuran sejati."
   },
   {
-    id: 'f3',
-    menuId: 'kwetiao-goreng',
-    advice: {
-      id: 'Aroma smokey wajan Kwetiao Goreng yang harum menandakan karirmu akan melesat naik dengan cepat!',
-      en: 'The rich smokey aroma of Kwetiao Goreng indicates your career or business will rise rapidly!',
-      zh: '擐蹱滯蝎厰瘞䈑憸內函鈭衤硋郎銝朖撠豢銝甇交郊擃睃嚗'
+    id: "fortune-3",
+    foodId: "kwetiao-goreng",
+    fortuneText: {
+      id: "Semangat dan energi Wok Hei Kwetiao Goreng akan membakar impian Anda menjadi kenyataan gemilang!",
+      en: "The sizzling Wok Hei energy of Fried Kwetiao will fuel your aspirations into golden success!"
     },
-    luckLevel: '潃鐥潃鐥潃 貉乩 (Hoki Melesat)',
-    chineseProverb: '甇交郊擃睃  憌鮋曇噢'
+    luckLevel: "⭐⭐⭐⭐⭐ Hoki Melesat",
+    luckyNumber: "7, 27, 77",
+    proverb: "Kerja keras penuh semangat membuka pintu kesuksesan."
   },
   {
-    id: 'f4',
-    menuId: 'capcai-kuah',
-    advice: {
-      id: 'Kehangatan Capcai Kuah penuh gizi membawa kedamaian hati dan kesehatan prima untukmu dan keluarga.',
-      en: 'The warm and nutritious Capcai soup brings complete peace of mind and prime wellness to you and your family.',
-      zh: '皜拇隋皛贝‘惜嚗䔶蛹典摰嗡犖撣行䔉摰亙熒扎'
+    id: "fortune-4",
+    foodId: "ice-jeruk-pontianak",
+    fortuneText: {
+      id: "Kesejukan dan kejernihan pikiran akan membuahkan solusi terbaik hari ini. Nikmati kesegaran Es Jeruk Nipis!",
+      en: "Clarity and refreshing calmness will bring the best solutions today. Enjoy our iced Pontianak lime!"
     },
-    luckLevel: '潃鐥潃鐥 厩孕憒 (Hoki Sehat)',
-    chineseProverb: '硋振摰匧熒  憿箏憒'
+    luckLevel: "⭐⭐⭐⭐ Hoki Sehat & Segar",
+    luckyNumber: "3, 13, 33",
+    proverb: "Hati yang tenang menyehatkan jiwa dan raga."
   },
   {
-    id: 'f5',
-    menuId: 'susu-kedelai',
-    advice: {
-      id: 'Susu Kedelai murni yang menyegarkan melambangkan kemurnian hati dan pikiran jernih hari ini.',
-      en: 'Pure, refreshing Soy Milk symbolizes an honest heart and clear mind to take great decisions today.',
-      zh: '蝥臬擐蹱瘚情敺娪讐敹銝擧惣改拇其亙箸箔撟貉押'
+    id: "fortune-5",
+    foodId: "bakmie-kuah",
+    fortuneText: {
+      id: "Kehangatan kuah kaldu menyertai kehangatan hubungan Anda dengan orang-orang terkasih hari ini.",
+      en: "The comforting warmth of savory broth accompanies heartfelt harmony with your loved ones today."
     },
-    luckLevel: '潃鐥潃鐥 暺皛∪ (Hoki Pikiran)',
-    chineseProverb: '皛∪  芣餈犖'
+    luckLevel: "⭐⭐⭐⭐ Hoki Kehangatan",
+    luckyNumber: "9, 19, 29",
+    proverb: "Kasih sayang dan kehangatan keluarga adalah harta abadi."
   },
   {
-    id: 'f6',
-    menuId: 'jeruk-nipis',
-    advice: {
-      id: 'Kesegaran Jeruk Nipis akan mencairkan segala ketegangan. Masalah rumit akan selesai dengan akhir menyegarkan!',
-      en: 'The vibrant zest of Jeruk Nipis will dissolve all tensions. Complex challenges will resolve with a sparkling clear outcome!',
-      zh: '皜鰵貊惩圾銝敹扼讠暸隞摰朞餈諹圾嚗諹交賜撅嚗'
+    id: "fortune-6",
+    foodId: "liang-teh",
+    fortuneText: {
+      id: "Ketenangan batin meredakan segala ketegangan. Liang Teh herbal menyegarkan dan menyejukkan langkah Anda.",
+      en: "Inner peace dissolves all stress. Herbal cooling tea revitalizes and restores your strength."
     },
-    luckLevel: '潃鐥潃鐥 其閫 (Hoki Keberuntungan)',
-    chineseProverb: '餈諹圾  蟡墧瘞'
+    luckLevel: "⭐⭐⭐⭐ Hoki Ketenangan",
+    luckyNumber: "2, 12, 22",
+    proverb: "Kesabaran mendalam membawa kedamaian abadi."
   }
 ];
 
-export interface ShioDetail {
+interface ShioInfo {
   id: string;
   name: string;
-  zh: string;
   emoji: string;
   elementDefault: string;
   foodId: string;
   luckyNumbers: string;
-  luckyColors: { id: string; en: string; zh: string };
-  luckyDirection: { id: string; en: string; zh: string };
-  trait: { id: string; en: string; zh: string };
-  desc: {
-    id: string;
-    en: string;
-    zh: string;
-  };
+  luckyColors: { id: string; en: string };
+  luckyDirection: { id: string; en: string };
+  trait: { id: string; en: string };
+  desc: { id: string; en: string };
 }
 
-export const SHIO_DETAILS: ShioDetail[] = [
+const SHIO_DATA: ShioInfo[] = [
   {
-    id: 'rat',
-    name: 'Tikus',
-    zh: '曌',
-    emoji: '',
-    elementDefault: 'Air',
-    foodId: 'bakmie-kering',
-    luckyNumbers: '2, 3, 6',
-    luckyColors: { id: 'Emas & Hijau', en: 'Gold & Green', zh: '銝遛' },
-    luckyDirection: { id: 'Tenggara & Timur Laut', en: 'Southeast & Northeast', zh: '銝銝' },
-    trait: { id: 'Cerdas, Lincah & Penuh Strategi', en: 'Clever, Agile & Strategic', zh: '箸惣㭘雲箏靚' },
+    id: "rat",
+    name: "Tikus",
+    emoji: "🐭",
+    elementDefault: "Air",
+    foodId: "bakmie-kering",
+    luckyNumbers: "2, 3",
+    luckyColors: { id: "Biru, Emas & Hijau", en: "Blue, Gold & Green" },
+    luckyDirection: { id: "Barat, Barat Laut", en: "West, Northwest" },
+    trait: { id: "Cerdas, Gesit & Teliti", en: "Clever, Quick-witted & Detail-oriented" },
     desc: {
-      id: 'Shio Tikus yang cerdas menyukai kepraktisan dan kelezatan yang padat. Bakmie Kering dengan topping lengkap sangat cocok untuk menemani hari produktif Anda!',
-      en: 'The clever Rat loves practical yet rich flavors. Dry Bakmie with complete toppings is perfect to accompany your highly productive day!',
-      zh: '芣曌㰘梁移游函蝢㭠坔瑞撟脫Ｙ撖寞糓芯撈券憭拍摰銋钅㚁'
+      id: "Shio Tikus yang cerdas dan gesit sangat cocok dengan kelezatan gurih Bakmie Kering khas Sambas yang kaya bumbu rahasia.",
+      en: "The clever and agile Rat matches perfectly with the savory richness of our authentic Sambas Dry Bakmie."
     }
   },
   {
-    id: 'ox',
-    name: 'Kerbau',
-    zh: '',
-    emoji: '',
-    elementDefault: 'Tanah',
-    foodId: 'capcai-kuah',
-    luckyNumbers: '1, 8, 9',
-    luckyColors: { id: 'Kuning Karamel & Merah', en: 'Caramel Yellow & Red', zh: '亦暺憭抒滯' },
-    luckyDirection: { id: 'Utara & Barat Daya', en: 'North & Southwest', zh: '甇銝舘正' },
-    trait: { id: 'Tekun, Setia & Pantang Menyerah', en: 'Diligent, Loyal & Persistent', zh: '文蝔喲摰' },
+    id: "ox",
+    name: "Kerbau",
+    emoji: "🐮",
+    elementDefault: "Tanah",
+    foodId: "kwetiao-goreng-sapi",
+    luckyNumbers: "1, 4",
+    luckyColors: { id: "Putih, Kuning & Hijau", en: "White, Yellow & Green" },
+    luckyDirection: { id: "Utara & Selatan", en: "North & South" },
+    trait: { id: "Kuat, Tekun & Andal", en: "Strong, Diligent & Dependable" },
     desc: {
-      id: 'Shio Kerbau yang tekun dan kuat membutuhkan asupan gizi yang seimbang dan menenangkan. Nasi Capcai Kuah hangat yang kaya serat adalah pilihan terbaik!',
-      en: 'The diligent and strong Ox needs balanced and comforting nourishment. Warm Nasi Capcai Kuah, rich in fibers, is your ultimate companion!',
-      zh: '文蝔喳閬銵⊥銵亦喲惜瘙憌毺漱蝏港萼撖瘙日平舀雿單鳴'
+      id: "Kerbau yang pekerja keras membutuhkan sajian bernutrisi tinggi dan kaya energi. Kwetiao Goreng Sapi beraroma Wok Hei adalah pilihan terbaik Anda!",
+      en: "The diligent Ox needs hearty, nutrient-rich nourishment. Our Wok Hei Beef Fried Kwetiao is your best powerhouse choice!"
     }
   },
   {
-    id: 'tiger',
-    name: 'Macan',
-    zh: '',
-    emoji: '鍳',
-    elementDefault: 'Kayu',
-    foodId: 'kwetiao-goreng',
-    luckyNumbers: '1, 3, 4',
-    luckyColors: { id: 'Jingga & Biru Langit', en: 'Orange & Sky Blue', zh: '璈躰銝予' },
-    luckyDirection: { id: 'Selatan & Timur', en: 'South & East', zh: '甇銝擧迤銝' },
-    trait: { id: 'Pemberani, Antusias & Karismatik', en: 'Brave, Enthusiastic & Charismatic', zh: '憡艇厰撖澆' },
+    id: "tiger",
+    name: "Harimau",
+    emoji: "🐯",
+    elementDefault: "Kayu",
+    foodId: "bakmie-kuah",
+    luckyNumbers: "1, 3, 4",
+    luckyColors: { id: "Biru, Abu-abu & Oranye", en: "Blue, Gray & Orange" },
+    luckyDirection: { id: "Timur & Selatan", en: "East & South" },
+    trait: { id: "Berani, Percaya Diri & Dinamis", en: "Brave, Confident & Dynamic" },
     desc: {
-      id: 'Shio Macan yang berani sangat menggemari aroma arang wajan (wok hei) yang kuat. Kwetiao Goreng Sapi beraroma smokey akan membakar semangat hoki Anda!',
-      en: 'The brave Tiger craves intense wok hei aromas. Smokey Kwetiao Goreng is guaranteed to ignite your lucky spirit today!',
-      zh: '餈舘望祆颲擐嗵埝瘝喟摰朞祇寧其游予兢餈鞉敹梹'
+      id: "Jiwa kepemimpinan dan keberanian Shio Harimau selaras dengan kehangatan kuah kaldu autentik Bakmie Kuah Segar.",
+      en: "The brave Tiger leadership spirit is warmed by the hearty authentic broth of our fresh Bakmie Kuah."
     }
   },
   {
-    id: 'rabbit',
-    name: 'Kelinci',
-    zh: '',
-    emoji: '鑛',
-    elementDefault: 'Kayu',
-    foodId: 'susu-kedelai',
-    luckyNumbers: '3, 4, 9',
-    luckyColors: { id: 'Merah Muda & Ungu', en: 'Pink & Purple', zh: '蝎厩滯銝換' },
-    luckyDirection: { id: 'Barat Daya & Barat Laut', en: 'Southwest & Northwest', zh: '镼踹銝舘正' },
-    trait: { id: 'Anggun, Lembut & Penuh Kedamaian', en: 'Elegant, Gentle & Peaceful', zh: '皜拙賊臭韐' },
+    id: "rabbit",
+    name: "Kelinci",
+    emoji: "🐰",
+    elementDefault: "Kayu",
+    foodId: "pangsit-kuah",
+    luckyNumbers: "3, 4, 6",
+    luckyColors: { id: "Merah, Merah Muda & Ungu", en: "Red, Pink & Purple" },
+    luckyDirection: { id: "Timur & Barat Daya", en: "East & Southwest" },
+    trait: { id: "Lembut, Elegan & Penuh Perhatian", en: "Gentle, Elegant & Thoughtful" },
     desc: {
-      id: 'Shio Kelinci yang anggun dan lembut sangat cocok dengan kesegaran yang alami dan murni. Susu Kedelai murni yang manis lembut akan menjaga kedamaian hati Anda.',
-      en: 'The elegant and gentle Rabbit matches beautifully with pure, natural refreshment. Sweet, silky Soy Milk will preserve your peaceful harmony today.',
-      zh: '皜拚擃䁅斯磰蝥臬予嗥皜拇隋舀擐嗵啁ㄗ鞊嚗銝箸撣行䔉摰祆'
+      id: "Karakter Shio Kelinci yang lembut dan penuh perhatian sangat menyukai tekstur lembut serta gurih dari Pangsit Kuah.",
+      en: "The gentle and elegant Rabbit loves the soft, comforting texture of our handmade wonton soup."
     }
   },
   {
-    id: 'dragon',
-    name: 'Naga',
-    zh: '樴',
-    emoji: '閅',
-    elementDefault: 'Tanah',
-    foodId: 'kaifon',
-    luckyNumbers: '1, 6, 7',
-    luckyColors: { id: 'Emas Imperial & Perak', en: 'Imperial Gold & Silver', zh: '撣萘睲鈭桅' },
-    luckyDirection: { id: 'Barat & Barat Laut', en: 'West & Northwest', zh: '甇正銝舘正' },
-    trait: { id: 'Megah, Berani & Penuh Kejayaan', en: 'Majestic, Bold & Ambitious', zh: '撠斯敹' },
+    id: "dragon",
+    name: "Naga",
+    emoji: "🐲",
+    elementDefault: "Tanah",
+    foodId: "nasi-campur",
+    luckyNumbers: "1, 6, 7",
+    luckyColors: { id: "Emas, Perak & Abu-abu", en: "Gold, Silver & Gray" },
+    luckyDirection: { id: "Timur & Barat", en: "East & West" },
+    trait: { id: "Karisma Tinggi, Ambisius & Sukses", en: "Charismatic, Ambitious & Successful" },
     desc: {
-      id: 'Shio Naga yang megah menyukai kemewahan rasa dan ragam topping berlimpah. Nasi Campur (Kaifon) spesial dengan aneka daging lezat adalah lambang kejayaan Anda!',
-      en: 'The majestic Dragon deserves a feast of rich, diverse premium toppings. Nasi Campur (Kaifon) with multi-meat toppings perfectly represents your glorious luck!',
-      zh: '撠揻樴躰澆交銝粹擗桃摰氬躰悸汿瘙瘚梶隞阡平甇糓券蛾餈憭渡鞊∪嚗'
+      id: "Shio Naga yang megah menyukai kemewahan rasa dan ragam topping berlimpah. Nasi Campur (Kaifon) spesial adalah lambang kejayaan Anda!",
+      en: "The majestic Dragon deserves a feast of rich, diverse premium toppings. Nasi Campur (Kaifon) perfectly represents your glorious luck!"
     }
   },
   {
-    id: 'snake',
-    name: 'Ular',
-    zh: '',
-    emoji: '',
-    elementDefault: 'Api',
-    foodId: 'kwetiao-kering',
-    luckyNumbers: '2, 8, 9',
-    luckyColors: { id: 'Hitam Elegan & Merah', en: 'Elegant Black & Red', zh: '銝之蝥' },
-    luckyDirection: { id: 'Barat Daya & Selatan', en: 'Southwest & South', zh: '镼踹銝擧迤' },
-    trait: { id: 'Intuitif, Bijaksana & Penuh Rahasia', en: 'Intuitive, Wise & Mysterious', zh: '瘛梯餈嗵踎' },
+    id: "snake",
+    name: "Ular",
+    emoji: "🐍",
+    elementDefault: "Api",
+    foodId: "kwetiao-kering",
+    luckyNumbers: "2, 8, 9",
+    luckyColors: { id: "Hitam Elegan & Merah", en: "Elegant Black & Red" },
+    luckyDirection: { id: "Barat Daya & Selatan", en: "Southwest & South" },
+    trait: { id: "Intuitif, Bijaksana & Penuh Rahasia", en: "Intuitive, Wise & Mysterious" },
     desc: {
-      id: 'Shio Ular yang penuh misteri dan intuitif menyukai perpaduan rasa bumbu halus yang meresap sempurna. Kwetiao Kering spesial adalah rahasia hoki Anda.',
-      en: 'The mysterious and intuitive Snake appreciates complex, deeply infused secret spices. Special Kwetiao Kering holds the hidden key to your fortune today.',
-      zh: '蟡䂿踵惣勗甈∩萼撖䎚喳撉函蝘睃蝢㗛擐坔皞Ｙ撟脫瘝喟甇糓函撘餈'
+      id: "Shio Ular yang penuh misteri dan intuitif menyukai perpaduan rasa bumbu halus yang meresap sempurna. Kwetiao Kering spesial adalah rahasia hoki Anda.",
+      en: "The mysterious and intuitive Snake appreciates complex, deeply infused secret spices. Special Kwetiao Kering holds the hidden key to your fortune."
     }
   },
   {
-    id: 'horse',
-    name: 'Kuda',
-    zh: '撽',
-    emoji: '鐦',
-    elementDefault: 'Api',
-    foodId: 'bakmie-goreng',
-    luckyNumbers: '2, 3, 7',
-    luckyColors: { id: 'Kuning Kunyit & Hijau', en: 'Turmeric Yellow & Green', zh: '憪銝蝏' },
-    luckyDirection: { id: 'Barat Daya & Barat', en: 'Southwest & West', zh: '镼踹銝擧迤镼' },
-    trait: { id: 'Berenergi Tinggi, Bebas & Dinamis', en: 'Energetic, Free-spirited & Dynamic', zh: '剜憟娍撖峕暑' },
+    id: "horse",
+    name: "Kuda",
+    emoji: "🐴",
+    elementDefault: "Api",
+    foodId: "bakmie-goreng",
+    luckyNumbers: "2, 3, 7",
+    luckyColors: { id: "Kuning Kunyit & Hijau", en: "Turmeric Yellow & Green" },
+    luckyDirection: { id: "Barat Daya & Barat", en: "Southwest & West" },
+    trait: { id: "Berenergi Tinggi, Bebas & Dinamis", en: "Energetic, Free-spirited & Dynamic" },
     desc: {
-      id: 'Shio Kuda yang berenergi tinggi membutuhkan hidangan lezat berkalori tinggi yang cepat saji. Bakmie Goreng spesial akan memberi Anda dorongan energi ekstra!',
-      en: 'The high-energy Horse needs a fast, flavorful, and energizing meal. Special Bakmie Goreng will give you that extra boost to race through your day!',
-      zh: '瘣餃撽祈閬瘞磰整說皛∠蝢㭠㗛瘞頞喟㘾嚗諹悟其憭拍誧蝏剝撽祉移蟡敺惩嚗'
+      id: "Shio Kuda yang berenergi tinggi membutuhkan hidangan lezat berkalori tinggi yang cepat saji. Bakmie Goreng spesial akan memberi dorongan energi ekstra!",
+      en: "The high-energy Horse needs a fast, flavorful meal. Special Bakmie Goreng will give you that extra boost to race through your day!"
     }
   },
   {
-    id: 'goat',
-    name: 'Kambing',
-    zh: '蝢',
-    emoji: '',
-    elementDefault: 'Tanah',
-    foodId: 'capcai-kering',
-    luckyNumbers: '2, 7, 8',
-    luckyColors: { id: 'Cokelat Kayu & Putih', en: 'Wood Brown & White', zh: '冽銝䪸' },
-    luckyDirection: { id: 'Utara & Barat Daya', en: 'North & Southwest', zh: '甇銝舘正' },
-    trait: { id: 'Lembut, Penyayang & Artistik', en: 'Gentle, Loving & Artistic', zh: '皜拙㕑䰾舀韐' },
+    id: "goat",
+    name: "Kambing",
+    emoji: "🐐",
+    elementDefault: "Tanah",
+    foodId: "capcai-kering",
+    luckyNumbers: "2, 7, 8",
+    luckyColors: { id: "Cokelat Kayu & Putih", en: "Wood Brown & White" },
+    luckyDirection: { id: "Utara & Barat Daya", en: "North & Southwest" },
+    trait: { id: "Penyayang, Kreatif & Tenang", en: "Compassionate, Creative & Calm" },
     desc: {
-      id: 'Shio Kambing yang damai dan penyayang menyukai kelezatan sayur-sayuran segar beraroma harum. Nasi Capcai Kering adalah sajian harmoni yang menenangkan jiwa.',
-      en: 'The peaceful and loving Goat loves fresh, fragrant, and vibrant stir-fried vegetables. Nasi Capcai Kering is a harmonious dish that calms your soul.',
-      zh: '諹䃈皜拚◇蝢望斢瘜質秧鈭箇嗡誘祈睃僕雴行平嚗蒂蝏蹱皜拇瘝餅萎澈'
+      id: "Shio Kambing yang tenang dan penuh kasih menyukai kombinasi sayuran segar renyah. Capcai Kering memberi keseimbangan hidup Anda.",
+      en: "The peaceful and artistic Goat enjoys harmonious blends of crisp vegetables. Capcai Kering brings peace and good luck to your day."
     }
   },
   {
-    id: 'monkey',
-    name: 'Monyet',
-    zh: '',
-    emoji: '閠',
-    elementDefault: 'Logam',
-    foodId: 'jeruk-nipis',
-    luckyNumbers: '4, 9, 1',
-    luckyColors: { id: 'Putih Murni & Biru Laut', en: 'Pure White & Ocean Blue', zh: '蝥舐蒾銝擧絲' },
-    luckyDirection: { id: 'Utara & Barat Laut', en: 'North & Northwest', zh: '甇銝舘正' },
-    trait: { id: 'Jenaka, Cerdas & Cepat Tanggap', en: 'Witty, Intelligent & Quick-witted', zh: '芣隡嗡厭暺㗛頞' },
+    id: "monkey",
+    name: "Monyet",
+    emoji: "🐵",
+    elementDefault: "Logam",
+    foodId: "ice-jeruk-pontianak",
+    luckyNumbers: "4, 9",
+    luckyColors: { id: "Putih, Emas & Biru", en: "White, Gold & Blue" },
+    luckyDirection: { id: "Utara & Barat Laut", en: "North & Northwest" },
+    trait: { id: "Cerdik, Humoristis & Inovatif", en: "Clever, Humorous & Innovative" },
     desc: {
-      id: 'Shio Monyet yang jenaka dan ceria sangat menyukai kejutan rasa asam manis yang menyegarkan. Es Jeruk Nipis Pontianak yang asam manis akan mencerahkan ide hoki Anda!',
-      en: 'The playful and witty Monkey loves refreshing, sweet-and-sour flavor bursts. Sweet-sour Ice Jeruk Nipis Pontianak will spark brilliant, lucky ideas today!',
-      zh: '箇靽讐铜渲梢靝漱蝏圾餌皜鰵皛见㭠臬䭾嚗游埝嘥喃撘餈鞟瘞䈑'
+      id: "Shio Monyet yang ceria dan penuh kejutan membutuhkan kesegaran instan. Es Jeruk Nipis Pontianak dingin akan menyegarkan ide-ide brilian Anda!",
+      en: "The witty and playful Monkey loves zesty refreshing flavors. Fresh Ice Pontianak Lime Juice will revitalize your genius mind!"
     }
   },
   {
-    id: 'rooster',
-    name: 'Ayam',
-    zh: '曏',
-    emoji: '',
-    elementDefault: 'Logam',
-    foodId: 'bakmie-kuah',
-    luckyNumbers: '5, 7, 8',
-    luckyColors: { id: 'Kuning Keemasan & Cokelat', en: 'Golden Yellow & Brown', zh: '煾銝∟' },
-    luckyDirection: { id: 'Timur Laut & Selatan', en: 'Northeast & South', zh: '銝銝擧迤' },
-    trait: { id: 'Teliti, Rapi & Penuh Percaya Diri', en: 'Meticulous, Neat & Confident', zh: '文蝎暹辺' },
+    id: "rooster",
+    name: "Ayam",
+    emoji: "🐔",
+    elementDefault: "Logam",
+    foodId: "bakmie-spesial",
+    luckyNumbers: "5, 7, 8",
+    luckyColors: { id: "Emas, Cokelat & Kuning", en: "Gold, Brown & Yellow" },
+    luckyDirection: { id: "Selatan & Tenggara", en: "South & Southeast" },
+    trait: { id: "Teliti, Rapi & Penuh Semangat", en: "Observant, Neat & Enthusiastic" },
     desc: {
-      id: 'Shio Ayam yang teliti dan rapi sangat menikmati sup kaldu bening yang bersih dan menghangatkan jiwa. Bakmie Kuah kaldu murni adalah resep kenyamanan hoki Anda.',
-      en: 'The meticulous and neat Rooster enjoys clean, soul-warming clear bone broths. Bakmie Kuah with pure rich broth is your perfect recipe for comforting luck.',
-      zh: '餈賣摰鈭衤鈭閙∠撅鮋腹派韏譍蝣㛖滲斢瘙扎瘙斤嗥瘙日舀隞予憟賜鍦蝢㭠'
+      id: "Shio Ayam yang perfeksionis menghargai penyajian terbaik dan bumbu presisi. Bakmie Spesial Komplit memenuhi standar cita rasa tinggi Anda.",
+      en: "The observant and meticulous Rooster values precision in flavor and plating. Bakmie Spesial Komplit satisfies your supreme standard."
     }
   },
   {
-    id: 'dog',
-    name: 'Anjing',
-    zh: '',
-    emoji: '濶',
-    elementDefault: 'Tanah',
-    foodId: 'kwetiao-kuah',
-    luckyNumbers: '3, 4, 9',
-    luckyColors: { id: 'Hijau Daun & Merah', en: 'Leaf Green & Red', zh: '蝧删遛銝之蝥' },
-    luckyDirection: { id: 'Timur & Tenggara', en: 'East & Southeast', zh: '甇銝' },
-    trait: { id: 'Setia, Jujur & Menghangatkan Hati', en: 'Loyal, Honest & Heartwarming', zh: '敹㰘西㨃斗萱' },
+    id: "dog",
+    name: "Anjing",
+    emoji: "🐶",
+    elementDefault: "Tanah",
+    foodId: "nasi-goreng-segar",
+    luckyNumbers: "3, 4, 9",
+    luckyColors: { id: "Merah, Hijau & Ungu", en: "Red, Green & Purple" },
+    luckyDirection: { id: "Timur & Selatan", en: "East & South" },
+    trait: { id: "Setia, Jujur & Menghangatkan Hati", en: "Loyal, Honest & Heartwarming" },
     desc: {
-      id: 'Shio Anjing yang setia dan hangat sangat menyukai sup hangat yang menenangkan hati di tengah keluarga. Kwetiao Kuah gurih akan melipatgandakan kebahagiaan harian Anda.',
-      en: 'The loyal and warm-hearted Dog treasures comforting soups shared with loved ones. Savory Kwetiao Kuah will double your daily joy and absolute peace.',
-      zh: '敹㰘皜拙勗皛∪振撣豢萱摨衣硋瘙斤器蝣埈萱瘨衣餌瘙斗眾蝎㚁摰朞霈拇亙兢蝳滚'
+      id: "Shio Anjing yang setia dan bersahaja menyukai hidangan klasik yang mengenyangkan dan penuh kenangan. Nasi Goreng Spesial adalah teman terbaik Anda.",
+      en: "The loyal and honest Dog loves classic comfort food. Special Fried Rice brings heartwarming luck and comfort to your table."
     }
   },
   {
-    id: 'pig',
-    name: 'Babi',
-    zh: '',
-    emoji: '䊹',
-    elementDefault: 'Air',
-    foodId: 'kopi',
-    luckyNumbers: '2, 5, 8',
-    luckyColors: { id: 'Kuning Emas & Hitam', en: 'Golden Yellow & Black', zh: '煾銝◢暺' },
-    luckyDirection: { id: 'Tenggara & Timur', en: 'Southeast & East', zh: '銝銝擧迤銝' },
-    trait: { id: 'Santai, Ramah & Penuh Rezeki', en: 'Easygoing, Friendly & Abundantly Blessed', zh: '敹摰賢嘀蝳' },
+    id: "pig",
+    name: "Babi",
+    emoji: "🐷",
+    elementDefault: "Air",
+    foodId: "nasi-campur",
+    luckyNumbers: "2, 5, 8",
+    luckyColors: { id: "Kuning Emas & Hitam", en: "Golden Yellow & Black" },
+    luckyDirection: { id: "Tenggara & Timur", en: "Southeast & East" },
+    trait: { id: "Santai, Ramah & Penuh Rezeki", en: "Easygoing, Friendly & Abundantly Blessed" },
     desc: {
-      id: 'Shio Babi yang santai dan penuh berkah menyukai minuman mantap beraroma harum mendalam. Kopi Hitam Mantap khas Kalbar adalah teman diskusi & penarik rezeki Anda!',
-      en: 'The easygoing and blessed Pig loves deep, aromatic and bold classic drinks. Bold Black Coffee from Kalbar is your best companion to draw continuous fortune!',
-      zh: '誩撖峕瘜賣楛撅䂿㻛澈烾瘞娍蝢㭠舀蟡䂿斗暺穃∴霈拇鍦揣皞鞉皛'
+      id: "Shio Babi yang dermawan dan menyukai kenikmatan kuliner akan sangat terpuaskan oleh kelezatan Nasi Campur legendaris RM Segar.",
+      en: "The cheerful and generous Pig enjoys life feasts to the fullest. RM Segar signature Nasi Campur brings abundant prosperity and joy."
     }
   }
 ];
 
+export const CHINESE_FORTUNES = FORTUNE_ITEMS;
+export const SHIO_DETAILS = SHIO_DATA;
+
 export const WHEEL_ITEMS = [
   { id: 'bakmie-kering', name: 'Bakmie Kering', emoji: '', bg: '#d97706', text: '#ffffff' },
-  { id: 'kwetiao-goreng', name: 'Kwetiao Goreng', emoji: '失', bg: '#ea580c', text: '#ffffff' },
+  { id: 'kwetiao-goreng', name: 'Kwetiao Goreng', emoji: '🥢', bg: '#ea580c', text: '#ffffff' },
   { id: 'kaifon', name: 'Nasi Campur (Kaifon)', emoji: '', bg: '#dc2626', text: '#ffffff' },
-  { id: 'capcai-kuah', name: 'Capcai Kuah', emoji: '㬢', bg: '#059669', text: '#ffffff' },
+  { id: 'capcai-kuah', name: 'Capcai Kuah', emoji: '🥠', bg: '#059669', text: '#ffffff' },
   { id: 'jeruk-nipis', name: 'Es Jeruk Nipis', emoji: '', bg: '#eab308', text: '#ffffff' },
   { id: 'susu-kedelai', name: 'Susu Kedelai', emoji: '', bg: '#7c3aed', text: '#ffffff' },
-  { id: 'kwetiao-kering', name: 'Kwetiao Kering', emoji: '失', bg: '#b45309', text: '#ffffff' },
+  { id: 'kwetiao-kering', name: 'Kwetiao Kering', emoji: '🥢', bg: '#b45309', text: '#ffffff' },
   { id: 'kopi', name: 'Kopi Hitam', emoji: '', bg: '#44403c', text: '#ffffff' }
 ];
 
@@ -1075,15 +756,15 @@ export interface BlockPiece {
 
 export const BLOCK_PRESETS: Omit<BlockPiece, 'id'>[] = [
   { shape: [[1]], color: '#f59e0b', emoji: '' },
-  { shape: [[1, 1]], color: '#ef4444', emoji: '失' },
+  { shape: [[1, 1]], color: '#ef4444', emoji: '🥢' },
   { shape: [[1], [1]], color: '#10b981', emoji: '' },
   { shape: [[1, 1, 1]], color: '#3b82f6', emoji: '' },
   { shape: [[1], [1], [1]], color: '#8b5cf6', emoji: '' },
   { shape: [[1, 1], [1, 1]], color: '#ec4899', emoji: '' },
-  { shape: [[1, 1, 1], [0, 1, 0]], color: '#f97316', emoji: '㨃' },
+  { shape: [[1, 1, 1], [0, 1, 0]], color: '#f97316', emoji: '🍜' },
   { shape: [[1, 0], [1, 1]], color: '#14b8a6', emoji: '' },
   { shape: [[0, 1], [1, 1]], color: '#06b6d4', emoji: '' },
-  { shape: [[1, 1, 1, 1]], color: '#84cc16', emoji: '布' },
+  { shape: [[1, 1, 1, 1]], color: '#84cc16', emoji: '🥟' },
   { shape: [[1, 1], [1, 0]], color: '#d97706', emoji: '' }
 ];
 
@@ -1174,7 +855,7 @@ function App() {
     } catch { return []; }
   });
   const [activeTab, setActiveTab] = useState('home');
-  const [language, setLanguage] = useState<'id' | 'en' | 'zh'>(getInitialLanguage);
+  const [language, setLanguage] = useState<'id' | 'en'>(getInitialLanguage);
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
@@ -2075,7 +1756,7 @@ function App() {
       const history = chatMessages
         .filter((msg, index) => {
           if (index === 0 && msg.role === 'model') return false;
-          if (msg.text.includes("Ups, koki AI kami") || msg.text.includes("Oops, our AI chef") || msg.text.includes("嚗峕隞祉 AI")) return false;
+          if (msg.text.includes("Ups, koki AI kami") || msg.text.includes("Oops, our AI chef")) return false;
           return true;
         });
 
@@ -2127,8 +1808,6 @@ function App() {
             role: 'model', 
             text: language === 'en' 
               ? "Hello friend! The AI Chef feature requires a valid GEMINI_API_KEY. Please configure GEMINI_API_KEY in the app settings or environment variables." 
-              : language === 'zh'
-              ? "雿惩末见嚗I 典蠘閬 GEMINI_API_KEY窈典刻挽蝵格臬㗛銝剝蝵 GEMINI_API_KEY"
               : "Halo kawan! Fitur AI Koki Teng membutuhkan GEMINI_API_KEY yang valid. Silakan konfigurasikan GEMINI_API_KEY pada Settings > Secrets aplikasi Anda." 
           }]);
           setIsAIThinking(false);
@@ -2137,11 +1816,11 @@ function App() {
 
         const genAI = new GoogleGenAI({ apiKey: apiKey.trim() });
 
-        const systemInstruction = `Anda adalah "Koki Teng", kepala koki legendaris RM Segar (斢) yang berasal dari Sambas, Kalimantan Barat. Anda sangat ramah, hangat, dan to-the-point!
+        const systemInstruction = `Anda adalah "Koki Teng", kepala koki legendaris RM Segar (RM Segar) yang berasal dari Sambas, Kalimantan Barat. Anda sangat ramah, hangat, dan to-the-point!
 
 SANGAT PENTING: JAWABLAH SECARA SINGKAT, PADAT, DAN JELAS! Jangan panjang lebar atau bertele-tele. Maksimal 1-3 kalimat saja per jawaban, langsung pada inti pertanyaan/saran menu.
 
-JAWABLAH DALAM BAHASA ${language === 'en' ? 'ENGLISH (Bahasa Inggris)' : language === 'zh' ? 'CHINESE/MANDARIN (Bahasa Mandarin)' : 'INDONESIAN (Bahasa Indonesia)'} sesuai dengan preferensi bahasa pelanggan saat ini. Jika Bahasa Indonesia, selipkan sedikit sapaan hangat khas koki (seperti "Kawan", "Kakak").
+JAWABLAH DALAM BAHASA ${language === 'en' ? 'ENGLISH (Bahasa Inggris)' : 'INDONESIAN (Bahasa Indonesia)'} sesuai dengan preferensi bahasa pelanggan saat ini. Jika Bahasa Indonesia, selipkan sedikit sapaan hangat khas koki (seperti "Kawan", "Kakak").
 
 Gaya Berbicara Anda:
 - Singkat, padat, jelas, ramah, dan langsung menjawab inti pertanyaan tanpa kata-kata berbunga-bunga yang terlalu panjang.
@@ -2312,7 +1991,7 @@ Aturan Sangat Penting:
         setUser(null);
         localStorage.removeItem('rm_segar_user');
         localStorage.removeItem('rm_segar_admin_auth');
-        alert(language === 'en' ? 'Admin session ended after 15 minutes of inactivity for security reasons.' : language === 'zh' ? '箔摰匧嚗恣隡朞15䭾暑典撌脰䌊冽釣' : 'Sesi admin telah berakhir secara otomatis karena tidak ada aktivitas selama 15 menit demi keamanan.');
+        alert(language === 'en' ? 'Admin session ended after 15 minutes of inactivity for security reasons.' : 'Sesi admin telah berakhir secara otomatis karena tidak ada aktivitas selama 15 menit demi keamanan.');
       }, 15 * 60 * 1000);
     };
 
@@ -2589,7 +2268,6 @@ Aturan Sangat Penting:
   const renderPDFMenuItem = (item: MenuItem) => {
     const idItem = translateMenuItem(item, 'id');
     const enItem = translateMenuItem(item, 'en');
-    const zhItem = translateMenuItem(item, 'zh');
     return (
       <div key={item.id} className="py-2.5 border-b border-stone-200/50 last:border-0 text-left">
         <div className="flex justify-between items-baseline mb-0.5">
@@ -2597,14 +2275,11 @@ Aturan Sangat Penting:
             <span className="font-extrabold text-stone-900 text-sm">{idItem.name}</span>
             <span className="text-stone-300 text-xs font-bold font-serif">/</span>
             <span className="text-stone-600 text-xs font-semibold">{enItem.name}</span>
-            <span className="text-stone-300 text-xs font-bold font-serif">/</span>
-            <span className="text-red-800 text-[13px] font-black font-serif">{zhItem.name}</span>
           </div>
         </div>
         <div className="text-[10px] text-stone-500 font-sans leading-relaxed space-y-0.5 mt-0.5">
           <p className="flex items-start gap-1"><span className="font-semibold text-stone-400 flex-shrink-0">ID:</span> <span>{idItem.description || '-'}</span></p>
           <p className="flex items-start gap-1"><span className="font-semibold text-stone-400 flex-shrink-0">EN:</span> <span>{enItem.description || '-'}</span></p>
-          <p className="flex items-start gap-1"><span className="font-semibold text-stone-400 flex-shrink-0">ZH:</span> <span>{zhItem.description || '-'}</span></p>
         </div>
       </div>
     );
@@ -2778,7 +2453,7 @@ Aturan Sangat Penting:
     }
 
     if (!isHumanVerified) {
-      alert('椘儭 Verifikasi Keamanan Diperlukan!\n\nHarap centang kotak "Saya bukan robot" terlebih dahulu sebelum mengirim OTP.');
+      alert('🔒 Verifikasi Keamanan Diperlukan!\n\nHarap centang kotak "Saya bukan robot" terlebih dahulu sebelum mengirim OTP.');
       return;
     }
 
@@ -2849,7 +2524,7 @@ Aturan Sangat Penting:
       window.location.href = nativeWaUrl;
     }
 
-    setEmailNotificationToast(`俥 Kode OTP ${finalToken} disiapkan untuk WhatsApp +${formattedPhone}. WhatsApp dibuka...`);
+    setEmailNotificationToast(`💬 Kode OTP ${finalToken} disiapkan untuk WhatsApp +${formattedPhone}. WhatsApp dibuka...`);
   };
 
   const handleLogin = async () => {
@@ -2858,12 +2533,12 @@ Aturan Sangat Penting:
       const remainingSecs = Math.ceil((otpLockoutUntil - Date.now()) / 1000);
       alert(language === 'en' 
         ? `Too many failed attempts. Locked out for ${remainingSecs} seconds.` 
-        : language === 'zh' ? `失败次数过多。锁定 ${remainingSecs} 秒。` : `Terlalu banyak percobaan gagal. Akses dikunci selama ${remainingSecs} detik.`);
+        : `Terlalu banyak percobaan gagal. Akses dikunci selama ${remainingSecs} detik.`);
       return;
     }
 
     if (!isHumanVerified) {
-      alert('椘儭 Verifikasi Keamanan Diperlukan!\n\nHarap centang verifikasi "Saya bukan robot" terlebih dahulu.');
+      alert('🔒 Verifikasi Keamanan Diperlukan!\n\nHarap centang verifikasi "Saya bukan robot" terlebih dahulu.');
       return;
     }
 
@@ -3227,31 +2902,31 @@ Aturan Sangat Penting:
     const lastDigit = year % 10;
     let element = 'Tanah';
     let elementColor = 'text-amber-500 bg-amber-500/10 border-amber-500/20';
-    let elementZh = '';
+    
 
     if (lastDigit === 0 || lastDigit === 1) {
       element = 'Logam';
       elementColor = 'text-stone-300 bg-stone-100/10 border-stone-200/20';
-      elementZh = '';
+      
     } else if (lastDigit === 2 || lastDigit === 3) {
       element = 'Air';
       elementColor = 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-      elementZh = '瘞';
+      
     } else if (lastDigit === 4 || lastDigit === 5) {
       element = 'Kayu';
       elementColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-      elementZh = '';
+      
     } else if (lastDigit === 6 || lastDigit === 7) {
       element = 'Api';
       elementColor = 'text-red-500 bg-red-500/10 border-red-500/20';
-      elementZh = '';
+      
     } else if (lastDigit === 8 || lastDigit === 9) {
       element = 'Tanah';
       elementColor = 'text-amber-600 bg-amber-600/10 border-amber-600/20';
-      elementZh = '';
+      
     }
 
-    return { shioDetail, element, elementColor, elementZh };
+    return { shioDetail, element, elementColor };
   };
 
   const handleSelectYear = (yearStr: string) => {
@@ -3282,7 +2957,7 @@ Aturan Sangat Penting:
   // Yang Kalah Traktir Multi-Game Handlers
   const initTraktirBombGame = (playerList = traktirPlayers) => {
     const bombIndex = Math.floor(Math.random() * 12);
-    const foodEmojis = ['', '', '㬢', '', '', '', '揢', '', '', '搇', '', '暒'];
+    const foodEmojis = ['🍜', '🥟', '🥠', '🍚', '🥢', '🥤', '🍲', '🍢', '🥩', '🍗', '🍤', '💥'];
     
     const grid = Array(12).fill(null).map((_, i) => ({
       id: i,
@@ -3784,24 +3459,24 @@ Aturan Sangat Penting:
     const verifyUrl = `${verifyBaseUrl}/?verify_order=${orderId}&seal=${securitySeal}`;
 
     // Format Pesan Terkunci Anti-Manipulasi & Anti-Edit (Tanpa Menyebutkan Nominal Harga)
-    const message = ` *[NOTA PESANAN RESMI TERKUNCI - RM SEGAR]* 㬢
+    const message = `📋 *[NOTA PESANAN RESMI TERKUNCI - RM SEGAR]*
 No. Nota: *#${orderId}*
 Kode Segel Sistem: *[${securitySeal}]*
 Waktu Pesan: *${dateFormatted}, ${timestamp}*
 
- *Data Pemesan:*
- Pelanggan: *${customerIdentifier}*
- Metode Bayar: *${paymentText}*${extraInfo}
+👤 *Data Pemesan:*
+Pelanggan: *${customerIdentifier}*
+Metode Bayar: *${paymentText}*${extraInfo}
 
- *Daftar Menu Resmi Terkunci Server:*
+🍜 *Daftar Menu Resmi Terkunci Server:*
 ${orderDetails}
 
 --------------------------------------------------
-椘儭 *SISTEM KEAMANAN & ANTI-MANIPULASI OWNER:*
+🔒 *SISTEM KEAMANAN & ANTI-MANIPULASI OWNER:*
 1. Pesanan ini telah *OTOMATIS TERCATAT & TERKUNCI* di Database Server RM Segar saat tombol kirim ditekan.
 2. Dapur & Kasir *HANYA MEMPROSES* menu asli sesuai No. Nota *#${orderId}* dan Kode Segel di atas.
 3. Segala perubahan/edit teks atau penghapusan sebagian pesan oleh user *TIDAK BERLAKU* & otomatis tertolak di sistem kasir.
- Verifikasi Nota Asli Server: ${verifyUrl}
+🔗 Verifikasi Nota Asli Server: ${verifyUrl}
 --------------------------------------------------`;
     
     // Save to history & Backend DB with cryptographic seal
@@ -3875,7 +3550,7 @@ ${orderDetails}
       id: 'receipt-' + newOrder.id,
       to: user?.email || 'valensiarainy73@gmail.com',
       sender: 'RM Segar Kasir <kasir@rmsegar.com>',
-      subject: `屁 Bukti Pesanan Resmi RM Segar #${newOrder.id} [Tersegel Digital]`,
+      subject: `📋 Bukti Pesanan Resmi RM Segar #${newOrder.id} [Tersegel Digital]`,
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       textContent: `Terima kasih! Pesanan #${newOrder.id} (${orderType}) senilai Rp ${calculatedTotal.toLocaleString('id-ID')} telah tercatat di server. Segel Digital: ${securitySeal}.`,
       htmlContent: `
@@ -3897,7 +3572,7 @@ ${orderDetails}
             </div>
           </div>
           <div style="background: #fffbeb; border: 1px solid #fef3c7; padding: 10px; border-radius: 8px; font-size: 11px; color: #92400e;">
-            椘儭 <b>Perlindungan Owner:</b> Data pesanan tersimpan permanen di cloud server kasir. Pesanan hanya diproses jika data WhatsApp cocok dengan database.
+            🔒 <b>Perlindungan Owner:</b> Data pesanan tersimpan permanen di cloud server kasir. Pesanan hanya diproses jika data WhatsApp cocok dengan database.
           </div>
         </div>
       `,
@@ -3919,7 +3594,7 @@ ${orderDetails}
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     });
 
-    triggerPandaAnimation("Pesanan Resmi & Tersegel Berhasil Dikirim! 䧟椘儭");
+    triggerPandaAnimation("Pesanan Resmi & Tersegel Berhasil Dikirim! 👨‍🍳🔒");
   };
 
   const handleConfirmFromAIChat = (idx: number, type: 'pesanan' | 'reservasi', content: string) => {
@@ -3982,7 +3657,7 @@ ${orderDetails}
     }
 
     setConfirmedAIMessages(prev => ({ ...prev, [idx]: true }));
-    triggerPandaAnimation("Pesanan AI Berhasil Terkonfirmasi! 䧟");
+    triggerPandaAnimation("Pesanan AI Berhasil Terkonfirmasi! 👨‍🍳");
   };
 
   const renderHome = () => (
@@ -4031,14 +3706,14 @@ ${orderDetails}
           
           <div className="flex items-center gap-4 relative z-10">
             <div className="w-14 h-14 bg-gradient-to-tr from-amber-400 to-amber-200 rounded-2xl flex items-center justify-center text-red-700 border border-amber-300 shadow-md transform -rotate-3 select-none flex-shrink-0">
-              <span className="text-3xl font-bold font-serif leading-none">福</span>
+              <span className="text-3xl font-bold font-serif leading-none">⭐</span>
             </div>
             <div>
               <h3 className="text-amber-200 font-black text-lg tracking-wide font-serif">
-                {language === 'en' ? 'Lucky Fortune Cookie' : language === 'zh' ? '幸运签饼' : 'Biskuit Keberuntungan Hoki'}
+                {language === 'en' ? 'Lucky Fortune Cookie' : 'Biskuit Keberuntungan Hoki'}
               </h3>
               <p className="text-amber-100/85 text-xs mt-0.5 max-w-sm font-sans font-medium">
-                {language === 'en' ? 'Crack open a daily fortune to discover your lucky menu recommendation!' : language === 'zh' ? '敲开幸运签饼，获取今日运势与推荐幸运菜肴！' : 'Pecahkan biskuitnya untuk tahu ramalan hari ini & rekomendasi menu hokimu!'}
+                {language === 'en' ? 'Crack open a daily fortune to discover your lucky menu recommendation!' : 'Pecahkan biskuitnya untuk tahu ramalan hari ini & rekomendasi menu hokimu!'}
               </p>
             </div>
           </div>
@@ -4047,8 +3722,8 @@ ${orderDetails}
             onClick={openFortuneCookie}
             className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 hover:from-amber-500 hover:to-amber-400 text-stone-900 font-black text-sm rounded-2xl shadow-lg shadow-amber-500/10 border border-amber-200 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer font-serif tracking-wide"
           >
-            <span>福</span>
-            <span>{language === 'en' ? 'Check Luck' : language === 'zh' ? '测今日运势' : 'Cek Hoki Kuliner'}</span>
+            <span>⭐</span>
+            <span>{language === 'en' ? 'Check Luck' : 'Cek Hoki Kuliner'}</span>
           </button>
         </div>
       </section>
@@ -4307,18 +3982,18 @@ ${orderDetails}
               <div className="flex items-center gap-2">
                 <span className="text-xl">🏮</span>
                 <h3 className="text-amber-400 font-black text-lg tracking-wide font-serif">
-                  {language === 'en' ? 'Zodiac & Food Compatibility' : language === 'zh' ? '生肖与幸运美食搭配' : 'Kecocokan Menu & Shio Keberuntungan'}
+                  {language === 'en' ? 'Zodiac & Food Compatibility' : 'Kecocokan Menu & Shio Keberuntungan'}
                 </h3>
               </div>
               <p className="text-stone-400 text-xs mt-1">
-                {language === 'en' ? 'Select your birth year or shio to reveal your lucky Pontianak menu match!' : language === 'zh' ? '选择出生年份或生肖，揭晓专属坤甸幸运美食搭配！' : 'Pilih tahun lahir atau langsung klik shiomu untuk melihat ramalan & menu hoki Pontianak Anda!'}
+                {language === 'en' ? 'Select your birth year or shio to reveal your lucky Pontianak menu match!' : 'Pilih tahun lahir atau langsung klik shiomu untuk melihat ramalan & menu hoki Pontianak Anda!'}
               </p>
             </div>
             
             {/* Year Selector Dropdown */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <label htmlFor="shio-year-select" className="text-[11px] font-extrabold uppercase tracking-widest text-stone-400 font-sans">
-                {language === 'en' ? 'Birth Year:' : language === 'zh' ? '出生年份:' : 'Tahun Lahir:'}
+                {language === 'en' ? 'Birth Year:' : 'Tahun Lahir:'}
               </label>
               <select
                 id="shio-year-select"
@@ -4326,7 +4001,7 @@ ${orderDetails}
                 onChange={(e) => handleSelectYear(e.target.value)}
                 className="bg-stone-950 border border-stone-800 text-amber-200 text-xs font-serif font-bold rounded-xl px-3 py-2 outline-none cursor-pointer focus:border-amber-400/50 transition-colors"
               >
-                <option value="">-- {language === 'en' ? 'Select' : language === 'zh' ? '选择' : 'Pilih'} --</option>
+                <option value="">-- {language === 'en' ? 'Select' : 'Pilih'} --</option>
                 {Array.from({ length: 87 }, (_, i) => 2026 - i).map((y) => (
                   <option key={y} value={y.toString()}>{y}</option>
                 ))}
@@ -4351,12 +4026,9 @@ ${orderDetails}
                 >
                   <span className="text-xl md:text-2xl mb-1 select-none">{shio.emoji}</span>
                   <span className="text-[9px] font-black uppercase text-stone-400 tracking-wider leading-none">
-                    {language === 'en' ? shio.id.toUpperCase().substring(0, 3) : language === 'zh' ? shio.zh : shio.name}
+                    {language === 'en' ? shio.id.toUpperCase().substring(0, 3) : shio.name}
                   </span>
-                  {/* Miniature Chinese character stamp */}
-                  <span className="absolute top-0.5 right-1.5 text-[7px] font-serif text-red-500/40 font-bold select-none">
-                    {shio.zh}
-                  </span>
+
                 </button>
               );
             })}
@@ -4385,20 +4057,20 @@ ${orderDetails}
                   <div className="flex-grow">
                     <div className="flex flex-wrap items-center gap-2">
                       <h4 className="text-amber-200 font-extrabold text-base font-serif tracking-wide">
-                        {language === 'en' ? `Shio ${selectedShio.id.toUpperCase()}` : language === 'zh' ? `${selectedShio.zh}` : `Shio ${selectedShio.name}`}
+                        {language === 'en' ? `Shio ${selectedShio.id.toUpperCase()}` : `Shio ${selectedShio.name}`}
                       </h4>
                       {birthYear && (() => {
                         const calculated = getShioAndElementFromYear(birthYear);
                         if (!calculated) return null;
                         return (
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-serif font-black border uppercase tracking-wider ${calculated.elementColor}`}>
-                            {language === 'en' ? calculated.element : language === 'zh' ? calculated.elementZh : `Elemen ${calculated.element}`}
+                            {language === 'en' ? calculated.element : `Elemen ${calculated.element}`}
                           </span>
                         );
                       })()}
                       {!birthYear && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-serif font-black bg-stone-800 border border-stone-700 text-stone-300 uppercase tracking-wider">
-                          {language === 'en' ? selectedShio.elementDefault : language === 'zh' ? '砍' : `Elemen ${selectedShio.elementDefault}`}
+                          {language === 'en' ? selectedShio.elementDefault : `Elemen ${selectedShio.elementDefault}`}
                         </span>
                       )}
 
@@ -4411,15 +4083,15 @@ ${orderDetails}
                     {/* Lucky Numbers, Colors, and Directions Badges */}
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[11px] text-stone-300 font-sans">
                       <span className="flex items-center gap-1 bg-stone-900/90 px-2 py-0.5 rounded-md border border-stone-800">
-                        <span className="text-amber-400 font-bold">㴓 {language === 'en' ? 'Numbers:' : language === 'zh' ? '㗇㺭:' : 'Angka Hoki:'}</span>
+                        <span className="text-amber-400 font-bold">🔢 {language === 'en' ? 'Numbers:' : 'Angka Hoki:'}</span>
                         <span className="font-extrabold text-amber-200">{selectedShio.luckyNumbers}</span>
                       </span>
                       <span className="flex items-center gap-1 bg-stone-900/90 px-2 py-0.5 rounded-md border border-stone-800">
-                        <span className="text-amber-400 font-bold">綫 {language === 'en' ? 'Colors:' : language === 'zh' ? '㕑:' : 'Warna Hoki:'}</span>
+                        <span className="text-amber-400 font-bold">🎨 {language === 'en' ? 'Colors:' : 'Warna Hoki:'}</span>
                         <span className="font-semibold text-stone-200">{selectedShio.luckyColors[language]}</span>
                       </span>
                       <span className="flex items-center gap-1 bg-stone-900/90 px-2 py-0.5 rounded-md border border-stone-800">
-                        <span className="text-amber-400 font-bold">妣 {language === 'en' ? 'Direction:' : language === 'zh' ? '韐Ｖ:' : 'Arah Hoki:'}</span>
+                        <span className="text-amber-400 font-bold">🧭 {language === 'en' ? 'Direction:' : 'Arah Hoki:'}</span>
                         <span className="font-semibold text-stone-200">{selectedShio.luckyDirection[language]}</span>
                       </span>
                     </div>
@@ -4438,7 +4110,7 @@ ${orderDetails}
                     <div className="w-full md:w-72 bg-stone-900/90 border border-amber-400/25 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-md hover:border-amber-400/40 transition-all flex-shrink-0">
                       <div className="text-left min-w-0 flex-grow">
                         <span className="text-[8px] bg-red-600 text-amber-50 font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
-                          {language === 'en' ? 'LUCKY MATCH' : language === 'zh' ? '㗇銝餅' : 'MENU HOKIMU'}
+                          {language === 'en' ? 'LUCKY MATCH' : 'MENU HOKIMU'}
                         </span>
                         <h5 className="font-extrabold text-amber-200 text-sm mt-1 truncate">{luckyMenuItem.name}</h5>
                         <p className="text-[10px] text-stone-400 leading-tight mt-0.5 line-clamp-1">{luckyMenuItem.description}</p>
@@ -5297,7 +4969,7 @@ ${orderDetails}
                 title="Hapus Semua Riwayat Pesanan"
               >
                 <Trash2 size={14} />
-                <span>{language === 'en' ? 'Delete History' : language === 'zh' ? '皜征蟮' : 'Hapus Riwayat'}</span>
+                <span>{language === 'en' ? 'Delete History' : 'Hapus Riwayat'}</span>
               </button>
             )}
           </div>
@@ -5322,7 +4994,7 @@ ${orderDetails}
                       {order.status === 'cooking' ? (
                         <span className="px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                          Sedang Dimasak 朖
+                          Sedang Dimasak ⏳
                         </span>
                       ) : order.status === 'done' ? (
                         <span className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1">
@@ -5337,7 +5009,7 @@ ${orderDetails}
                       ) : (
                         <span className="px-3 py-1 bg-orange-50 text-orange-700 border border-orange-200 text-[10px] font-bold uppercase rounded-full flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
-                          Sedang Disiapkan 㵵
+                          Sedang Disiapkan 🔥
                         </span>
                       )}
                       <span className="px-3 py-1 bg-stone-100 text-stone-600 text-[10px] font-bold uppercase rounded-full">
@@ -5472,14 +5144,10 @@ ${orderDetails}
                   </div>
                   <div className="space-y-1">
                     <h3 className="font-extrabold text-stone-900 text-base">
-                      {language === 'en' ? 'Download Menu Catalog (PDF)' : language === 'zh' ? '銝贝蝸桀 (PDF)' : 'Unduh Daftar Menu (PDF)'}
+                      {language === 'en' ? 'Download Menu Catalog (PDF)' : 'Unduh Daftar Menu (PDF)'}
                     </h3>
                     <p className="text-xs text-stone-600 leading-relaxed">
-                      {language === 'en' 
-                        ? 'Download the complete RM Segar menu brochure in 3 languages (ID, EN, ZH) without prices. Great for sharing or printing.' 
-                        : language === 'zh' 
-                        ? '銝贝蝸鉄啣側霂准㘚霂剖銝剜銝厩霂剛擐渲訫銵剁銝滚鉄隞瑟聢嚗剹澈啜' 
-                        : 'Unduh brosur daftar menu RM Segar lengkap dalam 3 bahasa (ID, EN, ZH) tanpa mencantumkan harga. Cocok untuk dibagikan atau dicetak.'}
+                      {language === 'en' ? 'Download the official RM Segar menu brochure in PDF format.' : 'Unduh brosur resmi menu RM Segar dalam format PDF.'}
                     </p>
                   </div>
                 </div>
@@ -5489,7 +5157,7 @@ ${orderDetails}
                 >
                   <BookOpen size={18} />
                   <span>
-                    {language === 'en' ? 'Preview & Print Menu' : language === 'zh' ? '憸撟嗆/銝贝蝸' : 'Pratinjau & Cetak/Unduh Menu'}
+                    {language === 'en' ? 'Preview & Print Menu' : 'Pratinjau & Cetak/Unduh Menu'}
                   </span>
                 </button>
               </div>
@@ -5507,41 +5175,41 @@ ${orderDetails}
                   {[
                     {
                       id: 'bakmie-kering',
-                      name: language === 'en' ? 'Dry Bakmie Kalimantan' : language === 'zh' ? '潔號撟脫' : 'Bakmie Kering Kalimantan',
-                      desc: language === 'en' ? 'Our homemade signature noodles using traditional family recipe, fragrant garlic oil, generous toppings, and separate savory broth.' : language === 'zh' ? '孵摰嗡蝘䀹䲮见極Ｘ辺嚗䔶隞仿瘚枏之硃萼撖諹蝣剝皜撉冽惜閧' : 'Mie khas buatan sendiri dengan resep racikan tradisional, minyak bawang harum, topping daging melimpah, dan kuah kaldu segar terpisah.',
-                      tag: language === 'en' ? 'Best Seller ' : language === 'zh' ? ' ' : 'Best Seller ',
+                      name: language === 'en' ? 'Dry Bakmie Kalimantan' : 'Bakmie Kering Kalimantan',
+                      desc: language === 'en' ? 'Our homemade signature noodles using traditional family recipe, fragrant garlic oil, generous toppings, and separate savory broth.' : 'Mie khas buatan sendiri dengan resep racikan tradisional, minyak bawang harum, topping daging melimpah, dan kuah kaldu segar terpisah.',
+                      tag: language === 'en' ? 'Best Seller ' : 'Best Seller ',
                       price: 'Rp 28.000',
                       item: MENU_ITEMS.find(m => m.id === 'bakmie-kering')
                     },
                     {
                       id: 'kwetiao-goreng',
-                      name: language === 'en' ? 'Fried Kwetiao with Beef' : language === 'zh' ? '蝎踵辺' : 'Kwetiao Goreng Sapi',
-                      desc: language === 'en' ? 'Stir-fried in an ultra-hot cast iron wok (Wok Hei) to produce our signature smokey aroma, tossed with tender slices of beef.' : language === 'zh' ? '憭抒嚗鸌㕑秧鈭箇擐䠷瘞䈑滚蝏咿賢藁蝢厩' : 'Kwetiao ditumis dengan wajan besi panas membara (Wok Hei) sehingga menghasilkan aroma panggangan yang khas dipadu irisan daging sapi empuk.',
-                      tag: language === 'en' ? 'Most Favorite ' : language === 'zh' ? '曹犖瘞 ' : 'Terfavorit ',
+                      name: language === 'en' ? 'Fried Kwetiao with Beef' : 'Kwetiao Goreng Sapi',
+                      desc: language === 'en' ? 'Stir-fried in an ultra-hot cast iron wok (Wok Hei) to produce our signature smokey aroma, tossed with tender slices of beef.' : 'Kwetiao ditumis dengan wajan besi panas membara (Wok Hei) sehingga menghasilkan aroma panggangan yang khas dipadu irisan daging sapi empuk.',
+                      tag: language === 'en' ? 'Most Favorite ' : 'Terfavorit ',
                       price: 'Rp 30.000',
                       item: MENU_ITEMS.find(m => m.id === 'kwetiao-goreng')
                     },
                     {
                       id: 'kaifon',
-                      name: language === 'en' ? 'Nasi Campur (Kaifon)' : language === 'zh' ? '镼踹蝏誩㚚平 (Kaifon)' : 'Nasi Campur (Kaifon)',
-                      desc: language === 'en' ? 'Warm white rice topped with delicious assorted roasted meats, drizzled with signature sweet-savory Kalimantan thick sauce and soup.' : language === 'zh' ? '剜曇賜掖擖剝隞亙撘讐喟嗉桃㚁瘚镼踹峕垈銝寧鸌脤蝔瘙' : 'Nasi putih hangat dengan aneka potongan daging panggang gurih, disiram saus kental manis gurih khas Kalbar dan disajikan bersama kuah hangat.',
-                      tag: language === 'en' ? 'Highly Recommended ' : language === 'zh' ? '撘箇刻 ' : 'Sangat Direkomendasikan ',
+                      name: language === 'en' ? 'Nasi Campur (Kaifon)' : 'Nasi Campur (Kaifon)',
+                      desc: language === 'en' ? 'Warm white rice topped with delicious assorted roasted meats, drizzled with signature sweet-savory Kalimantan thick sauce and soup.' : 'Nasi putih hangat dengan aneka potongan daging panggang gurih, disiram saus kental manis gurih khas Kalbar dan disajikan bersama kuah hangat.',
+                      tag: language === 'en' ? 'Highly Recommended ' : 'Sangat Direkomendasikan ',
                       price: 'Rp 32.000',
                       item: MENU_ITEMS.find(m => m.id === 'kaifon')
                     },
                     {
                       id: 'kwetiao-kering',
-                      name: language === 'en' ? 'Dry Seasoned Kwetiao' : language === 'zh' ? '撟脫厩蝎踵辺' : 'Kwetiao Kering',
-                      desc: language === 'en' ? 'Soft, delicate flat rice noodles tossed in RM Segar secret seasoned garlic oil, served with beef balls, tender meat, and fresh scallions.' : language === 'zh' ? '擐蹱咿僕䂿窒∴䔶誑蝘睃擐蹱㗇硃嚗屸銝詻憳抵蝧删遛撠讛' : 'Kwetiao lembut tanpa kuah dibumbui minyak gurih racikan RM Segar, dilengkapi bakso sapi, daging empuk, dan taburan daun bawang segar.',
-                      tag: language === 'en' ? 'Kalimantan Specialty ' : language === 'zh' ? '镼踹寡 ' : 'Khas Kalbar ',
+                      name: language === 'en' ? 'Dry Seasoned Kwetiao' : 'Kwetiao Kering',
+                      desc: language === 'en' ? 'Soft, delicate flat rice noodles tossed in RM Segar secret seasoned garlic oil, served with beef balls, tender meat, and fresh scallions.' : 'Kwetiao lembut tanpa kuah dibumbui minyak gurih racikan RM Segar, dilengkapi bakso sapi, daging empuk, dan taburan daun bawang segar.',
+                      tag: language === 'en' ? 'Kalimantan Specialty ' : 'Khas Kalbar ',
                       price: 'Rp 28.000',
                       item: MENU_ITEMS.find(m => m.id === 'kwetiao-kering')
                     },
                     {
                       id: 'jeruk-nipis',
-                      name: language === 'en' ? 'Ice Pontianak Lime Juice' : language === 'zh' ? '斤璛寡啁埝瘙' : 'Es Jeruk Nipis Pontianak',
-                      desc: language === 'en' ? 'Freshly squeezed local West Kalimantan lime, perfectly balanced sour-sweetness, the ultimate refreshing companion for your meal.' : language === 'zh' ? '厩鍂镼踹峕垈銝寞唳鰵斢璁刻峕嚗屸像銵∪啣憟賢嚗撖寞糓閫閫雿喳' : 'Perasan jeruk nipis lokal Kalimantan Barat yang asam segar alami dengan tingkat kemanisan yang pas, sangat cocok sebagai pendamping makan.',
-                      tag: language === 'en' ? 'Fresh Beverage ' : language === 'zh' ? '皜閫葩 ' : 'Minuman Segar ',
+                      name: language === 'en' ? 'Ice Pontianak Lime Juice' : 'Es Jeruk Nipis Pontianak',
+                      desc: language === 'en' ? 'Freshly squeezed local West Kalimantan lime, perfectly balanced sour-sweetness, the ultimate refreshing companion for your meal.' : 'Perasan jeruk nipis lokal Kalimantan Barat yang asam segar alami dengan tingkat kemanisan yang pas, sangat cocok sebagai pendamping makan.',
+                      tag: language === 'en' ? 'Fresh Beverage ' : 'Minuman Segar ',
                       price: 'Rp 10.000',
                       item: MENU_ITEMS.find(m => m.id === 'jeruk-nipis')
                     }
@@ -5587,7 +5255,7 @@ ${orderDetails}
 
             <div className="pt-8 pb-2 text-center border-t border-stone-50">
               <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">
-                穢 {new Date().getFullYear()} RM Segar
+                © {new Date().getFullYear()} RM Segar
               </p>
               <p className="text-[10px] text-stone-300 mt-1">
                 valensiarainy73@gmail.com
@@ -5713,7 +5381,7 @@ ${orderDetails}
                 {[
                   { code: 'id', name: 'Bahasa Indonesia' },
                   { code: 'en', name: 'English' },
-                  { code: 'zh', name: '銝剜' }
+                  
                 ].map((item) => (
                   <button
                     key={item.code}
@@ -5757,7 +5425,7 @@ ${orderDetails}
                   <h2 className="text-xl font-black text-stone-900 tracking-tight">
                     {loginMode === 'admin_google' 
                       ? 'Masuk Admin Google' 
-                      : (language === 'en' ? 'Sign In / Register' : language === 'zh' ? '餃 / 瘜典' : 'Masuk atau Daftar')}
+                      : (language === 'en' ? 'Sign In / Register' : 'Masuk atau Daftar')}
                   </h2>
                   <p className="text-stone-500 text-xs leading-relaxed max-w-xs mx-auto">
                     {loginMode === 'admin_google' 
@@ -5824,7 +5492,7 @@ ${orderDetails}
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 underline cursor-pointer"
                             >
-                              <span>俥 Buka WhatsApp untuk kirim OTP</span>
+                              <span>💬 Buka WhatsApp untuk kirim OTP</span>
                             </a>
                           </div>
                         )}
@@ -5899,7 +5567,7 @@ ${orderDetails}
 
           <div className="pt-12 pb-4 text-center">
             <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">
-              穢 {new Date().getFullYear()} RM Segar
+              © {new Date().getFullYear()} RM Segar
             </p>
             <p className="text-[10px] text-stone-300 mt-1">
               val***@gmail.com
@@ -5970,7 +5638,7 @@ ${orderDetails}
                     <span className="text-[10px] text-stone-400 font-bold">{orderPushBanner.timestamp}</span>
                   </div>
                   <h4 className="text-base font-extrabold text-stone-900 leading-tight mt-0.5">
-                    Pesanan Sedang Disiapkan! 㵵
+                    Pesanan Sedang Disiapkan! 🔥
                   </h4>
                 </div>
               </div>
@@ -5997,7 +5665,7 @@ ${orderDetails}
               <div className="text-right">
                 <span className="text-[10px] font-bold text-stone-400 uppercase block">{orderPushBanner.totalItems} Item  {orderPushBanner.orderType}</span>
                 <span className="font-bold text-orange-600 text-xs bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-200/60 inline-block mt-0.5">
-                  Sedang Disiapkan 朖
+                  Sedang Disiapkan ⏳
                 </span>
               </div>
             </div>
@@ -6520,7 +6188,7 @@ ${orderDetails}
               <div className="absolute inset-y-0 w-1.5 border-x border-amber-300/10 rounded-full" />
               
               {/* Golden prosperity character */}
-              <span className="text-[10px] text-amber-200 font-serif font-black select-none leading-none scale-90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] z-10">蟡</span>
+              <span className="text-[10px] text-amber-200 font-serif font-black select-none leading-none scale-90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.3)] z-10">⭐</span>
               
               {/* Internal glow aura */}
               <motion.div 
@@ -6548,7 +6216,7 @@ ${orderDetails}
             <div className="flex items-center gap-3">
               {/* Traditional Red Stamp / Seal */}
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-red-600 to-red-700 border-2 border-amber-400 flex items-center justify-center shadow-lg shadow-red-500/20 -rotate-6 relative flex-shrink-0">
-                <span className="font-serif font-extrabold text-xl text-amber-100 select-none">擙</span>
+                <span className="font-serif font-extrabold text-xl text-amber-100 select-none">🥠</span>
                 <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
               </div>
               <div className="flex flex-col max-w-[165px]">
@@ -7210,7 +6878,7 @@ ${orderDetails}
                     <button 
                       type="button"
                       onClick={() => setShowClearChatConfirmModal(true)}
-                      title={language === 'en' ? 'Clear History' : language === 'zh' ? '皜膄霈啣' : 'Hapus Riwayat'}
+                      title={language === 'en' ? 'Clear History' : 'Hapus Riwayat'}
                       className="w-10 h-10 bg-stone-100 hover:bg-red-50 hover:text-red-500 rounded-2xl flex items-center justify-center text-stone-500 transition-colors cursor-pointer"
                     >
                       <Trash2 size={18} />
@@ -7219,7 +6887,7 @@ ${orderDetails}
                       type="button"
                       onClick={() => setIsChatOpen(false)}
                       className="w-10 h-10 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white rounded-2xl flex items-center justify-center transition-all shadow-md shadow-orange-100 font-bold"
-                      title={language === 'en' ? 'Close Chat' : language === 'zh' ? '喲予' : 'Tutup Chat'}
+                      title={language === 'en' ? 'Close Chat' : 'Tutup Chat'}
                     >
                       <X size={20} />
                     </button>
@@ -7271,7 +6939,7 @@ ${orderDetails}
                                 <span className={`w-2.5 h-2.5 rounded-full ${
                                   confirmedAIMessages[idx] ? 'bg-green-500' : 'bg-orange-500 animate-pulse'
                                 }`} />
-                                {parsed.waLink.type === 'pesanan' ? 'Draf Pesanan AI' : 'Draf Reservasi AI'}
+                                {parsed.actionType === 'pesanan' ? 'Draf Pesanan AI' : 'Draf Reservasi AI'}
                               </div>
                               {confirmedAIMessages[idx] && (
                                 <span className="bg-green-100 text-green-700 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
@@ -7281,13 +6949,13 @@ ${orderDetails}
                             </div>
                             
                             <p className="text-xs text-stone-600 font-medium leading-relaxed bg-stone-50 p-3 rounded-2xl border border-stone-100 italic">
-                              "{parsed.waLink.content}"
+                              "{parsed.waMessage}"
                             </p>
                             
                             {!confirmedAIMessages[idx] ? (
                               <div className="flex flex-col gap-2">
                                 <button
-                                  onClick={() => handleConfirmFromAIChat(idx, parsed.waLink!.type as any, parsed.waLink!.content)}
+                                  onClick={() => handleConfirmFromAIChat(idx, (parsed.actionType || "pesanan") as any, parsed.waMessage || "")}
                                   className="w-full py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md shadow-orange-100"
                                 >
                                   <Sparkles size={16} />
@@ -7296,8 +6964,8 @@ ${orderDetails}
                                 <button
                                   onClick={() => {
                                     const phoneNumber = "6281258394293";
-                                    openWhatsApp(phoneNumber, parsed.waLink!.content);
-                                    triggerPandaAnimation("Menghubungi WhatsApp RM Segar... 䧟俥");
+                                    openWhatsApp(phoneNumber, parsed.waMessage || "");
+                                    triggerPandaAnimation("Menghubungi WhatsApp RM Segar... 👨‍🍳💬");
                                   }}
                                   className="w-full py-2.5 px-4 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
                                 >
@@ -7596,13 +7264,13 @@ ${orderDetails}
               
               {/* Header */}
               <div className="relative bg-gradient-to-r from-red-800 via-red-900 to-red-800 p-6 text-center border-b border-amber-400/30">
-                <div className="absolute top-2 left-4 text-xs font-serif text-amber-300">福</div>
-                <div className="absolute top-2 right-4 text-xs font-serif text-amber-300">福</div>
+                <div className="absolute top-2 left-4 text-xs font-serif text-amber-300">⭐</div>
+                <div className="absolute top-2 right-4 text-xs font-serif text-amber-300">⭐</div>
                 <h3 className="text-xl font-bold font-serif text-amber-300 tracking-wider">
-                  {language === 'en' ? 'CHINESE FORTUNE COOKIE' : language === 'zh' ? '中华幸运签饼' : 'BISKUIT KEBERUNTUNGAN'}
+                  {language === 'en' ? 'CHINESE FORTUNE COOKIE' : 'BISKUIT KEBERUNTUNGAN'}
                 </h3>
                 <p className="text-[10px] uppercase font-sans font-black tracking-widest text-amber-200/70 mt-1">
-                  {language === 'en' ? 'RM SEGAR HOKI GENERATOR' : language === 'zh' ? 'RM SEGAR 美食运势推荐' : 'RAMALAN KULINER HOKI RM SEGAR'}
+                  {language === 'en' ? 'RM SEGAR HOKI GENERATOR' : 'RAMALAN KULINER HOKI RM SEGAR'}
                 </p>
                 {fortuneState !== 'shaking' && (
                   <button 
@@ -7650,10 +7318,10 @@ ${orderDetails}
 
                     <div className="space-y-2">
                       <h4 className="text-amber-200 font-bold text-lg tracking-wide font-serif">
-                        {language === 'en' ? 'Crack Your Cookie!' : language === 'zh' ? '敲开您的幸运签饼' : 'Pecahkan Biskuit Hokimu!'}
+                        {language === 'en' ? 'Crack Your Cookie!' : 'Pecahkan Biskuit Hokimu!'}
                       </h4>
                       <p className="text-stone-300 text-xs leading-relaxed max-w-xs mx-auto">
-                        {language === 'en' ? 'Tap the cookie or click the button below to break it and reveal your kitchen fortune.' : language === 'zh' ? '点击上方的金色幸运签饼或下方按钮，揭晓今日运势与推荐菜单！' : 'Ketuk biskuit emas di atas atau tombol di bawah untuk memecahkannya dan mengungkap ramalan kulinermu hari ini.'}
+                        {language === 'en' ? 'Tap the cookie or click the button below to break it and reveal your kitchen fortune.' : 'Ketuk biskuit emas di atas atau tombol di bawah untuk memecahkannya dan mengungkap ramalan kulinermu hari ini.'}
                       </p>
                     </div>
 
@@ -7661,7 +7329,7 @@ ${orderDetails}
                       onClick={startCrackingCookie}
                       className="px-8 py-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-sm rounded-2xl shadow-xl shadow-amber-500/10 border border-amber-300 transition-all active:scale-95 font-serif cursor-pointer"
                     >
-                      {language === 'en' ? 'BREAK COOKIE 福' : language === 'zh' ? '敲开签饼 福' : 'PECAHKAN BISKUIT 福'}
+                      {language === 'en' ? 'BREAK COOKIE ⭐' : 'PECAHKAN BISKUIT ⭐'}
                     </button>
                   </div>
                 )}
@@ -7696,10 +7364,10 @@ ${orderDetails}
 
                     <div className="space-y-2 animate-pulse">
                       <h4 className="text-amber-300 font-bold text-base tracking-widest font-serif">
-                        {language === 'en' ? 'ALCHEMIZING LUCK...' : language === 'zh' ? '正在凝聚运势能量...' : 'MENGALIRKAN ENERGI HOKI...'}
+                        {language === 'en' ? 'ALCHEMIZING LUCK...' : 'MENGALIRKAN ENERGI HOKI...'}
                       </h4>
                       <p className="text-stone-400 text-xs">
-                        {language === 'en' ? 'Chef Teng is invoking ancient culinary blessings...' : language === 'zh' ? '邓大厨正在为您祈福今日美食运势...' : 'Koki Teng sedang memutar cawan takdir kuliner Anda...'}
+                        {language === 'en' ? 'Chef Teng is invoking ancient culinary blessings...' : 'Koki Teng sedang memutar cawan takdir kuliner Anda...'}
                       </p>
                     </div>
                   </div>
@@ -7749,7 +7417,7 @@ ${orderDetails}
                       
                       {/* Traditional Seal watermark or header */}
                       <div className="text-red-600 text-2xl font-serif font-black mb-1 select-none opacity-85 mt-2">
-                        福
+                        ⭐
                       </div>
 
                       {/* Luck Level */}
@@ -7765,7 +7433,7 @@ ${orderDetails}
                       {/* Lucky Menu recommendation title */}
                       <div className="w-full text-center mt-2 mb-1">
                         <p className="text-[9px] font-black uppercase tracking-wider text-amber-800 font-sans">
-                          {language === 'en' ? 'YOUR LUCKY MENU' : language === 'zh' ? '今日推荐幸运菜单' : 'REKOMENDASI MENU HOKI'}
+                          {language === 'en' ? 'YOUR LUCKY MENU' : 'REKOMENDASI MENU HOKI'}
                         </p>
                       </div>
 
@@ -7803,13 +7471,13 @@ ${orderDetails}
                         onClick={() => setFortuneState('idle')}
                         className="w-full sm:flex-1 py-3 bg-stone-800 hover:bg-stone-700 text-amber-300 font-bold text-xs md:text-sm rounded-xl border border-amber-500/20 active:scale-95 transition-all font-serif cursor-pointer"
                       >
-                        {language === 'en' ? 'CRACK ANOTHER COOKIE 福' : language === 'zh' ? '再试一次 福' : 'COBA BISKUIT LAIN 福'}
+                        {language === 'en' ? 'CRACK ANOTHER COOKIE ⭐' : 'COBA BISKUIT LAIN ⭐'}
                       </button>
                       <button
                         onClick={() => setIsFortuneModalOpen(false)}
                         className="w-full sm:flex-1 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-bold text-xs md:text-sm rounded-xl border border-amber-500/20 active:scale-95 transition-all shadow-lg cursor-pointer"
                       >
-                        {language === 'en' ? 'DONE' : language === 'zh' ? '领受福气' : 'TUTUP & AMBIL HOKI'}
+                        {language === 'en' ? 'DONE' : 'TUTUP & AMBIL HOKI'}
                       </button>
                     </div>
                   </motion.div>
@@ -7861,10 +7529,10 @@ ${orderDetails}
               {/* Header */}
               <div className="relative bg-[#450a0a] p-5 text-center border-b border-amber-500/30">
                 <h3 className="text-xl font-bold font-serif text-amber-200 tracking-wider">
-                  {language === 'en' ? '3-LANGUAGE MENU CATALOG PREVIEW' : language === 'zh' ? '銝㕑祗桀憸' : 'PRATINJAU KATALOG MENU 3 BAHASA'}
+                  {language === 'en' ? '3-LANGUAGE MENU CATALOG PREVIEW' : 'PRATINJAU KATALOG MENU 3 BAHASA'}
                 </h3>
                 <p className="text-[10px] uppercase font-sans font-extrabold tracking-widest text-amber-300/80 mt-1">
-                  {language === 'en' ? 'Priceless  Hand-crafted for RM Segar' : language === 'zh' ? '銝㮖蛹斢霈Ｗ  銝滚鉄隞瑟聢' : 'Bebas Harga  Dibuat Khusus RM Segar'}
+                  {language === 'en' ? 'Priceless  Hand-crafted for RM Segar' : 'Bebas Harga  Dibuat Khusus RM Segar'}
                 </p>
                 <button 
                   onClick={() => setIsPDFPreviewModalOpen(false)}
@@ -7885,7 +7553,7 @@ ${orderDetails}
                         : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
-                    {language === 'en' ? 'Page 1: Main Dishes' : language === 'zh' ? '蝚砌憿蛛銝駁ａ平' : 'Halaman 1: Makanan'}
+                    {language === 'en' ? 'Page 1: Main Dishes' : 'Halaman 1: Makanan'}
                   </button>
                   <button
                     onClick={() => setPdfPreviewPage(2)}
@@ -7895,7 +7563,7 @@ ${orderDetails}
                         : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
-                    {language === 'en' ? 'Page 2: Drinks & About' : language === 'zh' ? '蝚砌憿蛛皜擖桀' : 'Halaman 2: Minuman & Tentang'}
+                    {language === 'en' ? 'Page 2: Drinks & About' : 'Halaman 2: Minuman & Tentang'}
                   </button>
                 </div>
 
@@ -7907,8 +7575,8 @@ ${orderDetails}
                     }}
                     className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-stone-950 font-extrabold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
                   >
-                    <span>㤧儭</span>
-                    <span>{language === 'en' ? 'Print Menu' : language === 'zh' ? '湔枏㫲' : 'Cetak Menu'}</span>
+                    <span>🖨️</span>
+                    <span>{language === 'en' ? 'Print Menu' : 'Cetak Menu'}</span>
                   </button>
 
                   {/* PDF Download Button */}
@@ -7920,12 +7588,12 @@ ${orderDetails}
                     {isGeneratingPDF ? (
                       <>
                         <div className="animate-spin h-3.5 w-3.5 border-2 border-amber-200 border-t-transparent rounded-full" />
-                        <span>{language === 'en' ? 'Generating...' : language === 'zh' ? '甇銁...' : 'Menyiapkan...'}</span>
+                        <span>{language === 'en' ? 'Generating...' : 'Menyiapkan...'}</span>
                       </>
                     ) : (
                       <>
                         <Download size={14} />
-                        <span>{language === 'en' ? 'Download PDF' : language === 'zh' ? '銝贝蝸 PDF' : 'Unduh PDF'}</span>
+                        <span>{language === 'en' ? 'Download PDF' : 'Unduh PDF'}</span>
                       </>
                     )}
                   </button>
@@ -7958,15 +7626,14 @@ ${orderDetails}
                           </div>
                           <h1 className="text-3xl font-extrabold tracking-widest text-[#450a0a]">RUMAH MAKAN SEGAR</h1>
                           <p className="text-xs uppercase tracking-widest text-amber-700 font-sans font-bold mt-1">
-                            Katalog Menu Utama  Main Menu  擙桅尹銝餉
-                          </p>
+                            Katalog Menu Utama • Main Menu</p>
                           <p className="text-[10px] text-stone-500 font-sans italic mt-1">Cita Rasa Autentik Kalimantan Barat (Sambas)</p>
                         </div>
 
                         <div className="space-y-6 flex-grow">
                           <div>
                             <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                              1. BAKMIE (Noodles / 见極厰)
+                              1. BAKMIE (Signature Noodles)
                             </h3>
                             <div className="space-y-1">
                               {MENU_ITEMS.filter(item => item.category === 'Bakmie').map(item => renderPDFMenuItem(item))}
@@ -7975,7 +7642,7 @@ ${orderDetails}
 
                           <div>
                             <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                              2. KWETIAO (Flat Rice Noodles / 祆蝎踵辺)
+                              2. KWETIAO (Flat Rice Noodles)
                             </h3>
                             <div className="space-y-1">
                               {MENU_ITEMS.filter(item => item.category === 'Kwetiao').map(item => renderPDFMenuItem(item))}
@@ -7984,7 +7651,7 @@ ${orderDetails}
 
                           <div>
                             <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                              3. HIDANGAN NASI (Rice Dishes / 蝏誩擖剝)
+                              3. HIDANGAN NASI (Rice Dishes)
                             </h3>
                             <div className="space-y-1">
                               {MENU_ITEMS.filter(item => item.category === 'Nasi').map(item => renderPDFMenuItem(item))}
@@ -8019,13 +7686,13 @@ ${orderDetails}
                           <div className="text-center border-b-2 border-amber-500/30 pb-4 mb-6">
                             <h2 className="text-2xl font-bold tracking-widest text-[#450a0a]">MINUMAN SEGAR</h2>
                             <p className="text-xs uppercase tracking-widest text-amber-700 font-sans font-bold mt-0.5">
-                              Beverages  皜擖桀
+                              Beverages • Minuman Segar
                             </p>
                           </div>
 
                             <div>
                             <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                              4. ANEKA MINUMAN (Beverages / 擖格)
+                              4. ANEKA MINUMAN (Fresh Beverages)
                             </h3>
                             <div className="space-y-1">
                               {MENU_ITEMS.filter(item => item.category === 'Minuman').map(item => renderPDFMenuItem(item))}
@@ -8036,8 +7703,7 @@ ${orderDetails}
                         <div className="mt-8 border-t-2 border-amber-500/20 pt-6 space-y-4">
                           <div className="bg-stone-100/60 p-5 rounded-2xl border border-stone-200/50">
                             <h4 className="text-sm font-extrabold tracking-wider text-[#450a0a] mb-2 font-sans uppercase">
-                              Tentang Rumah Makan Segar  Our Story  喃睲賑
-                            </h4>
+                              Tentang Rumah Makan Segar • Our Story</h4>
                             <div className="text-[10px] text-stone-600 font-sans leading-relaxed space-y-2">
                               <p>
                                 <span className="font-bold text-[#450a0a]">ID:</span> RM Segar menyajikan hidangan autentik khas Sambas, Kalimantan Barat sejak turun-temurun. Dibuat dengan resep legendaris rahasia keluarga and bahan-bahan segar berkualitas tinggi demi cita rasa gurih legendaris yang tiada duanya.
@@ -8046,8 +7712,7 @@ ${orderDetails}
                                 <span className="font-bold text-stone-700">EN:</span> RM Segar serves authentic West Kalimantan Chinese culinary legacy from generation to generation. Made with legendary secret family recipes and high-quality fresh ingredients for an unparalleled authentic taste.
                               </p>
                               <p>
-                                <span className="font-bold text-red-800">ZH:</span> 斢 (RM Segar) 銝碶誨隡䭾㗁甇镼踹峕垈銝嫣穃礶蝏誩銝剝蝢嚗屸典振讐園嫣銝羓圈憌嚗䔶蛹典桃牐厩稲憌㭠
-                              </p>
+                                <span className="font-bold text-red-800">EN:</span> RM Segar has proudly preserved Sambas traditional family recipes for decades, delivering comforting warmth and unmatched authentic flavor in every single bowl.</p>
                             </div>
                           </div>
 
@@ -8056,7 +7721,7 @@ ${orderDetails}
                             <div className="text-[10px] text-red-900 leading-normal font-sans font-medium space-y-0.5">
                               <p><span className="font-bold">INFORMASI PENTING (ID):</span> Menu kami mengandung bahan-bahan Non-Halal.</p>
                               <p><span className="font-bold">IMPORTANT NOTICE (EN):</span> Our menu contains non-halal ingredients.</p>
-                              <p><span className="font-bold">滩鞟內 (ZH):</span> 睲賑訫恍皜 (Non-Halal) 憌</p>
+                              
                             </div>
                           </div>
                         </div>
@@ -8074,10 +7739,8 @@ ${orderDetails}
               {/* Bottom bar info */}
               <div className="p-4 border-t border-stone-200/60 bg-stone-50 text-center text-xs text-stone-500">
                 {language === 'en' 
-                  ? '働 Desktop users can print directly using A4 paper size settings for best results.' 
-                  : language === 'zh' 
-                  ? '働 獢屸蝡舐鍂瑕虾隞亦凒亥挽蝵唧4蝥詨憭批枏㫲嚗䔶誑瑕雿單唳栶' 
-                  : '働 Untuk hasil terbaik saat mencetak, gunakan pengaturan ukuran kertas A4 pada menu printer Anda.'}
+                  ? '💡 Desktop users can print directly using A4 paper size settings for best results.' 
+                  : '💡 Untuk hasil terbaik saat mencetak, gunakan pengaturan ukuran kertas A4 pada menu printer Anda.'}
               </div>
             </motion.div>
           </>
@@ -8107,13 +7770,11 @@ ${orderDetails}
 
               <div className="space-y-1.5">
                 <h3 className="text-xl font-bold text-stone-900">
-                  {language === 'en' ? 'Confirm Log Out' : language === 'zh' ? '蝖株恕箇蒈敶' : 'Konfirmasi Keluar'}
+                  {language === 'en' ? 'Confirm Log Out' : 'Konfirmasi Keluar'}
                 </h3>
                 <p className="text-xs text-stone-500 leading-relaxed px-2">
                   {language === 'en' 
                     ? 'Are you sure you want to log out of your RM Segar account?' 
-                    : language === 'zh' 
-                    ? '函＆摰朞 RM Segar 韐血噡梹' 
                     : 'Apakah Anda yakin ingin keluar dari akun RM Segar?'}
                 </p>
               </div>
@@ -8123,7 +7784,7 @@ ${orderDetails}
                   onClick={() => setShowLogoutConfirmModal(false)}
                   className="py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-2xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
                 >
-                  {language === 'en' ? 'Cancel' : language === 'zh' ? '' : 'Batal'}
+                  {language === 'en' ? 'Cancel' : 'Batal'}
                 </button>
                 <button 
                   onClick={() => {
@@ -8133,7 +7794,7 @@ ${orderDetails}
                   className="py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-red-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <LogOut size={16} />
-                  <span>{language === 'en' ? 'Log Out' : language === 'zh' ? '' : 'Ya, Keluar'}</span>
+                  <span>{language === 'en' ? 'Log Out' : 'Ya, Keluar'}</span>
                 </button>
               </div>
             </motion.div>
@@ -8164,13 +7825,11 @@ ${orderDetails}
 
               <div className="space-y-1.5">
                 <h3 className="text-xl font-bold text-stone-900">
-                  {language === 'en' ? 'Delete Order History?' : language === 'zh' ? '皜征霈Ｗ蟮嚗' : 'Hapus Riwayat Pesanan?'}
+                  {language === 'en' ? 'Delete Order History?' : 'Hapus Riwayat Pesanan?'}
                 </h3>
                 <p className="text-xs text-stone-500 leading-relaxed px-1">
                   {language === 'en' 
                     ? 'Are you sure you want to delete all order history? This action cannot be undone.' 
-                    : language === 'zh' 
-                    ? '函＆摰朞膄㕑恥訫脰扇敶訫嚗迨滢䭾日' 
                     : 'Apakah Anda yakin ingin menghapus semua riwayat pesanan? Tindakan ini tidak dapat dibatalkan.'}
                 </p>
               </div>
@@ -8180,7 +7839,7 @@ ${orderDetails}
                   onClick={() => setShowClearHistoryConfirmModal(false)}
                   className="py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-2xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
                 >
-                  {language === 'en' ? 'Cancel' : language === 'zh' ? '' : 'Batal'}
+                  {language === 'en' ? 'Cancel' : 'Batal'}
                 </button>
                 <button 
                   onClick={() => {
@@ -8189,7 +7848,7 @@ ${orderDetails}
                   className="py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-red-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Trash2 size={16} />
-                  <span>{language === 'en' ? 'Delete All' : language === 'zh' ? '皜征' : 'Ya, Hapus'}</span>
+                  <span>{language === 'en' ? 'Delete All' : 'Ya, Hapus'}</span>
                 </button>
               </div>
             </motion.div>
@@ -8220,13 +7879,11 @@ ${orderDetails}
 
               <div className="space-y-1.5">
                 <h3 className="text-xl font-bold text-stone-900">
-                  {language === 'en' ? 'Clear Chat History?' : language === 'zh' ? '皜征予霈啣嚗' : 'Hapus Obrolan Koki?'}
+                  {language === 'en' ? 'Clear Chat History?' : 'Hapus Obrolan Koki?'}
                 </h3>
                 <p className="text-xs text-stone-500 leading-relaxed px-1">
                   {language === 'en' 
                     ? 'Are you sure you want to clear all chat messages with Chef Teng?' 
-                    : language === 'zh' 
-                    ? '函＆摰朞皜征銝 Koki Teng 典㕑憭抵扇敶訫嚗' 
                     : 'Apakah Anda yakin ingin menghapus semua riwayat obrolan dengan Koki Teng?'}
                 </p>
               </div>
@@ -8236,7 +7893,7 @@ ${orderDetails}
                   onClick={() => setShowClearChatConfirmModal(false)}
                   className="py-3.5 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-2xl font-bold text-sm transition-all active:scale-95 cursor-pointer"
                 >
-                  {language === 'en' ? 'Cancel' : language === 'zh' ? '' : 'Batal'}
+                  {language === 'en' ? 'Cancel' : 'Batal'}
                 </button>
                 <button 
                   onClick={() => {
@@ -8252,7 +7909,7 @@ ${orderDetails}
                   className="py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-red-200 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Trash2 size={16} />
-                  <span>{language === 'en' ? 'Clear' : language === 'zh' ? '皜征' : 'Ya, Hapus'}</span>
+                  <span>{language === 'en' ? 'Clear' : 'Ya, Hapus'}</span>
                 </button>
               </div>
             </motion.div>
@@ -8280,7 +7937,7 @@ ${orderDetails}
               {/* Header with Close */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">繧</span>
+                  <span className="text-xl">🎡</span>
                   <div className="text-left">
                     <h3 className="font-black text-amber-300 text-lg leading-tight">RODA PUTAR HOKI</h3>
                     <p className="text-[10px] text-stone-400 font-semibold">Tentukan Pilihan Kuliner Hari Ini!</p>
@@ -8370,7 +8027,7 @@ ${orderDetails}
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-amber-500/20 text-amber-300 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 border border-amber-500/30">
-                      {WHEEL_ITEMS.find(w => w.id === wonWheelMenu.id)?.emoji || '㬢'}
+                      {WHEEL_ITEMS.find(w => w.id === wonWheelMenu.id)?.emoji || '🥠'}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-extrabold text-white text-sm truncate">{wonWheelMenu.name}</h4>
@@ -8382,7 +8039,7 @@ ${orderDetails}
                       onClick={handleSpinWheel}
                       className="py-2.5 bg-stone-700 hover:bg-stone-600 text-stone-200 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer"
                     >
-                      Putar Lagi 繧
+                      Putar Lagi 🎡
                     </button>
                     <button
                       onClick={(e) => {
@@ -8407,7 +8064,7 @@ ${orderDetails}
                   }`}
                 >
                   <Dices size={20} className={isWheelSpinning ? 'animate-spin' : ''} />
-                  <span>{isWheelSpinning ? 'MEMUTAR RODA...' : 'PUTAR RODA HOKI 繧'}</span>
+                  <span>{isWheelSpinning ? 'MEMUTAR RODA...' : 'PUTAR RODA HOKI 🎡'}</span>
                 </button>
               )}
             </motion.div>
@@ -8591,7 +8248,7 @@ ${orderDetails}
               {/* Header */}
               <div className="flex items-center justify-between border-b border-stone-800 pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">妝</span>
+                  <span className="text-2xl">🎮</span>
                   <div>
                     <h3 className="font-black text-amber-300 text-lg leading-tight">BLOCK BLAST KULINER</h3>
                     <p className="text-[10px] text-stone-400">Susun Balok, Bersihkan Garis & Raih Poin!</p>
@@ -8666,7 +8323,7 @@ ${orderDetails}
                     onClick={openBlockBlastGame}
                     className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:brightness-110 text-stone-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all active:scale-95 cursor-pointer"
                   >
-                    Main Lagi 妝
+                    Main Lagi 🎮
                   </button>
                 </motion.div>
               ) : (
@@ -8906,7 +8563,7 @@ ${orderDetails}
                       : 'text-stone-400 hover:text-white'
                   }`}
                 >
-                  <span>繧 Roda Traktir</span>
+                  <span>🎡 Roda Traktir</span>
                 </button>
                 <button
                   onClick={() => { setTraktirGameMode('bomb'); initTraktirBombGame(); }}
@@ -8916,7 +8573,7 @@ ${orderDetails}
                       : 'text-stone-400 hover:text-white'
                   }`}
                 >
-                  <span>侢 Bom Kuliner</span>
+                  <span>💣 Bom Kuliner</span>
                 </button>
                 <button
                   onClick={() => { setTraktirGameMode('tap'); setTapIsActive(false); setTapLoser(null); }}
@@ -8926,7 +8583,7 @@ ${orderDetails}
                       : 'text-stone-400 hover:text-white'
                   }`}
                 >
-                  <span>失 Adu Sumpit</span>
+                  <span>🥢 Adu Sumpit</span>
                 </button>
               </div>
 
@@ -9030,7 +8687,7 @@ ${orderDetails}
                           onClick={handleSpinTraktirWheel}
                           className="py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer"
                         >
-                          Putar Ulang 繧
+                          Putar Ulang 🎡
                         </button>
                       </div>
                     </motion.div>
@@ -9045,7 +8702,7 @@ ${orderDetails}
                       }`}
                     >
                       <Dices size={18} className={traktirIsSpinning ? 'animate-spin' : ''} />
-                      <span>{traktirIsSpinning ? 'MEMUTAR RODA DOSA...' : 'PUTAR RODA DOSA TRAKTIR 繧'}</span>
+                      <span>{traktirIsSpinning ? 'MEMUTAR RODA DOSA...' : 'PUTAR RODA DOSA TRAKTIR 🎡'}</span>
                     </button>
                   )}
                 </div>
@@ -9089,10 +8746,10 @@ ${orderDetails}
                         }`}
                       >
                         {cell.isOpen ? (
-                          <span className="text-2xl">{cell.isBomb ? '侢' : cell.foodEmoji}</span>
+                          <span className="text-2xl">{cell.isBomb ? '💣' : cell.foodEmoji}</span>
                         ) : (
                           <>
-                            <span className="text-xl">暒</span>
+                            <span className="text-xl">💥</span>
                             <span className="text-[9px] font-mono text-amber-400/80 font-bold">#{idx + 1}</span>
                           </>
                         )}
@@ -9107,7 +8764,7 @@ ${orderDetails}
                       className="p-4 bg-gradient-to-br from-red-950 via-stone-900 to-amber-950 rounded-2xl border border-amber-500/50 text-center space-y-3 shadow-xl"
                     >
                       <div className="w-12 h-12 bg-red-600/30 text-red-400 rounded-full flex items-center justify-center mx-auto text-3xl border border-red-500/50 animate-pulse">
-                        侢
+                        💣
                       </div>
                       <div>
                         <span className="text-[10px] font-black text-red-400 uppercase tracking-widest block">BOOOM!! BOM TRAKTIR MELEDAK!</span>
@@ -9127,7 +8784,7 @@ ${orderDetails}
                           onClick={() => initTraktirBombGame()}
                           className="py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer"
                         >
-                          Main Lagi 侢
+                          Main Lagi 💣
                         </button>
                       </div>
                     </motion.div>
@@ -9162,7 +8819,7 @@ ${orderDetails}
                         >
                           <span className="text-xs uppercase tracking-wider"> {traktirPlayers[0] || 'Pemain 1'}</span>
                           <span className="text-4xl font-mono">{tapP1Score}</span>
-                          <span className="text-[10px] bg-stone-950/20 px-2 py-0.5 rounded-full uppercase">TAP FAST! 失</span>
+                          <span className="text-[10px] bg-stone-950/20 px-2 py-0.5 rounded-full uppercase">TAP FAST! 🥢</span>
                         </button>
 
                         {/* Player 2 Tapper */}
@@ -9172,7 +8829,7 @@ ${orderDetails}
                         >
                           <span className="text-xs uppercase tracking-wider"> {traktirPlayers[1] || 'Pemain 2'}</span>
                           <span className="text-4xl font-mono">{tapP2Score}</span>
-                          <span className="text-[10px] bg-stone-950/20 px-2 py-0.5 rounded-full uppercase">TAP FAST! 失</span>
+                          <span className="text-[10px] bg-stone-950/20 px-2 py-0.5 rounded-full uppercase">TAP FAST! 🥢</span>
                         </button>
                       </div>
                     </div>
@@ -9208,7 +8865,7 @@ ${orderDetails}
                           onClick={startTapDuel}
                           className="py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs transition-all active:scale-95 cursor-pointer"
                         >
-                          Adu Lagi 失
+                          Adu Lagi 🥢
                         </button>
                       </div>
                     </motion.div>
@@ -9218,7 +8875,7 @@ ${orderDetails}
                       className="w-full py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:brightness-110 text-stone-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2"
                     >
                       <Zap size={18} />
-                      <span>MULAI ADU KETUK SUMPIT (5 DETIK) 失</span>
+                      <span>MULAI ADU KETUK SUMPIT (5 DETIK) 🥢</span>
                     </button>
                   )}
                 </div>
@@ -10419,8 +10076,7 @@ ${orderDetails}
               </div>
               <h1 className="text-3xl font-extrabold tracking-widest text-[#450a0a]">RUMAH MAKAN SEGAR</h1>
               <p className="text-xs uppercase tracking-widest text-amber-700 font-sans font-bold mt-1">
-                Katalog Menu Utama  Main Menu  擙桅尹銝餉
-              </p>
+                Katalog Menu Utama • Main Menu</p>
               <p className="text-[10px] text-stone-500 font-sans italic mt-1">Cita Rasa Autentik Kalimantan Barat (Sambas)</p>
             </div>
 
@@ -10429,7 +10085,7 @@ ${orderDetails}
               {/* Category: BAKMIE */}
               <div>
                 <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                  1. BAKMIE (Noodles / 见極厰)
+                  1. BAKMIE (Signature Noodles)
                 </h3>
                 <div className="space-y-1">
                   {MENU_ITEMS.filter(item => item.category === 'Bakmie').map(item => renderPDFMenuItem(item))}
@@ -10439,7 +10095,7 @@ ${orderDetails}
               {/* Category: KWETIAO */}
               <div>
                 <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                  2. KWETIAO (Flat Rice Noodles / 祆蝎踵辺)
+                  2. KWETIAO (Flat Rice Noodles)
                 </h3>
                 <div className="space-y-1">
                   {MENU_ITEMS.filter(item => item.category === 'Kwetiao').map(item => renderPDFMenuItem(item))}
@@ -10449,7 +10105,7 @@ ${orderDetails}
               {/* Category: NASI */}
               <div>
                 <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                  3. HIDANGAN NASI (Rice Dishes / 蝏誩擖剝)
+                  3. HIDANGAN NASI (Rice Dishes)
                 </h3>
                 <div className="space-y-1">
                   {MENU_ITEMS.filter(item => item.category === 'Nasi').map(item => renderPDFMenuItem(item))}
@@ -10486,13 +10142,13 @@ ${orderDetails}
               <div className="text-center border-b-2 border-amber-500/30 pb-4 mb-6">
                 <h2 className="text-2xl font-bold tracking-widest text-[#450a0a]">MINUMAN SEGAR</h2>
                 <p className="text-xs uppercase tracking-widest text-amber-700 font-sans font-bold mt-0.5">
-                  Beverages  皜擖桀
+                  Beverages • Minuman Segar
                 </p>
               </div>
 
               <div>
                 <h3 className="text-xs uppercase font-extrabold tracking-wider bg-[#450a0a] text-amber-100 px-3 py-1 inline-block rounded mb-2 font-sans">
-                  4. ANEKA MINUMAN (Beverages / 擖格)
+                  4. ANEKA MINUMAN (Fresh Beverages)
                 </h3>
                 <div className="space-y-1">
                   {MENU_ITEMS.filter(item => item.category === 'Minuman').map(item => renderPDFMenuItem(item))}
@@ -10504,8 +10160,7 @@ ${orderDetails}
             <div className="mt-8 border-t-2 border-amber-500/20 pt-6 space-y-4">
               <div className="bg-stone-100/60 p-5 rounded-2xl border border-stone-200/50">
                 <h4 className="text-sm font-extrabold tracking-wider text-[#450a0a] mb-2 font-sans uppercase">
-                  Tentang Rumah Makan Segar  Our Story  喃睲賑
-                </h4>
+                  Tentang Rumah Makan Segar • Our Story</h4>
                 <div className="text-[10px] text-stone-600 font-sans leading-relaxed space-y-2">
                   <p>
                     <span className="font-bold text-[#450a0a]">ID:</span> RM Segar menyajikan hidangan autentik khas Sambas, Kalimantan Barat sejak turun-temurun. Dibuat dengan resep legendaris rahasia keluarga dan bahan-bahan segar berkualitas tinggi demi cita rasa gurih legendaris yang tiada duanya.
@@ -10513,19 +10168,15 @@ ${orderDetails}
                   <p>
                     <span className="font-bold text-stone-700">EN:</span> RM Segar serves authentic West Kalimantan Chinese culinary legacy from generation to generation. Made with legendary secret family recipes and high-quality fresh ingredients for an unparalleled authentic taste.
                   </p>
-                  <p>
-                    <span className="font-bold text-red-800">ZH:</span> 斢 (RM Segar) 銝碶誨隡䭾㗁甇镼踹峕垈銝嫣穃礶蝏誩銝剝蝢嚗屸典振讐園嫣銝羓圈憌嚗䔶蛹典桃牐厩稲憌㭠
-                  </p>
                 </div>
               </div>
 
               {/* Warnings and Info */}
               <div className="bg-red-50 p-4 rounded-xl border border-red-200 flex items-start gap-3">
-                <span className="text-red-600 text-lg"></span>
+                <span className="text-red-600 text-lg">⚠️</span>
                 <div className="text-[10px] text-red-900 leading-normal font-sans font-medium space-y-0.5">
                   <p><span className="font-bold">INFORMASI PENTING (ID):</span> Menu kami mengandung bahan-bahan Non-Halal.</p>
                   <p><span className="font-bold">IMPORTANT NOTICE (EN):</span> Our menu contains non-halal ingredients.</p>
-                  <p><span className="font-bold">滩鞟內 (ZH):</span> 睲賑訫恍皜 (Non-Halal) 憌</p>
                 </div>
               </div>
             </div>

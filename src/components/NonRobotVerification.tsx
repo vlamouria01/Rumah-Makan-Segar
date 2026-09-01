@@ -5,7 +5,7 @@ import { ShieldCheck, CheckCircle2, RefreshCw, X, ShieldAlert, Check } from 'luc
 interface NonRobotVerificationProps {
   isVerified: boolean;
   onVerify: (verified: boolean) => void;
-  language?: 'id' | 'en' | 'zh';
+  language?: 'id' | 'en';
   className?: string;
   id?: string;
 }
@@ -107,16 +107,16 @@ export const NonRobotVerification: React.FC<NonRobotVerificationProps> = ({
   };
 
   const t = {
-    notRobot: language === 'en' ? "I'm not a robot" : language === 'zh' ? "我不是机器人" : "Saya bukan robot",
-    verifying: language === 'en' ? "Verifying..." : language === 'zh' ? "验证中..." : "Memverifikasi...",
-    verified: language === 'en' ? "Verified" : language === 'zh' ? "已验证" : "Terverifikasi",
-    securityBadge: language === 'en' ? "RM Segar Security Protection" : language === 'zh' ? "RM Segar 安全防护" : "Proteksi Keamanan RM Segar",
-    challengeTitle: language === 'en' ? "Human Verification Challenge" : language === 'zh' ? "真人身份安全验证" : "Verifikasi Manusia (Non-Robot)",
-    challengeSubtitle: language === 'en' ? "Select all delicious food & drink items" : language === 'zh' ? "请点击选择所有美食和饮品" : "Pilih semua gambar makanan atau minuman RM Segar",
-    mathSubtitle: language === 'en' ? "Solve the simple arithmetic:" : language === 'zh' ? "请回答简易计算题：" : "Jawab pertanyaan matematika sederhana:",
-    verifyBtn: language === 'en' ? "Verify" : language === 'zh' ? "确认验证" : "Verifikasi Sekarang",
-    errorMsg: language === 'en' ? "Please choose all correct items." : language === 'zh' ? "选择不正确，请重试。" : "Pilihan belum tepat, silakan coba lagi.",
-    mathErrorMsg: language === 'en' ? "Incorrect answer, try again." : language === 'zh' ? "答案错误，请重试。" : "Jawaban salah, silakan hitung kembali.",
+    notRobot: language === 'en' ? "I'm not a robot" : "Saya bukan robot",
+    verifying: language === 'en' ? "Verifying..." : "Memverifikasi...",
+    verified: language === 'en' ? "Verified" : "Terverifikasi",
+    securityBadge: language === 'en' ? "RM Segar Security Protection" : "Proteksi Keamanan RM Segar",
+    challengeTitle: language === 'en' ? "Human Verification Challenge" : "Verifikasi Manusia (Non-Robot)",
+    challengeSubtitle: language === 'en' ? "Select all delicious food & drink items" : "Pilih semua gambar makanan atau minuman RM Segar",
+    mathSubtitle: language === 'en' ? "Solve the simple arithmetic:" : "Jawab pertanyaan matematika sederhana:",
+    verifyBtn: language === 'en' ? "Verify" : "Verifikasi Sekarang",
+    errorMsg: language === 'en' ? "Please choose all correct items." : "Pilihan belum tepat, silakan coba lagi.",
+    mathErrorMsg: language === 'en' ? "Incorrect answer, try again." : "Jawaban salah, silakan hitung kembali.",
   };
 
   return (
