@@ -20,6 +20,7 @@ import {
   History,
   Trash2,
   Check,
+  Flame,
   Soup,
   GlassWater,
   Zap,
@@ -71,6 +72,14 @@ import { MISSING_PERSONS_DATA, MissingPerson, searchOrangHilangLive } from './mi
 import { loginAdminWithGoogleFirebase, loginWithGoogleFirebase, ALLOWED_ADMIN_EMAIL, normalizePhoneNumber, isValidPhoneNumber, db, VERCEL_DOMAIN } from './lib/firebase';
 import { doc, setDoc, getDoc, getDocs, collection, updateDoc, deleteDoc } from 'firebase/firestore';
 import { NonRobotVerification } from './components/NonRobotVerification';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { SpotlightCard } from './components/react-bits/SpotlightCard';
+import { ShinyText } from './components/react-bits/ShinyText';
+import { Magnet } from './components/react-bits/Magnet';
+import { ClickSpark } from './components/react-bits/ClickSpark';
+
+gsap.registerPlugin(useGSAP);
 
 export interface VirtualEmail {
   id: string;
@@ -148,7 +157,11 @@ export const TRANSLATIONS = {
     kokiError: "Ups, Koki Teng sedang sibuk menyiapkan pesanan. Coba lagi nanti ya!",
     searchTitle: "Pencarian",
     searchResultsFor: "Hasil pencarian untuk",
-    searchNoResults: "Menu tidak ditemukan"
+    searchNoResults: "Menu tidak ditemukan",
+    cookingToastTitle: "Pesanan Sedang Dimasak 🍳",
+    cookingToastDesc: "Anda memiliki pesanan yang sedang dimasak di dapur. Jangan lupa kembali mengecek status pesanan Anda!",
+    cookingToastAction: "Cek Status Pesanan",
+    cookingLeaveAlert: "Pesanan Anda sedang dimasak di dapur RM Segar! Jangan lupa kembali mengecek status pesanan Anda."
   },
   zh: {
     title: "RM Segar 新鲜餐馆",
@@ -212,7 +225,11 @@ export const TRANSLATIONS = {
     kokiError: "哎呀，Teng 厨师正在忙着备餐，请稍后再试！",
     searchTitle: "搜索",
     searchResultsFor: "搜索结果",
-    searchNoResults: "未找到相关菜品"
+    searchNoResults: "未找到相关菜品",
+    cookingToastTitle: "餐品正在烹饪中 🍳",
+    cookingToastDesc: "您有正在厨房烹饪的订单，请记得随时返回查看订单最新状态！",
+    cookingToastAction: "查看订单状态",
+    cookingLeaveAlert: "您在 RM Segar 有正在烹饪的订单！请记得返回查看订单最新状态。"
   },
   en: {
     title: "RM Segar",
@@ -276,7 +293,11 @@ export const TRANSLATIONS = {
     kokiError: "Oops, Chef Teng is busy preparing orders. Please try again later!",
     searchTitle: "Search",
     searchResultsFor: "Search results for",
-    searchNoResults: "No menu items found"
+    searchNoResults: "No menu items found",
+    cookingToastTitle: "Order Is Being Cooked 🍳",
+    cookingToastDesc: "You have an active order being cooked in the kitchen. Don't forget to return and check your order status!",
+    cookingToastAction: "Check Order Status",
+    cookingLeaveAlert: "Your order is currently being cooked at RM Segar! Don't forget to return and check your order status."
   },
   
 };
@@ -954,6 +975,34 @@ function App() {
     } catch { return []; }
   });
   const [activeTab, setActiveTab] = useState('home');
+  const homeContainerRef = useRef<HTMLDivElement>(null);
+
+  // GSAP: Staggered animation for menu items and gentle floating badge animations
+  useGSAP(() => {
+    if (activeTab !== 'home') return;
+
+    gsap.fromTo(
+      '.gsap-menu-card',
+      { opacity: 0, y: 18, scale: 0.98 },
+      {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.45,
+        stagger: 0.035,
+        ease: 'power2.out',
+        clearProps: 'transform,opacity'
+      }
+    );
+
+    gsap.to('.gsap-float-slow', {
+      y: -5,
+      duration: 2.2,
+      repeat: -1,
+      yoyo: true,
+      ease: 'sine.inOut'
+    });
+  }, { dependencies: [activeCategory, activeTab], scope: homeContainerRef });
   const [language, setLanguage] = useState<'id' | 'en' | 'zh'>(getInitialLanguage);
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
@@ -1524,6 +1573,14 @@ function App() {
   const [orderPushBanner, setOrderPushBanner] = useState<OrderPushBannerState | null>(null);
   const [emailNotificationToast, setEmailNotificationToast] = useState<string | null>(null);
 
+  // Cooking Reminder Toast State for orders with 'cooking' status when closing/reopening
+  interface CookingReminderToastState {
+    orderId: string;
+    totalItems: number;
+    orderType?: string;
+  }
+  const [cookingReminderToast, setCookingReminderToast] = useState<CookingReminderToastState | null>(null);
+
   const [virtualEmails, setVirtualEmails] = useState<VirtualEmail[]>(() => {
     try {
       const saved = localStorage.getItem('rm_segar_virtual_emails');
@@ -1568,6 +1625,126 @@ function App() {
   const unreadEmailCount = useMemo(() => {
     return virtualEmails.filter(e => !e.isRead).length;
   }, [virtualEmails]);
+
+  // Alert user before closing or reloading if they have an active order with 'cooking' status
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const cookingOrder = orders.find(o => o.status === 'cooking');
+      if (cookingOrder) {
+        try {
+          localStorage.setItem('rm_segar_left_with_cooking', JSON.stringify({
+            orderId: cookingOrder.orderId || cookingOrder.id,
+            totalItems: cookingOrder.totalItems || cookingOrder.items?.length || 1,
+            orderType: cookingOrder.orderType || 'Dine In',
+            timestamp: Date.now()
+          }));
+        } catch {}
+        const message = TRANSLATIONS[language]?.cookingLeaveAlert || "Pesanan Anda sedang dimasak di dapur RM Segar! Jangan lupa kembali mengecek status pesanan Anda.";
+        e.preventDefault();
+        e.returnValue = message;
+        return message;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [orders, language]);
+
+  // Monitor app minimization / closing / return and trigger toast notification for 'cooking' orders
+  useEffect(() => {
+    const triggerCookingToast = (targetOrder?: Order) => {
+      const cookingOrder = targetOrder || orders.find(o => o.status === 'cooking');
+      if (!cookingOrder) return;
+
+      const lastToastTime = sessionStorage.getItem('rm_segar_last_cooking_toast_time');
+      const now = Date.now();
+      if (lastToastTime && now - parseInt(lastToastTime, 10) < 6000) {
+        return;
+      }
+      sessionStorage.setItem('rm_segar_last_cooking_toast_time', now.toString());
+
+      setCookingReminderToast({
+        orderId: cookingOrder.orderId || cookingOrder.id,
+        totalItems: cookingOrder.totalItems || cookingOrder.items?.length || 1,
+        orderType: cookingOrder.orderType || 'Dine In'
+      });
+    };
+
+    // Check if user had left/closed previously while order was cooking, or on app mount
+    const savedLeft = localStorage.getItem('rm_segar_left_with_cooking');
+    const activeCooking = orders.find(o => o.status === 'cooking');
+    if (savedLeft || activeCooking) {
+      const timer = setTimeout(() => {
+        triggerCookingToast(activeCooking);
+        localStorage.removeItem('rm_segar_left_with_cooking');
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+
+    const handleVisibilityChange = () => {
+      const currentCooking = orders.find(o => o.status === 'cooking');
+      if (document.visibilityState === 'hidden') {
+        if (currentCooking) {
+          try {
+            localStorage.setItem('rm_segar_left_with_cooking', JSON.stringify({
+              orderId: currentCooking.orderId || currentCooking.id,
+              totalItems: currentCooking.totalItems || currentCooking.items?.length || 1,
+              orderType: currentCooking.orderType || 'Dine In',
+              timestamp: Date.now()
+            }));
+          } catch {}
+
+          // Native browser background notification if granted
+          if ('Notification' in window && Notification.permission === 'granted') {
+            try {
+              new Notification('RM Segar - Pesanan Sedang Dimasak 🍳', {
+                body: `Pesanan #${currentCooking.id} sedang dimasak di dapur. Klik untuk kembali mengecek status pesanan!`,
+                icon: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=96&h=96&fit=crop'
+              });
+            } catch {}
+          }
+        }
+      } else if (document.visibilityState === 'visible') {
+        // App reopened or tab refocused
+        const hadLeft = localStorage.getItem('rm_segar_left_with_cooking');
+        if (hadLeft || currentCooking) {
+          triggerCookingToast(currentCooking);
+          localStorage.removeItem('rm_segar_left_with_cooking');
+        }
+      }
+    };
+
+    const handlePageHide = () => {
+      const currentCooking = orders.find(o => o.status === 'cooking');
+      if (currentCooking) {
+        try {
+          localStorage.setItem('rm_segar_left_with_cooking', JSON.stringify({
+            orderId: currentCooking.orderId || currentCooking.id,
+            totalItems: currentCooking.totalItems || currentCooking.items?.length || 1,
+            orderType: currentCooking.orderType || 'Dine In',
+            timestamp: Date.now()
+          }));
+        } catch {}
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+    };
+  }, [orders]);
+
+  // Auto-dismiss cooking reminder toast after 9 seconds
+  useEffect(() => {
+    if (!cookingReminderToast) return;
+    const timer = setTimeout(() => {
+      setCookingReminderToast(null);
+    }, 9000);
+    return () => clearTimeout(timer);
+  }, [cookingReminderToast]);
 
   const handleUpdateOrderStatus = (order: Order, newStatus: 'cooking' | 'done' | 'cancelled') => {
     setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: newStatus } : o));
@@ -2514,36 +2691,42 @@ Aturan Sangat Penting:
 
     if (totalQty <= 0) {
       return (
-        <button
-          type="button"
-          onClick={handleIncrease}
-          className="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-full text-xs font-bold transition-all active:scale-95 shadow-xs flex items-center gap-1 cursor-pointer"
-        >
-          <Plus size={12} />
-          Tambah
-        </button>
+        <ClickSpark sparkColor="#f97316" sparkCount={7} sparkRadius={18}>
+          <button
+            type="button"
+            onClick={handleIncrease}
+            className="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-full text-xs font-bold transition-all active:scale-95 shadow-xs flex items-center gap-1 cursor-pointer"
+          >
+            <Plus size={12} />
+            Tambah
+          </button>
+        </ClickSpark>
       );
     }
 
     return (
       <div className="flex items-center bg-stone-50 border border-stone-100 rounded-2xl p-0.5 shadow-sm">
-        <button
-          type="button"
-          onClick={handleDecrease}
-          className="w-7 h-7 rounded-xl flex items-center justify-center text-stone-600 bg-white hover:bg-stone-100 active:scale-95 transition-all shadow-xs"
-        >
-          <Minus size={12} />
-        </button>
+        <ClickSpark sparkColor="#f97316" sparkCount={5} sparkRadius={14}>
+          <button
+            type="button"
+            onClick={handleDecrease}
+            className="w-7 h-7 rounded-xl flex items-center justify-center text-stone-600 bg-white hover:bg-stone-100 active:scale-95 transition-all shadow-xs cursor-pointer"
+          >
+            <Minus size={12} />
+          </button>
+        </ClickSpark>
         <span className="w-8 text-center font-bold text-xs text-stone-800">
           {totalQty}
         </span>
-        <button
-          type="button"
-          onClick={handleIncrease}
-          className="w-7 h-7 rounded-xl flex items-center justify-center bg-orange-500 text-white font-bold text-xs hover:bg-orange-600 active:scale-95 transition-all shadow-xs"
-        >
-          <Plus size={12} />
-        </button>
+        <ClickSpark sparkColor="#f97316" sparkCount={5} sparkRadius={14}>
+          <button
+            type="button"
+            onClick={handleIncrease}
+            className="w-7 h-7 rounded-xl flex items-center justify-center bg-orange-500 text-white font-bold text-xs hover:bg-orange-600 active:scale-95 transition-all shadow-xs cursor-pointer"
+          >
+            <Plus size={12} />
+          </button>
+        </ClickSpark>
       </div>
     );
   };
@@ -3765,6 +3948,7 @@ ${orderDetails}
 
   const renderHome = () => (
     <motion.div 
+      ref={homeContainerRef}
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }}
@@ -3773,68 +3957,108 @@ ${orderDetails}
       {/* Action Banners (Chef Chat & Fortune Cookie) */}
       <section className="px-4 md:px-8 lg:px-10 space-y-4 max-w-xl mx-auto w-full" id="tour-ai-chat">
         {/* Chef Teng Recommendation Banner */}
-        <div className="bg-gradient-to-br from-[#260c0c] via-[#1c0808] to-[#120404] border-2 border-red-950/70 rounded-[32px] p-5 md:p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
-          <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
+        <SpotlightCard
+          className="bg-stone-950 border border-stone-800/80 rounded-3xl p-5 md:p-6 shadow-xl relative overflow-hidden flex flex-col justify-between"
+          spotlightColor="rgba(234, 88, 12, 0.2)"
+        >
+          <div className="absolute top-0 right-0 w-36 h-36 bg-orange-500/10 rounded-full blur-2xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-36 h-36 bg-red-600/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute inset-1.5 border border-red-500/10 rounded-[28px] pointer-events-none" />
+
+          {/* Top Badge */}
+          <div className="mb-3 relative z-10 flex items-center justify-between">
+            <ShinyText 
+              text="✨ ASISTEN KULINER RESMI" 
+              color="#9a3412" 
+              shineColor="#fdba74" 
+              className="text-[10px] font-black uppercase tracking-wider" 
+            />
+            <span className="text-[10px] font-bold text-stone-400 bg-stone-900 border border-stone-800 px-2 py-0.5 rounded-full">
+              Koki Teng AI
+            </span>
+          </div>
 
           {/* Top Row: Icon + Text */}
           <div className="flex items-center gap-3.5 relative z-10">
-            <div className="w-14 h-14 bg-gradient-to-br from-[#ef233c] to-[#d90429] rounded-2xl flex items-center justify-center text-white border border-red-400/40 shadow-md flex-shrink-0">
+            <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-orange-600 rounded-2xl flex items-center justify-center text-white border border-orange-400/40 shadow-md flex-shrink-0 gsap-float-slow">
               <Bot size={28} className="text-white" strokeWidth={2.2} />
             </div>
             <div>
-              <h3 className="text-white font-extrabold text-base md:text-lg tracking-tight font-sans">
+              <h3 className="text-white font-extrabold text-base md:text-lg tracking-tight font-display">
                 {TRANSLATIONS[language].kokiAsk}
               </h3>
-              <p className="text-stone-300 text-xs md:text-sm mt-0.5 font-medium font-sans">
+              <p className="text-stone-300 text-xs md:text-sm mt-0.5 font-medium">
                 {TRANSLATIONS[language].chatChef}
               </p>
             </div>
           </div>
 
-          {/* Bottom Button */}
-          <button 
-            onClick={startAIChat}
-            className="w-full mt-4 py-3.5 px-4 bg-gradient-to-r from-[#e50914] via-[#f0142f] to-[#e50914] hover:brightness-110 text-white rounded-2xl font-bold text-sm md:text-base flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-red-950/40 active:scale-98 border border-red-400/30 font-serif tracking-wide cursor-pointer relative z-10"
-          >
-            <MessageSquare size={18} className="text-amber-200" />
-            <span>{TRANSLATIONS[language].kokiStart}</span>
-          </button>
-        </div>
+          {/* Bottom Button with Magnet Micro-interaction */}
+          <div className="mt-4 relative z-10">
+            <Magnet padding={40} magnetStrength={3} wrapperClassName="w-full">
+              <ClickSpark sparkColor="#f97316" sparkCount={9} sparkRadius={24} className="w-full">
+                <button 
+                  onClick={startAIChat}
+                  className="w-full py-3.5 px-4 bg-gradient-to-r from-red-600 via-orange-600 to-red-600 hover:brightness-110 text-white rounded-2xl font-bold text-sm md:text-base flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-orange-950/40 active:scale-98 border border-orange-500/30 font-display tracking-wide cursor-pointer"
+                >
+                  <MessageSquare size={18} className="text-amber-200" />
+                  <span>{TRANSLATIONS[language].kokiStart}</span>
+                </button>
+              </ClickSpark>
+            </Magnet>
+          </div>
+        </SpotlightCard>
 
         {/* Lucky Fortune Cookie Banner */}
-        <div className="bg-gradient-to-br from-[#801010] via-[#6d0b0b] to-[#550606] border-2 border-red-950/70 rounded-[32px] p-5 md:p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
+        <SpotlightCard
+          className="bg-[#1c140d] border border-amber-900/60 rounded-3xl p-5 md:p-6 shadow-xl relative overflow-hidden flex flex-col justify-between"
+          spotlightColor="rgba(245, 158, 11, 0.22)"
+        >
           <div className="absolute top-0 right-0 w-36 h-36 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute inset-1.5 border border-amber-500/15 rounded-[28px] pointer-events-none" />
           
+          {/* Top Badge */}
+          <div className="mb-3 relative z-10 flex items-center justify-between">
+            <ShinyText 
+              text="🏮 BISKUIT KEBERUNTUNGAN" 
+              color="#b45309" 
+              shineColor="#fef08a" 
+              className="text-[10px] font-black uppercase tracking-wider" 
+            />
+            <span className="text-[10px] font-bold text-amber-400/90 bg-amber-950/60 border border-amber-800/60 px-2 py-0.5 rounded-full">
+              Hoki Harian
+            </span>
+          </div>
+
           {/* Top Row: Icon + Text */}
           <div className="flex items-center gap-3.5 relative z-10">
-            <div className="w-14 h-14 bg-gradient-to-br from-[#fed766] via-[#facc15] to-[#eab308] rounded-2xl flex items-center justify-center text-[#991b1b] shadow-md border border-amber-300/80 flex-shrink-0 select-none">
+            <div className="w-14 h-14 bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 rounded-2xl flex items-center justify-center text-stone-900 shadow-md border border-amber-300 flex-shrink-0 select-none gsap-float-slow">
               <span className="text-3xl font-black font-serif leading-none">福</span>
             </div>
             <div>
-              <h3 className="text-[#fef08a] font-black text-base md:text-lg tracking-wide font-serif">
+              <h3 className="text-amber-200 font-black text-base md:text-lg tracking-wide font-display">
                 {language === 'zh' ? '幸运饼干 (Fortune Cookie)' : language === 'en' ? 'Lucky Fortune Cookie' : 'Biskuit Hoki Keberuntungan'}
               </h3>
-              <p className="text-amber-100/90 text-xs md:text-sm mt-0.5 leading-snug font-sans font-medium max-w-sm">
+              <p className="text-amber-100/90 text-xs md:text-sm mt-0.5 leading-snug font-medium max-w-sm">
                 {language === 'zh' ? '敲开每日幸运饼干，揭晓您的专属今日幸运招牌菜！' : language === 'en' ? 'Crack open a daily fortune to discover your lucky menu recommendation!' : 'Pecahkan biskuit hoki untuk rekomendasi menu keberuntunganmu!'}
               </p>
             </div>
           </div>
           
-          {/* Bottom Button */}
-          <button 
-            onClick={openFortuneCookie}
-            className="w-full mt-4 py-3.5 px-4 bg-gradient-to-r from-[#f59e0b] via-[#fbbf24] to-[#f59e0b] hover:brightness-105 text-stone-950 rounded-2xl font-black text-sm md:text-base flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-amber-950/30 active:scale-98 border border-amber-300 font-serif tracking-wide cursor-pointer relative z-10"
-          >
-            <span className="text-base select-none">🏮</span>
-            <span>{language === 'zh' ? '查看今日运势' : language === 'en' ? 'Check Luck' : 'Cek Hoki'}</span>
-          </button>
-        </div>
+          {/* Bottom Button with Magnet Micro-interaction */}
+          <div className="mt-4 relative z-10">
+            <Magnet padding={40} magnetStrength={3} wrapperClassName="w-full">
+              <ClickSpark sparkColor="#fbbf24" sparkCount={10} sparkRadius={24} className="w-full">
+                <button 
+                  onClick={openFortuneCookie}
+                  className="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:brightness-105 text-stone-950 rounded-2xl font-black text-sm md:text-base flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-amber-950/30 active:scale-98 border border-amber-300 font-display tracking-wide cursor-pointer"
+                >
+                  <span className="text-base select-none">🏮</span>
+                  <span>{language === 'zh' ? '查看今日运势' : language === 'en' ? 'Check Luck' : 'Cek Hoki'}</span>
+                </button>
+              </ClickSpark>
+            </Magnet>
+          </div>
+        </SpotlightCard>
       </section>
-
-
 
       {/* Categories */}
       <section className="px-4 md:px-8 lg:px-10 overflow-x-auto no-scrollbar flex justify-start md:justify-center gap-4 md:gap-6 lg:gap-12 py-4" id="tour-categories">
@@ -3842,14 +4066,14 @@ ${orderDetails}
           <button
             key={cat.name}
             onClick={() => setActiveCategory(cat.name)}
-            className={`flex flex-col items-center gap-2 min-w-[70px] md:min-w-[100px] transition-all ${
-              activeCategory === cat.name ? 'scale-105' : 'opacity-65'
+            className={`flex flex-col items-center gap-2 min-w-[70px] md:min-w-[100px] transition-all cursor-pointer ${
+              activeCategory === cat.name ? 'scale-105' : 'opacity-65 hover:opacity-90'
             }`}
           >
             <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center transition-all duration-300 ${
               activeCategory === cat.name 
-                ? 'bg-gradient-to-br from-red-600 to-red-500 text-white shadow-lg shadow-red-200 border border-amber-400' 
-                : 'bg-white text-stone-600 border border-stone-100 hover:border-red-100'
+                ? 'bg-gradient-to-br from-red-600 to-orange-600 text-white shadow-lg shadow-red-200 border border-amber-400' 
+                : 'bg-white text-stone-600 border border-stone-100 hover:border-red-100 shadow-xs'
             }`}>
               {cat.icon}
             </div>
@@ -3865,77 +4089,86 @@ ${orderDetails}
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <span className="text-red-600">🔥</span>
-            <h2 className="text-xl font-bold text-stone-900 tracking-tight">{TRANSLATIONS[language].popular}</h2>
+            <h2 className="text-xl font-bold text-stone-900 tracking-tight font-display">{TRANSLATIONS[language].popular}</h2>
           </div>
           <button 
             onClick={handleViewAllMenu}
             className="text-red-600 hover:text-red-700 text-sm font-bold flex items-center gap-0.5 transition-colors cursor-pointer"
           >
             <span>Lihat Semua</span>
-            <span></span>
           </button>
         </div>
         <div ref={popularScrollRef} className="flex gap-4 overflow-x-auto no-scrollbar pb-4 md:flex lg:grid lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 md:gap-6 lg:gap-8 xl:gap-10">
           {popularItems.map((item) => (
-            <motion.div 
-              key={item.id}
-              whileTap={{ scale: 0.95 }}
-              className="min-w-[240px] md:min-w-[280px] lg:min-w-0 bg-white rounded-3xl p-4 md:p-5 lg:p-6 shadow-sm border border-stone-50 flex flex-col justify-between h-full hover:border-red-100 transition-all group"
-            >
-              <div className="relative h-32 rounded-2xl overflow-hidden mb-4 bg-stone-50">
-                <MenuIcon item={item} size={48} />
-                <button 
-                  onClick={() => toggleFavorite(item.id)}
-                  className={`absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full transition-all shadow-xs ${
-                    favorites.includes(item.id) ? 'text-red-500 scale-110' : 'text-stone-400 hover:text-red-400'
-                  }`}
-                >
-                  <Heart size={16} fill={favorites.includes(item.id) ? "currentColor" : "none"} />
-                </button>
-              </div>
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-stone-900 leading-tight group-hover:text-red-700 transition-colors">{item.name}</h3>
-                <div className="flex items-center gap-1 text-amber-500">
-                  <Star size={14} fill="currentColor" />
-                  <span className="text-xs font-bold">4.8</span>
+            <ClickSpark key={item.id} sparkColor="#ea580c" sparkCount={6} sparkRadius={16}>
+              <motion.div 
+                whileTap={{ scale: 0.96 }}
+                className="gsap-menu-card min-w-[240px] md:min-w-[280px] lg:min-w-0 bg-white rounded-3xl p-4 md:p-5 lg:p-6 shadow-sm border border-stone-100 flex flex-col justify-between h-full hover:border-orange-200 hover:shadow-md transition-all group"
+              >
+                <div className="relative h-32 rounded-2xl overflow-hidden mb-4 bg-stone-50">
+                  <MenuIcon item={item} size={48} />
+                  <button 
+                    onClick={() => toggleFavorite(item.id)}
+                    className={`absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full transition-all shadow-xs cursor-pointer ${
+                      favorites.includes(item.id) ? 'text-red-500 scale-110' : 'text-stone-400 hover:text-red-400'
+                    }`}
+                  >
+                    <Heart size={16} fill={favorites.includes(item.id) ? "currentColor" : "none"} />
+                  </button>
                 </div>
-              </div>
-              <p className="text-xs text-stone-400 mb-4 line-clamp-2 h-8">{item.description}</p>
-              <div className="flex justify-between items-center mt-auto pt-2 border-t border-stone-50">
-                <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md">Otentik Kalbar</span>
-                {renderMenuQuantitySelector(item)}
-              </div>
-            </motion.div>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-bold text-stone-900 leading-tight group-hover:text-red-700 transition-colors font-display">{item.name}</h3>
+                  <div className="flex items-center gap-1 text-amber-500">
+                    <Star size={14} fill="currentColor" />
+                    <span className="text-xs font-bold">4.8</span>
+                  </div>
+                </div>
+                <p className="text-xs text-stone-500 mb-4 line-clamp-2 h-8 leading-relaxed">{item.description}</p>
+                <div className="flex justify-between items-center mt-auto pt-2 border-t border-stone-100">
+                  <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md">
+                    <ShinyText text="Otentik Kalbar" color="#dc2626" shineColor="#f59e0b" className="text-[10px]" />
+                  </span>
+                  {renderMenuQuantitySelector(item)}
+                </div>
+              </motion.div>
+            </ClickSpark>
           ))}
         </div>
       </section>
 
       {/* Menu List */}
       <section ref={menuListSectionRef} className="px-4 md:px-8 lg:px-10 scroll-mt-20">
-        <h2 className="text-xl font-bold text-stone-900 mb-4">Menu {activeCategory}</h2>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+          <h2 className="text-xl font-bold text-stone-900 font-display">Menu {activeCategory}</h2>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8 xl:gap-10">
           {categoryItems.map((item) => (
-            <motion.div 
-              layout
-              key={item.id}
-              className="bg-white p-3 md:p-5 lg:p-6 rounded-3xl flex gap-4 md:gap-6 shadow-sm border border-stone-50 h-full"
-            >
-              <div className="w-24 h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-2xl overflow-hidden flex-shrink-0">
-                <MenuIcon item={item} size={40} />
-              </div>
-              <div className="flex-grow flex flex-col justify-center py-1">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-bold text-stone-900 mb-1">{item.name}</h3>
-                  <button onClick={() => toggleFavorite(item.id)} className={favorites.includes(item.id) ? 'text-orange-500' : 'text-stone-300'}>
-                    <Heart size={16} fill={favorites.includes(item.id) ? "currentColor" : "none"} />
-                  </button>
+            <ClickSpark key={item.id} sparkColor="#ea580c" sparkCount={6} sparkRadius={16}>
+              <motion.div 
+                layout
+                className="gsap-menu-card bg-white p-3 md:p-5 lg:p-6 rounded-3xl flex gap-4 md:gap-6 shadow-sm border border-stone-100 h-full hover:border-orange-200 hover:shadow-md transition-all group"
+              >
+                <div className="w-24 h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-2xl overflow-hidden flex-shrink-0 bg-stone-50">
+                  <MenuIcon item={item} size={40} />
                 </div>
-                <p className="text-xs text-stone-400 mb-3">{item.description}</p>
-                <div className="flex justify-end items-center mt-auto pt-2">
-                  {renderMenuQuantitySelector(item)}
+                <div className="flex-grow flex flex-col justify-center py-1">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-stone-900 mb-1 group-hover:text-red-700 transition-colors font-display">{item.name}</h3>
+                    <button onClick={() => toggleFavorite(item.id)} className={`cursor-pointer transition-colors ${favorites.includes(item.id) ? 'text-red-500' : 'text-stone-300 hover:text-red-400'}`}>
+                      <Heart size={16} fill={favorites.includes(item.id) ? "currentColor" : "none"} />
+                    </button>
+                  </div>
+                  <p className="text-xs text-stone-500 mb-3 line-clamp-2 leading-relaxed">{item.description}</p>
+                  <div className="flex justify-between items-center mt-auto pt-2 border-t border-stone-100">
+                    <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-md">
+                      {item.category}
+                    </span>
+                    {renderMenuQuantitySelector(item)}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </ClickSpark>
           ))}
         </div>
       </section>
@@ -5563,20 +5796,34 @@ ${orderDetails}
                     <div className="flex items-center gap-2">
                       <input 
                         type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="Contoh: 081234567890"
                         value={loginPhone}
-                        onChange={(e) => setLoginPhone(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          // Hanya terima angka murni, jika ada huruf/simbol hapus otomatis
+                          setLoginPhone(val.replace(/\D/g, ''));
+                        }}
+                        onKeyDown={(e) => {
+                          // Cegah input huruf langsung
+                          if (e.key.length === 1 && !/[0-9]/.test(e.key) && !e.ctrlKey && !e.metaKey) {
+                            e.preventDefault();
+                          }
+                        }}
                         className="flex-1 min-w-0 bg-stone-50 border border-stone-200 rounded-xl py-3 px-3.5 text-stone-900 text-sm font-semibold focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white transition-all placeholder:text-stone-400 placeholder:font-normal"
                       />
 
-                      <button
-                        type="button"
-                        onClick={handleSendOtpWhatsApp}
-                        className="px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-xs shadow-md shadow-orange-500/20 active:scale-95 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
-                      >
-                        <Send size={14} />
-                        <span>Kirim OTP</span>
-                      </button>
+                      <ClickSpark sparkColor="#f97316" sparkCount={6} sparkRadius={16} className="shrink-0">
+                        <button
+                          type="button"
+                          onClick={handleSendOtpWhatsApp}
+                          className="px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-xs shadow-md shadow-orange-500/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Send size={14} />
+                          <span>Kirim OTP</span>
+                        </button>
+                      </ClickSpark>
                     </div>
 
                     {resetToken && (
@@ -5621,16 +5868,28 @@ ${orderDetails}
                     </label>
                     <input 
                       type="text" 
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       maxLength={6}
                       placeholder="000000"
                       value={inputToken}
-                      onChange={(e) => setInputToken(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        // Hanya terima angka murni, jika ada huruf/simbol otomatis terhapus
+                        setInputToken(val.replace(/\D/g, ''));
+                      }}
+                      onKeyDown={(e) => {
+                        // Cegah pengetikan huruf langsung
+                        if (e.key.length === 1 && !/[0-9]/.test(e.key) && !e.ctrlKey && !e.metaKey) {
+                          e.preventDefault();
+                        }
+                      }}
                       className="w-full bg-stone-50 border border-stone-200 rounded-xl py-3 px-4 text-center text-lg tracking-[0.25em] font-mono font-bold text-stone-900 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 focus:bg-white transition-all placeholder:tracking-normal placeholder:font-sans placeholder:text-stone-300"
                     />
                   </div>
 
                   {/* Non-Robot Verification Checkbox */}
-                  <div className="pt-1">
+                  <div className="pt-1 w-full overflow-hidden flex justify-center">
                     <NonRobotVerification 
                       id="login-captcha-verification"
                       isVerified={isHumanVerified} 
@@ -5640,14 +5899,16 @@ ${orderDetails}
                   </div>
 
                   {/* Primary "Verifikasi & Masuk" Button */}
-                  <button 
-                    type="button"
-                    onClick={handleLogin}
-                    className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black text-sm shadow-md shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
-                  >
-                    <span>Masuk / Verifikasi OTP</span>
-                    <ArrowRight size={16} />
-                  </button>
+                  <ClickSpark sparkColor="#f97316" sparkCount={8} sparkRadius={22} className="w-full mt-2">
+                    <button 
+                      type="button"
+                      onClick={handleLogin}
+                      className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black text-sm shadow-md shadow-orange-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>Masuk / Verifikasi OTP</span>
+                      <ArrowRight size={16} />
+                    </button>
+                  </ClickSpark>
 
                   {/* Divider */}
                   <div className="relative my-3">
@@ -5656,19 +5917,21 @@ ${orderDetails}
                   </div>
 
                   {/* Google Sign In Option Button */}
-                  <button 
-                    type="button"
-                    onClick={handleFirebaseGoogleLogin}
-                    className="w-full py-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-800 rounded-xl font-bold text-xs shadow-xs active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer"
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24">
-                      <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
-                      <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
-                      <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z"/>
-                      <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/>
-                    </svg>
-                    <span>Lanjutkan dengan Google</span>
-                  </button>
+                  <ClickSpark sparkColor="#4285F4" sparkCount={8} sparkRadius={20} className="w-full">
+                    <button 
+                      type="button"
+                      onClick={handleFirebaseGoogleLogin}
+                      className="w-full py-3 bg-white border border-stone-200 hover:bg-stone-50 text-stone-800 rounded-xl font-bold text-xs shadow-xs active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
+                        <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+                        <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z"/>
+                        <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/>
+                      </svg>
+                      <span>Lanjutkan dengan Google</span>
+                    </button>
+                  </ClickSpark>
                 </div>
               </div>
             </div>
@@ -5689,6 +5952,80 @@ ${orderDetails}
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] flex flex-col items-center justify-start overflow-x-hidden relative">
+      {/* Cooking Reminder Toast Notification */}
+      <AnimatePresence>
+        {cookingReminderToast && (
+          <motion.div
+            id="cooking-reminder-toast"
+            initial={{ opacity: 0, y: -50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="fixed top-4 left-4 right-4 md:left-auto md:right-6 md:w-[440px] z-[99999] bg-stone-900/95 text-white backdrop-blur-xl rounded-2xl p-4 shadow-2xl border border-amber-500/40 text-left overflow-hidden"
+          >
+            {/* Top glowing orange accent line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-400 to-amber-600" />
+            
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-gradient-to-tr from-amber-500 to-orange-500 text-stone-950 rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20 mt-0.5 relative">
+                  <Flame size={20} className="text-stone-950 animate-bounce" />
+                  <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                  </span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-extrabold text-amber-300">
+                      {TRANSLATIONS[language]?.cookingToastTitle || "Pesanan Sedang Dimasak 🍳"}
+                    </h4>
+                    <span className="text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">
+                      #{cookingReminderToast.orderId}
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-300 mt-1 leading-relaxed">
+                    {TRANSLATIONS[language]?.cookingToastDesc || "Anda memiliki pesanan yang sedang dimasak di dapur. Jangan lupa kembali mengecek status pesanan Anda!"}
+                  </p>
+                </div>
+              </div>
+              <button
+                id="close-cooking-toast-btn"
+                type="button"
+                onClick={() => setCookingReminderToast(null)}
+                className="text-stone-400 hover:text-white p-1 rounded-lg hover:bg-stone-800 transition-colors cursor-pointer shrink-0"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-stone-800/80">
+              <button
+                id="check-cooking-order-status-btn"
+                type="button"
+                onClick={() => {
+                  setCookingReminderToast(null);
+                  setShowOrderHistory(true);
+                }}
+                className="flex-1 py-2 px-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-stone-950 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-amber-950/30 transition-all cursor-pointer active:scale-95"
+              >
+                <History size={14} />
+                <span>{TRANSLATIONS[language]?.cookingToastAction || "Cek Status Pesanan"}</span>
+              </button>
+              <button
+                id="dismiss-cooking-toast-btn"
+                type="button"
+                onClick={() => setCookingReminderToast(null)}
+                className="px-3 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl font-medium text-xs transition-colors cursor-pointer"
+              >
+                {language === 'zh' ? '稍后查看' : language === 'en' ? 'Dismiss' : 'Tutup'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* SendGrid Email Notification Toast Banner */}
       <AnimatePresence>
         {emailNotificationToast && (
@@ -6443,20 +6780,24 @@ ${orderDetails}
             <Search size={24} />
             <span className="text-[10px] font-bold">{TRANSLATIONS[language].search}</span>
           </button>
-          <motion.button 
-            id="cart-button"
-            onClick={() => setIsCartOpen(true)}
-            animate={cartPulse ? { scale: [1, 1.25, 0.85, 1.15, 1.05, 1] } : {}}
-            transition={{ duration: 0.5 }}
-            className="relative -top-8 w-16 h-16 bg-gradient-to-tr from-red-600 to-red-500 text-white rounded-full flex items-center justify-center shadow-xl shadow-red-200 border-4 border-white cursor-pointer hover:from-red-700 hover:to-red-600 transition-all"
-          >
-            <ShoppingBag size={28} />
-            {totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 w-6 h-6 bg-amber-500 text-stone-950 text-[10px] font-extrabold rounded-full flex items-center justify-center border-2 border-white shadow-xs">
-                {totalItems}
-              </span>
-            )}
-          </motion.button>
+          <Magnet padding={36} magnetStrength={2.5}>
+            <ClickSpark sparkColor="#f97316" sparkCount={9} sparkRadius={24} className="relative -top-8">
+              <motion.button 
+                id="cart-button"
+                onClick={() => setIsCartOpen(true)}
+                animate={cartPulse ? { scale: [1, 1.25, 0.85, 1.15, 1.05, 1] } : {}}
+                transition={{ duration: 0.5 }}
+                className="w-16 h-16 bg-gradient-to-tr from-red-600 to-orange-600 text-white rounded-full flex items-center justify-center shadow-xl shadow-red-200 border-4 border-white cursor-pointer hover:from-red-700 hover:to-orange-700 transition-all active:scale-95"
+              >
+                <ShoppingBag size={28} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 w-6 h-6 bg-amber-500 text-stone-950 text-[10px] font-extrabold rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+                    {totalItems}
+                  </span>
+                )}
+              </motion.button>
+            </ClickSpark>
+          </Magnet>
           <button 
             onClick={() => handleTabChange('heart')}
             className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'heart' ? 'text-red-600' : 'text-stone-400 hover:text-red-500'}`}
@@ -6828,13 +7169,15 @@ ${orderDetails}
                     </div>
                   )}
 
-                  <button 
-                    onClick={sendToWhatsApp}
-                    className="w-full py-4 bg-orange-500 text-white rounded-2xl font-bold text-base flex items-center justify-center gap-2 hover:bg-orange-600 active:scale-[0.99] transition-all shadow-lg shadow-orange-200 cursor-pointer"
-                  >
-                    <span>{user ? 'Konfirmasi Pesanan' : 'Login & Pesan Sekarang'}</span>
-                    <ArrowRight size={18} />
-                  </button>
+                  <ClickSpark sparkColor="#ea580c" sparkCount={9} sparkRadius={24} className="w-full">
+                    <button 
+                      onClick={sendToWhatsApp}
+                      className="w-full py-4 bg-orange-500 text-white rounded-2xl font-bold text-base flex items-center justify-center gap-2 hover:bg-orange-600 active:scale-[0.99] transition-all shadow-lg shadow-orange-200 cursor-pointer"
+                    >
+                      <span>{user ? 'Konfirmasi Pesanan' : 'Login & Pesan Sekarang'}</span>
+                      <ArrowRight size={18} />
+                    </button>
+                  </ClickSpark>
                 </div>
               )}
             </motion.div>
@@ -6884,36 +7227,40 @@ ${orderDetails}
                 </p>
 
                 {/* Google Sign In Direct Button */}
-                <button 
-                  type="button"
-                  onClick={async () => {
-                    await handleFirebaseGoogleLogin();
-                    setShowLoginRequiredModal(false);
-                  }}
-                  className="w-full py-3.5 bg-white border-2 border-stone-200 hover:border-orange-400 hover:bg-stone-50 text-stone-800 rounded-2xl font-bold text-sm shadow-xs active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer"
-                >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
-                    <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
-                    <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z"/>
-                    <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/>
-                  </svg>
-                  <span>Lanjutkan dengan Akun Google</span>
-                </button>
+                <ClickSpark sparkColor="#4285F4" sparkCount={8} sparkRadius={20} className="w-full">
+                  <button 
+                    type="button"
+                    onClick={async () => {
+                      await handleFirebaseGoogleLogin();
+                      setShowLoginRequiredModal(false);
+                    }}
+                    className="w-full py-3.5 bg-white border-2 border-stone-200 hover:border-orange-400 hover:bg-stone-50 text-stone-800 rounded-2xl font-bold text-sm shadow-xs active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer"
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                      <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/>
+                      <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/>
+                      <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z"/>
+                      <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/>
+                    </svg>
+                    <span>Lanjutkan dengan Akun Google</span>
+                  </button>
+                </ClickSpark>
 
                 {/* Login via WhatsApp Tab Link */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowLoginRequiredModal(false);
-                    setIsCartOpen(false);
-                    setActiveTab('profile');
-                  }}
-                  className="w-full py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-2xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Phone size={15} className="text-emerald-600" />
-                  <span>Masuk via Nomor WhatsApp / OTP</span>
-                </button>
+                <ClickSpark sparkColor="#10b981" sparkCount={8} sparkRadius={20} className="w-full">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowLoginRequiredModal(false);
+                      setIsCartOpen(false);
+                      setActiveTab('profile');
+                    }}
+                    className="w-full py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-2xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Phone size={15} className="text-emerald-600" />
+                    <span>Masuk via Nomor WhatsApp / OTP</span>
+                  </button>
+                </ClickSpark>
               </div>
 
               <div className="pt-2 text-center">
@@ -7155,13 +7502,15 @@ ${orderDetails}
                       placeholder="Tanya koki AI..."
                       className="flex-grow bg-stone-50 border-none rounded-2xl py-4 px-6 pr-14 text-sm text-stone-900 placeholder:text-stone-400 focus:ring-2 focus:ring-orange-500/20 transition-all outline-none"
                     />
-                    <button 
-                      type="submit"
-                      disabled={!chatInput.trim() || isAIThinking}
-                      className="absolute right-2 w-10 h-10 bg-orange-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-orange-100 disabled:opacity-50 transition-all active:scale-90"
-                    >
-                      <Send size={18} />
-                    </button>
+                    <ClickSpark sparkColor="#f97316" sparkCount={6} sparkRadius={16} className="absolute right-2">
+                      <button 
+                        type="submit"
+                        disabled={!chatInput.trim() || isAIThinking}
+                        className="w-10 h-10 bg-orange-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-orange-100 disabled:opacity-50 transition-all active:scale-90 cursor-pointer"
+                      >
+                        <Send size={18} />
+                      </button>
+                    </ClickSpark>
                   </form>
                 )}
               </div>
@@ -7224,16 +7573,18 @@ ${orderDetails}
                 <div className="flex gap-3">
                   <button 
                     onClick={() => setNoteModalItem(null)}
-                    className="flex-1 py-4 bg-stone-100 text-stone-500 rounded-2xl font-bold text-sm"
+                    className="flex-1 py-4 bg-stone-100 text-stone-500 rounded-2xl font-bold text-sm cursor-pointer"
                   >
                     Batal
                   </button>
-                  <button 
-                    onClick={() => updateNote(noteModalItem.id, noteModalItem.option, noteModalItem.note)}
-                    className="flex-1 py-4 bg-orange-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-orange-100"
-                  >
-                    Simpan
-                  </button>
+                  <ClickSpark sparkColor="#f97316" sparkCount={7} sparkRadius={18} className="flex-1">
+                    <button 
+                      onClick={() => updateNote(noteModalItem.id, noteModalItem.option, noteModalItem.note)}
+                      className="w-full py-4 bg-orange-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-orange-100 cursor-pointer"
+                    >
+                      Simpan
+                    </button>
+                  </ClickSpark>
                 </div>
               </div>
             </motion.div>
@@ -7315,12 +7666,14 @@ ${orderDetails}
                   </button>
                 </div>
 
-                <button 
-                  onClick={(e) => addToCart(optionModalItem!, selectedOption, e)}
-                  className="w-full py-4 bg-orange-500 text-white rounded-2xl font-bold text-lg shadow-lg shadow-orange-100"
-                >
-                  Tambah ke Keranjang
-                </button>
+                <ClickSpark sparkColor="#f97316" sparkCount={9} sparkRadius={24} className="w-full">
+                  <button 
+                    onClick={(e) => addToCart(optionModalItem!, selectedOption, e)}
+                    className="w-full py-4 bg-orange-500 text-white rounded-2xl font-bold text-lg shadow-lg shadow-orange-100 cursor-pointer"
+                  >
+                    Tambah ke Keranjang
+                  </button>
+                </ClickSpark>
               </div>
             </motion.div>
           </>
@@ -7434,12 +7787,14 @@ ${orderDetails}
                       </p>
                     </div>
 
-                    <button
-                      onClick={startCrackingCookie}
-                      className="px-8 py-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-sm rounded-2xl shadow-xl shadow-amber-500/10 border border-amber-300 transition-all active:scale-95 font-serif cursor-pointer"
-                    >
-                      {language === 'en' ? 'BREAK COOKIE ⭐' : 'PECAHKAN BISKUIT ⭐'}
-                    </button>
+                    <ClickSpark sparkColor="#fbbf24" sparkCount={10} sparkRadius={24}>
+                      <button
+                        onClick={startCrackingCookie}
+                        className="px-8 py-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-sm rounded-2xl shadow-xl shadow-amber-500/10 border border-amber-300 transition-all active:scale-95 font-serif cursor-pointer"
+                      >
+                        {language === 'en' ? 'BREAK COOKIE ⭐' : 'PECAHKAN BISKUIT ⭐'}
+                      </button>
+                    </ClickSpark>
                   </div>
                 )}
 
@@ -7560,16 +7915,18 @@ ${orderDetails}
                               <h5 className="font-extrabold text-stone-900 text-xs md:text-sm mt-1 truncate">{luckyItem.name}</h5>
                               <p className="text-[10px] text-stone-500 leading-tight mt-0.5 line-clamp-1">{luckyItem.description}</p>
                             </div>
-                            <button
-                              onClick={(e) => {
-                                addToCart(luckyItem, undefined, e);
-                                setIsFortuneModalOpen(false);
-                              }}
-                              className="w-8 h-8 md:w-10 md:h-10 bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center shadow-md active:scale-95 transition-all flex-shrink-0 cursor-pointer"
-                              title="Pesan Menu"
-                            >
-                              <Plus size={16} />
-                            </button>
+                            <ClickSpark sparkColor="#dc2626" sparkCount={6} sparkRadius={16} className="flex-shrink-0">
+                              <button
+                                onClick={(e) => {
+                                  addToCart(luckyItem, undefined, e);
+                                  setIsFortuneModalOpen(false);
+                                }}
+                                className="w-8 h-8 md:w-10 md:h-10 bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center justify-center shadow-md active:scale-95 transition-all cursor-pointer"
+                                title="Pesan Menu"
+                              >
+                                <Plus size={16} />
+                              </button>
+                            </ClickSpark>
                           </div>
                         );
                       })()}
@@ -7577,19 +7934,23 @@ ${orderDetails}
 
                     {/* Bottom Actions of Modal */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 relative z-10 w-full px-2">
-                      <button
-                        onClick={() => setFortuneState('idle')}
-                        className="w-full sm:flex-1 py-3 bg-stone-800 hover:bg-stone-700 text-amber-300 font-bold text-xs md:text-sm rounded-xl border border-amber-500/20 active:scale-95 transition-all font-serif cursor-pointer flex items-center justify-center gap-1.5"
-                      >
-                        <span>🏮</span>
-                        <span>{language === 'zh' ? '再抽一个饼干' : language === 'en' ? 'CRACK ANOTHER COOKIE' : 'COBA BISKUIT LAIN'}</span>
-                      </button>
-                      <button
-                        onClick={() => setIsFortuneModalOpen(false)}
-                        className="w-full sm:flex-1 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-bold text-xs md:text-sm rounded-xl border border-amber-500/20 active:scale-95 transition-all shadow-lg cursor-pointer"
-                      >
-                        {language === 'zh' ? '收下好运' : language === 'en' ? 'DONE' : 'TUTUP & AMBIL HOKI'}
-                      </button>
+                      <ClickSpark sparkColor="#fbbf24" sparkCount={7} sparkRadius={18} className="w-full sm:flex-1">
+                        <button
+                          onClick={() => setFortuneState('idle')}
+                          className="w-full py-3 bg-stone-800 hover:bg-stone-700 text-amber-300 font-bold text-xs md:text-sm rounded-xl border border-amber-500/20 active:scale-95 transition-all font-serif cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <span>🏮</span>
+                          <span>{language === 'zh' ? '再抽一个饼干' : language === 'en' ? 'CRACK ANOTHER COOKIE' : 'COBA BISKUIT LAIN'}</span>
+                        </button>
+                      </ClickSpark>
+                      <ClickSpark sparkColor="#ef4444" sparkCount={8} sparkRadius={20} className="w-full sm:flex-1">
+                        <button
+                          onClick={() => setIsFortuneModalOpen(false)}
+                          className="w-full py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-bold text-xs md:text-sm rounded-xl border border-amber-500/20 active:scale-95 transition-all shadow-lg cursor-pointer"
+                        >
+                          {language === 'zh' ? '收下好运' : language === 'en' ? 'DONE' : 'TUTUP & AMBIL HOKI'}
+                        </button>
+                      </ClickSpark>
                     </div>
                   </motion.div>
                 )}

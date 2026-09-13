@@ -592,6 +592,49 @@ async function startServer() {
     }
   });
 
+  // POST /api/verify-recaptcha - Verifikasi Google reCAPTCHA token ke API Google
+  app.post("/api/verify-recaptcha", async (req, res) => {
+    try {
+      const { token } = req.body || {};
+      if (!token || typeof token !== "string") {
+        return res.status(400).json({ success: false, error: "Token captcha diperlukan." });
+      }
+
+      const secretKey = process.env.RECAPTCHA_SECRET_KEY || "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
+      
+      const params = new URLSearchParams();
+      params.append("secret", secretKey);
+      params.append("response", token.trim());
+      
+      const remoteIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+      if (remoteIp && typeof remoteIp === "string") {
+        params.append("remoteip", remoteIp.split(",")[0].trim());
+      }
+
+      const googleRes = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString()
+      });
+
+      const data: any = await googleRes.json();
+      console.log("[GOOGLE RECAPTCHA VERIFY]", { success: data.success, score: data.score, action: data.action });
+
+      if (data && data.success) {
+        return res.json({ success: true, message: "Verifikasi Google reCAPTCHA berhasil!", timestamp: new Date().toISOString() });
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: "Verifikasi reCAPTCHA tidak valid.",
+          errorCodes: data["error-codes"] || []
+        });
+      }
+    } catch (err: any) {
+      console.error("[GOOGLE RECAPTCHA ERROR]:", err);
+      return res.status(500).json({ success: false, error: "Gagal memverifikasi ke Google reCAPTCHA API." });
+    }
+  });
+
   // PATCH /api/orders/:id - Update or Modify order (Auto-revokes/updates verification status)
   app.patch("/api/orders/:id", async (req, res) => {
     try {
