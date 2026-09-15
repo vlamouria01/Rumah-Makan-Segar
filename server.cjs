@@ -906,12 +906,51 @@ Data atau segel pesanan #${cleanId} tidak cocok dengan data asli di server. Link
       });
     }
     if (!cleanTarget.includes("@")) {
+      let fonnteSent = false;
+      let fonnteMessage = "";
+      let fonnteReason = "";
+      const fonnteToken = (process.env.FONNTE_TOKEN || "RqasK6yJhNnseAbXh4hV").trim();
+      if (fonnteToken) {
+        try {
+          const digitsOnly = cleanTarget.replace(/\D/g, "");
+          const targetWaNumber = digitsOnly.startsWith("0") ? "62" + digitsOnly.slice(1) : digitsOnly.startsWith("62") ? digitsOnly : "62" + digitsOnly;
+          const fonnteRes = await fetch("https://api.fonnte.com/send", {
+            method: "POST",
+            headers: {
+              "Authorization": fonnteToken,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              target: targetWaNumber,
+              message: `*RM Segar Khas Kalbar*
+
+Kode OTP Verifikasi akun Anda adalah:
+*${token}*
+
+Kode ini berlaku selama 5 menit. Harap jangan berikan kode ini kepada siapapun demi keamanan akun Anda.`,
+              countryCode: "62"
+            })
+          });
+          const fonnteData = await fonnteRes.json().catch(() => null);
+          if (fonnteData && (fonnteData.status === true || fonnteData.status === "true")) {
+            fonnteSent = true;
+            fonnteMessage = "Kode OTP telah otomatis terkirim ke nomor WhatsApp Anda via Fonnte.";
+          } else {
+            fonnteReason = fonnteData?.reason || "Gagal mengirim via Fonnte";
+            console.warn("[FONNTE NOTICE]", fonnteReason);
+          }
+        } catch (fonnteErr) {
+          console.warn("[FONNTE ERROR]", fonnteErr);
+        }
+      }
       return res.json({
         success: true,
-        message: `Kode OTP WhatsApp (${token}) berhasil dibuat untuk ${cleanTarget}.`,
+        message: fonnteSent ? fonnteMessage : `Kode OTP WhatsApp (${token}) berhasil dibuat untuk ${cleanTarget}.`,
         token,
         expiresAt,
-        isPhone: true
+        isPhone: true,
+        fonnteSent,
+        fonnteReason: fonnteReason || void 0
       });
     }
     if (emailRes.sent) {
@@ -993,6 +1032,27 @@ Data atau segel pesanan #${cleanId} tidak cocok dengan data asli di server. Link
         error: "INVALID_OTP",
         message: `Kode OTP salah. Sisa ${remaining}x percobaan.`
       });
+    }
+  });
+  app.get("/api/proxy/oranghilang", async (req, res) => {
+    try {
+      const search = (req.query.search || "").trim();
+      const limit2 = (req.query.limit || "50").trim();
+      const targetUrl = search ? `https://www.oranghilang.id/api/victim?search=${encodeURIComponent(search)}` : `https://www.oranghilang.id/api/victim?limit=${encodeURIComponent(limit2)}`;
+      const upstream = await fetch(targetUrl, {
+        headers: {
+          "Accept": "application/json",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) RM-Segar/1.0"
+        }
+      });
+      if (!upstream.ok) {
+        return res.status(upstream.status).json({ items: [] });
+      }
+      const data = await upstream.json();
+      return res.json(data);
+    } catch (err) {
+      console.warn("[ORANGHILANG PROXY] Upstream fetch notice:", err?.message || err);
+      return res.status(502).json({ items: [] });
     }
   });
   app.get("/api/user/profile", async (req, res) => {
