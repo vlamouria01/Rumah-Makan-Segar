@@ -80,6 +80,7 @@ import { Magnet } from './components/react-bits/Magnet';
 import { ClickSpark } from './components/react-bits/ClickSpark';
 
 gsap.registerPlugin(useGSAP);
+gsap.config({ nullTargetWarn: false });
 
 export interface VirtualEmail {
   id: string;
@@ -977,32 +978,6 @@ function App() {
   const [activeTab, setActiveTab] = useState('home');
   const homeContainerRef = useRef<HTMLDivElement>(null);
 
-  // GSAP: Staggered animation for menu items and gentle floating badge animations
-  useGSAP(() => {
-    if (activeTab !== 'home') return;
-
-    gsap.fromTo(
-      '.gsap-menu-card',
-      { opacity: 0, y: 18, scale: 0.98 },
-      {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        duration: 0.45,
-        stagger: 0.035,
-        ease: 'power2.out',
-        clearProps: 'transform,opacity'
-      }
-    );
-
-    gsap.to('.gsap-float-slow', {
-      y: -5,
-      duration: 2.2,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut'
-    });
-  }, { dependencies: [activeCategory, activeTab], scope: homeContainerRef });
   const [language, setLanguage] = useState<'id' | 'en' | 'zh'>(getInitialLanguage);
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
@@ -1670,10 +1645,21 @@ function App() {
       });
     };
 
-    // Check if user had left/closed previously while order was cooking, or on app mount
+    // Check if user had left/closed previously while order was cooking, or sent order to WA, or on app mount
     const savedLeft = localStorage.getItem('rm_segar_left_with_cooking');
+    const wasWaOrderSent = localStorage.getItem('rm_segar_wa_order_sent');
     const activeCooking = orders.find(o => o.status === 'cooking');
-    if (savedLeft || activeCooking) {
+
+    if (wasWaOrderSent) {
+      const timer = setTimeout(() => {
+        triggerPandaAnimation("Pesanan Resmi Berhasil Terkirim ke WhatsApp Pemilik!");
+        localStorage.removeItem('rm_segar_wa_order_sent');
+        if (activeCooking) {
+          triggerCookingToast(activeCooking);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    } else if (savedLeft || activeCooking) {
       const timer = setTimeout(() => {
         triggerCookingToast(activeCooking);
         localStorage.removeItem('rm_segar_left_with_cooking');
@@ -1706,6 +1692,12 @@ function App() {
         }
       } else if (document.visibilityState === 'visible') {
         // App reopened or tab refocused
+        const wasWaOrderSentOnRefocus = localStorage.getItem('rm_segar_wa_order_sent');
+        if (wasWaOrderSentOnRefocus) {
+          triggerPandaAnimation("Pesanan Resmi Berhasil Terkirim ke WhatsApp Pemilik!");
+          localStorage.removeItem('rm_segar_wa_order_sent');
+        }
+
         const hadLeft = localStorage.getItem('rm_segar_left_with_cooking');
         if (hadLeft || currentCooking) {
           triggerCookingToast(currentCooking);
@@ -1968,6 +1960,46 @@ function App() {
   const chatEndRef = React.useRef<HTMLDivElement>(null);
   const touchStartRef = React.useRef(0);
   const mouseStartRef = React.useRef<number>(-1);
+
+  // GSAP: Context-aware animations scoped to the single main containerRef
+  useGSAP(() => {
+    if (!containerRef.current) return;
+
+    // Use requestAnimationFrame to guarantee child elements from AnimatePresence have painted
+    const rafId = requestAnimationFrame(() => {
+      if (!containerRef.current) return;
+
+      const menuCards = containerRef.current.querySelectorAll('.gsap-menu-card');
+      if (menuCards && menuCards.length > 0) {
+        gsap.fromTo(
+          menuCards,
+          { opacity: 0, y: 18, scale: 0.98 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.45,
+            stagger: 0.035,
+            ease: 'power2.out',
+            clearProps: 'transform,opacity'
+          }
+        );
+      }
+
+      const floatBadges = containerRef.current.querySelectorAll('.gsap-float-slow');
+      if (floatBadges && floatBadges.length > 0) {
+        gsap.to(floatBadges, {
+          y: -5,
+          duration: 2.2,
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut'
+        });
+      }
+    });
+
+    return () => cancelAnimationFrame(rafId);
+  }, { dependencies: [activeCategory, activeTab, isLoading], scope: containerRef });
 
   useEffect(() => {
     const checkKey = async () => {
@@ -2762,6 +2794,8 @@ Aturan Sangat Penting:
     const guaranteedToken = String(Math.floor(100000 + Math.random() * 900000));
     let finalToken = guaranteedToken;
 
+    let fonnteWasSent = false;
+
     try {
       const res = await fetch('/api/auth/send-otp', {
         method: 'POST',
@@ -2774,6 +2808,7 @@ Aturan Sangat Penting:
           finalToken = String(data.token);
         }
         if (data.expiresAt) setOtpExpiresAt(data.expiresAt);
+        if (data.fonnteSent) fonnteWasSent = true;
       } else if (!res.ok) {
         if (data.error === 'INVALID_PHONE_NUMBER') {
           alert(` ${data.message || 'Nomor WhatsApp tidak valid atau tidak terdaftar.'}`);
@@ -2799,18 +2834,22 @@ Aturan Sangat Penting:
     const webWaUrl = `https://wa.me/${formattedPhone}?text=${waText}`;
     setWaDirectLink(webWaUrl);
 
-    // Launch WhatsApp directly via native protocol scheme
-    try {
-      const link = document.createElement('a');
-      link.href = nativeWaUrl;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (e) {
-      window.location.href = nativeWaUrl;
-    }
+    if (fonnteWasSent) {
+      setEmailNotificationToast(`✅ Kode OTP ${finalToken} telah terkirim otomatis ke WhatsApp +${formattedPhone} via Fonnte Gateway.`);
+    } else {
+      // Launch WhatsApp directly via native protocol scheme fallback
+      try {
+        const link = document.createElement('a');
+        link.href = nativeWaUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (e) {
+        window.location.href = nativeWaUrl;
+      }
 
-    setEmailNotificationToast(`💬 Kode OTP ${finalToken} disiapkan untuk WhatsApp +${formattedPhone}. WhatsApp dibuka...`);
+      setEmailNotificationToast(`💬 Kode OTP ${finalToken} disiapkan untuk WhatsApp +${formattedPhone}. WhatsApp dibuka...`);
+    }
   };
 
   const handleLogin = async () => {
@@ -3867,6 +3906,13 @@ ${orderDetails}
     };
     setVirtualEmails(prev => [orderReceiptEmail, ...prev]);
     
+    try {
+      localStorage.setItem('rm_segar_wa_order_sent', JSON.stringify({
+        orderId: newOrder.id,
+        timestamp: Date.now()
+      }));
+    } catch {}
+
     openWhatsApp(phoneNumber, message);
     setCart([]);
     setIsCartOpen(false);
@@ -6472,7 +6518,7 @@ ${orderDetails}
                     {/* Panda Cooking */}
                     <motion.div 
                       className="w-24 h-20 bg-white rounded-[40px_40px_30px_30px] border-4 border-stone-900 relative shadow-lg"
-                      animate={isRefreshing ? {
+                      animate={(isRefreshing || pullY > 20) ? {
                         y: [0, -5, 0],
                         rotate: [0, -1, 1, 0]
                       } : {}}
@@ -6497,7 +6543,7 @@ ${orderDetails}
                     {/* Frying Pan */}
                     <motion.div 
                       className="absolute -bottom-4 -right-8 w-16 h-6 bg-stone-800 rounded-full border-4 border-stone-900 z-10"
-                      animate={isRefreshing ? {
+                      animate={(isRefreshing || pullY > 20) ? {
                         rotate: [0, -15, 0],
                         y: [0, -10, 0]
                       } : {}}
@@ -6506,7 +6552,7 @@ ${orderDetails}
                       {/* Handle */}
                       <div className="absolute top-1/2 -right-8 w-8 h-2 bg-stone-900 rounded-full -translate-y-1/2" />
                       {/* Food in pan */}
-                      {isRefreshing && (
+                      {(isRefreshing || pullY > 20) && (
                         <div className="absolute -top-4 left-4 right-4 flex gap-1">
                           {[1,2,3].map(i => (
                             <motion.div 
@@ -6523,7 +6569,7 @@ ${orderDetails}
                     {/* Spatula */}
                     <motion.div 
                       className="absolute -bottom-4 -left-4 w-2 h-12 bg-stone-400 border-2 border-stone-900 rounded-full z-10 origin-bottom"
-                      animate={isRefreshing ? {
+                      animate={(isRefreshing || pullY > 20) ? {
                         rotate: [0, 30, 0],
                         x: [0, 5, 0]
                       } : {}}
@@ -6532,27 +6578,6 @@ ${orderDetails}
                   </div>
                 )}
               </div>
-
-              {/* Status text badge below panda */}
-              <motion.div 
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-3 bg-stone-900/90 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 border border-amber-500/30 backdrop-blur-md pointer-events-none"
-              >
-                {showSuccess ? (
-                  <span className="text-emerald-400 flex items-center gap-1.5">
-                    <Check size={14} className="stroke-[3]" />
-                    {pandaMessage || "Pesanan Berhasil Dikirim ke WhatsApp!"}
-                  </span>
-                ) : isRefreshing ? (
-                  <span className="text-amber-300 flex items-center gap-1.5">
-                    <Sparkles size={14} className="animate-spin text-amber-400" />
-                    {pandaMessage || "Koki Teng Sedang Memasak Pesanan..."}
-                  </span>
-                ) : (
-                  <span className="text-stone-300">Tarik untuk Memuat Ulang</span>
-                )}
-              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

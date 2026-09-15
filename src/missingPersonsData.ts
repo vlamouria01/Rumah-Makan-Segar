@@ -181,8 +181,8 @@ export async function searchOrangHilangLive(searchTerm: string = ""): Promise<{
   const term = searchTerm.trim();
   try {
     const url = term 
-      ? `https://oranghilang.id/api/victim?search=${encodeURIComponent(term)}`
-      : `https://oranghilang.id/api/victim?limit=50`;
+      ? `/api/proxy/oranghilang?search=${encodeURIComponent(term)}`
+      : `/api/proxy/oranghilang?limit=50`;
     const res = await fetch(url, { headers: { "Accept": "application/json" } });
     if (res.ok) {
       const json = await res.json();

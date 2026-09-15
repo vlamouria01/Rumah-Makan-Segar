@@ -21,6 +21,10 @@
       "destination": "/api/chat"
     },
     {
+      "source": "/api/proxy/oranghilang",
+      "destination": "/api/oranghilang"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
